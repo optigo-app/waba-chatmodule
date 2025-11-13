@@ -1,0 +1,305 @@
+$background-light: #ececec99;
+$white: #ffffff;
+$gray: gray;
+$text-muted: #8080808f;
+
+// Mixins
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin circle($size: 80px, $color: #7367f0) {
+    width: $size;
+    height: $size;
+    background-color: $color;
+    border-radius: 50%;
+}
+
+// Main container
+.login-container {
+    @include flex-center;
+    height: 100vh;
+    padding: 0 8px;
+
+    @media (min-width: 600px) {
+        padding: 0 16px;
+    }
+
+    @media (min-width: 900px) {
+        padding: 0 16px;
+    }
+}
+
+// Login wrapper
+.login-wrapper {
+    width: 100%;
+    max-width: 600px;
+    border-radius: 20px;
+    background: #ececec99;
+    padding: 0;
+    position: relative;
+
+    @media (min-width: 600px) {
+        max-width: 600px;
+        padding: 16px;
+    }
+
+    @media (min-width: 900px) {
+        max-width: 900px;
+        padding: 64px;
+    }
+
+    @media (min-width: 1200px) {
+        max-width: 1000px;
+    }
+}
+
+// Decorative circles
+.decorative-circle {
+    position: absolute;
+    @include circle();
+    z-index: 0;
+
+    &--top-left {
+        top: 35px;
+        left: 35px;
+        background: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #f06787 100%);
+    }
+
+    &--bottom-right {
+        bottom: 35px;
+        right: 35px;
+        background-color: #fff;
+    }
+}
+
+// Main paper container
+.login-paper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 600px;
+    border-radius: 20px !important;
+    box-shadow: none !important;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+
+    @media (min-width: 600px) {
+        flex-direction: row;
+    }
+}
+
+// Login form section
+.login-form-section {
+    flex: 1;
+    background: #ffffff;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+
+    @media (min-width: 600px) {
+        padding: 40px;
+    }
+}
+
+.login-form-content {
+    width: 100%;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+// Typography styles
+.login-title {
+    font-weight: bold !important;
+    margin-bottom: 8px;
+}
+
+.login-subtitle {
+    color: gray;
+    margin-bottom: 26px !important;
+}
+
+// Form styles
+.form-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+    gap: 1px;
+    width: 100%;
+    margin-bottom: 20px;
+
+    .field-label {
+        margin-bottom: 4px;
+        display: block;
+    }
+}
+
+// Password toggle button
+.password-toggle {
+    color: #8080808f;
+}
+
+// Login button
+.login-button-container {
+    margin-top: 16px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+
+    button {
+        background: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #f06787 100%);
+        color: white !important;
+    }
+}
+
+// Image section
+.login-image-section {
+    flex: 1;
+    background: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #f06787 100%);
+    @include flex-center;
+
+    .image-container {
+        width: 100%;
+        height: 100%;
+        border-radius: 20px;
+        @include flex-center;
+
+        .login-image {
+            width: 100%;
+            border-radius: 15px;
+        }
+    }
+}
+
+// tab specific adjustments
+@media (max-width: 768px) {
+    .login-wrapper {
+        max-width: 700px;
+    }
+}
+
+// Mobile specific adjustments
+@media (max-width: 599px) {
+    .login-image-section {
+        display: none;
+    }
+
+    .login-form-section {
+        justify-content: center;
+    }
+}
+
+
+.textfieldsClass {
+    font-size: 14px;
+    color: #808080;
+
+    .MuiTypography-root {
+        color: #808080;
+        font-size: 14px;
+    }
+
+    .MuiOutlinedInput-root {
+        color: #808080;
+        border-radius: 8px !important;
+        padding: 0px 5px !important;
+        font-size: 14px;
+    }
+
+    .MuiPickersDay-root {
+        background-color: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%);
+        color: #fff;
+    }
+
+    .MuiOutlinedInput-root fieldset {
+        border-color: #ccc;
+    }
+
+    .MuiOutlinedInput-root:hover fieldset {
+        border-color: #685dd8;
+    }
+
+    .MuiOutlinedInput-root.Mui-focused fieldset {
+        border-color: #685dd8;
+    }
+
+    .MuiInputBase-input {
+        color: #808080 !important;
+        padding: 7px 5px !important;
+
+        &:not(textarea) {
+            padding: 7px 5px !important;
+        }
+
+        &.MuiInputBase-inputSizeSmall {
+            padding: 7px 5px !important;
+        }
+
+        &.MuiInputBase-inputAdornedStart:not(.MuiAutocomplete-input) {
+            padding-left: 0 !important;
+        }
+
+        &.MuiInputBase-inputAdornedEnd:not(.MuiAutocomplete-input) {
+            padding-right: 0 !important;
+        }
+
+        &:not(.MuiInputBase-readOnly):not([readonly])::placeholder {
+            transition: 200ms !important;
+        }
+    }
+
+    .MuiOutlinedInput-root.Mui-focused {
+        box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
+
+        .MuiInputBase-input:not(.MuiInputBase-readOnly):not([readonly])::placeholder {
+            transform: translateX(4px);
+        }
+    }
+
+    .MuiInputAdornment-root {
+        .MuiButtonBase-root {
+            padding: 0px 2px !important;
+            margin-right: 0px;
+
+            .MuiSvgIcon-root {
+                width: 22px;
+                height: 22px;
+                color: #808080;
+            }
+        }
+    }
+
+    // Apply to Chips
+    .MuiChip-root {
+        color: #444050;
+        cursor: pointer;
+
+        &:hover {
+            background: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%) !important;
+            color: #fff;
+        }
+
+        .MuiChip-deleteIcon {
+            &:hover {
+                color: #fff;
+            }
+        }
+
+        .MuiChip-label {
+            font-size: 12px !important;
+        }
+    }
+
+    .MuiFormHelperText-root {
+        margin-top: 4px;
+        margin-inline: 5px !important;
+    }
+}

@@ -1,0 +1,43 @@
+.header_mainDiv {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #fff;
+    border-bottom: 1px solid #fff;
+    height: 60px;
+    box-sizing: border-box;
+
+    .header_main {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+
+        .header_left {
+            flex: 1;
+            height: 40px;
+
+            .header_left_logo {
+                width: 150px;
+                height: auto;
+            }
+        }
+        
+        .header_center {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+        }
+        
+        .header_right {
+            flex: 0 0 250px;
+            min-width: 250px;
+        }
+    }
+}

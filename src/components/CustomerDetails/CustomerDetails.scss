@@ -1,0 +1,1005 @@
+// Variables
+$whatsapp-green: #1976d2;
+$whatsapp-dark-green: #128c7e;
+$whatsapp-light-green: #dcf8c6;
+$header-bg: #1976d2;
+$text-primary: #000;
+$text-secondary: #667781;
+$text-muted: #8696a0;
+$border-color: #e9edef;
+$hover-bg: #f0f2f5;
+$danger-color: #e53e3e;
+$white: #ffffff;
+
+// Mixins
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+@mixin transition {
+    transition: all 0.3s ease;
+}
+
+// Main Container
+.customer-details-container {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    background: $white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    @include transition;
+
+    &.slide-in {
+        right: 0;
+    }
+
+    &.visible {
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        max-width: 100%;
+        right: -100%;
+
+        &.slide-in {
+            right: 0;
+        }
+    }
+}
+
+.details-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+// Header
+.header-section {
+    @include flex-between;
+    padding: 16px 20px;
+    // background: $header-bg;
+    background: #8e4ff3;
+    color: $white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        .back-button {
+            color: $white !important;
+            padding: 8px !important;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+        }
+
+        .header-title {
+            font-size: 20px !important;
+            font-weight: 500 !important;
+            color: $white;
+        }
+    }
+
+    .header-right {
+        display: flex;
+        gap: 8px;
+
+        .MuiIconButton-root {
+            color: $white !important;
+            padding: 8px !important;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.1) !important;
+            }
+        }
+    }
+}
+
+// Content Scroll
+.content-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+
+        &:hover {
+            background: #a8a8a8;
+        }
+    }
+}
+
+// Profile Section
+.profile-section {
+    text-align: center;
+    padding: 25px 24px;
+    border-bottom: 1px solid $border-color;
+
+    .avatar-container {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 20px;
+
+        .profile-avatar {
+            width: 80px !important;
+            height: 80px !important;
+            cursor: pointer;
+            @include transition;
+
+            &:hover {
+                opacity: 0.9;
+            }
+        }
+
+        .status-indicator {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid $white;
+            position: absolute;
+            bottom: -9px;
+            right: 4px;
+        }
+    }
+
+    .customer-name {
+        font-size: 24px !important;
+        font-weight: 500 !important;
+        color: $text-primary;
+        margin-bottom: 4px !important;
+    }
+
+    .customer-phone {
+        font-size: 16px !important;
+        color: $text-secondary;
+        margin-bottom: 8px !important;
+    }
+
+    .last-seen {
+        font-size: 14px !important;
+        color: $text-muted;
+    }
+}
+
+// About Section
+.about-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid $border-color;
+
+    .about-header {
+        @include flex-between;
+        margin-bottom: 8px;
+
+        .section-title {
+            font-size: 14px !important;
+            color: $text-muted;
+            font-weight: 500 !important;
+        }
+
+        .edit-btn {
+            background: none;
+            border: none;
+            color: $whatsapp-green;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            @include transition;
+
+            &:hover {
+                background: rgba($whatsapp-green, 0.1);
+            }
+        }
+    }
+
+    .about-text {
+        font-size: 16px !important;
+        color: $text-primary;
+        margin-bottom: 4px !important;
+    }
+
+    .joined-date {
+        font-size: 12px !important;
+        color: $text-muted;
+    }
+}
+
+// Action Buttons
+.action-buttons {
+    display: flex;
+    justify-content: space-around;
+    padding: 20px 24px;
+    background: $hover-bg;
+    border-bottom: 1px solid $border-color;
+
+    .action-button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        background: none;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        @include transition;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            @include flex-center;
+            color: $white;
+
+            &.audio {
+                background: $whatsapp-green;
+            }
+
+            &.video {
+                background: $whatsapp-green;
+            }
+
+            &.search {
+                background: $whatsapp-green;
+            }
+
+            .MuiSvgIcon-root {
+                font-size: 20px;
+            }
+        }
+
+        span {
+            font-size: 12px;
+            color: $text-secondary;
+            font-weight: 500;
+        }
+    }
+}
+
+// Settings Section
+.settings-section {
+    border-bottom: 1px solid $border-color;
+
+    .setting-item {
+        @include flex-between;
+        padding: 16px 24px;
+        cursor: pointer;
+        @include transition;
+
+        &:hover {
+            background: $hover-bg;
+        }
+
+        &.toggle-item {
+            .setting-left {
+                flex: 1;
+            }
+        }
+
+        &.danger {
+            .setting-left {
+                span {
+                    color: $danger-color;
+                }
+            }
+
+            .MuiSvgIcon-root {
+                color: $danger-color;
+            }
+        }
+
+        .setting-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+
+            .MuiSvgIcon-root {
+                color: $text-secondary;
+                font-size: 20px;
+            }
+
+            span {
+                font-size: 16px;
+                color: $text-primary;
+            }
+        }
+
+        .setting-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .encryption-text {
+                font-size: 14px;
+                color: $text-muted;
+            }
+
+            .count {
+                font-size: 14px;
+                color: $text-muted;
+            }
+        }
+
+        .chevron {
+            color: $text-muted !important;
+            font-size: 16px !important;
+        }
+    }
+}
+
+// Toggle Switch
+.toggle-switch {
+    width: 48px;
+    height: 24px;
+    background: #ccc;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    @include transition;
+
+    &.active {
+        // background: $whatsapp-green;
+        background: #8e4ff3;
+
+        .toggle-slider {
+            transform: translateX(24px);
+        }
+    }
+
+    .toggle-slider {
+        width: 20px;
+        height: 20px;
+        background: $white;
+        border-radius: 50%;
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        @include transition;
+    }
+}
+
+// Media Section
+.media-section {
+    border-bottom: 1px solid $border-color;
+
+    .media-tabs {
+        display: flex;
+        border-bottom: 1px solid $border-color;
+
+        .tab-button {
+            flex: 1;
+            padding: 16px 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: $text-secondary;
+            @include transition;
+            border-bottom: 2px solid transparent;
+
+            &.active {
+                color: #8e4ff3;
+                border-bottom-color: #8e4ff3;
+            }
+
+            &:hover {
+                background: $hover-bg;
+            }
+
+            .MuiSvgIcon-root {
+                font-size: 20px;
+            }
+
+            span {
+                font-size: 12px;
+                font-weight: 500;
+            }
+        }
+    }
+
+    .tab-content {
+        padding: 16px 24px;
+    }
+}
+
+// Media Tab
+.media-tab {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .media-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 16px;
+
+        &::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 2px;
+        }
+    }
+
+    .media-section {
+        margin-bottom: 24px;
+
+        h4 {
+            color: $text-secondary;
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    }
+
+    .media-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        margin-bottom: 12px;
+    }
+
+    .media-item {
+        position: relative;
+        width: 100%;
+        padding-bottom: 100%;
+        /* 1:1 Aspect Ratio */
+        cursor: pointer;
+        overflow: hidden;
+        border-radius: 4px;
+        background-color: #f5f5f5;
+
+        &:hover {
+            .media-overlay {
+                opacity: 1;
+            }
+        }
+    }
+
+    .media-thumbnail-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .media-thumbnail {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+
+        &:hover {
+            transform: scale(1.05);
+        }
+    }
+
+    .media-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+        @include flex-center;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+
+        .media-icon {
+            color: white;
+            font-size: 24px !important;
+        }
+    }
+
+    .no-media {
+        @include flex-center;
+        flex-direction: column;
+        padding: 40px 0;
+        color: $text-muted;
+        text-align: center;
+
+        .no-media-icon {
+            font-size: 48px !important;
+            margin-bottom: 16px;
+            color: #e0e0e0;
+        }
+
+        p {
+            margin: 0;
+            font-size: 14px;
+        }
+    }
+
+    .media-header {
+        @include flex-between;
+        margin-bottom: 16px;
+
+        .media-count {
+            font-size: 14px;
+            color: $text-secondary;
+        }
+
+
+        .media-actions {
+            display: flex;
+            gap: 8px;
+
+            .MuiIconButton-root {
+                padding: 4px !important;
+                color: $text-secondary !important;
+
+                &:hover {
+                    background: $hover-bg !important;
+                }
+            }
+        }
+    }
+
+    .media-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+
+        .media-item {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            @include transition;
+
+            &:hover {
+                opacity: 0.9;
+            }
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .video-overlay {
+                position: absolute;
+                inset: 0;
+                @include flex-center;
+
+                .play-button {
+                    width: 32px;
+                    height: 32px;
+                    background: rgba(0, 0, 0, 0.5);
+                    border-radius: 50%;
+                    @include flex-center;
+
+                    .play-icon {
+                        width: 0;
+                        height: 0;
+                        border-left: 8px solid $white;
+                        border-top: 4px solid transparent;
+                        border-bottom: 4px solid transparent;
+                        margin-left: 2px;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Documents Tab
+.documents-tab {
+    .documents-header {
+        margin-bottom: 16px;
+
+        .documents-count {
+            font-size: 14px;
+            color: $text-secondary;
+        }
+    }
+
+    .documents-list {
+        .document-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            cursor: pointer;
+            @include transition;
+
+            &:hover {
+                background: $hover-bg;
+                margin: 0 -12px;
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .document-icon {
+                width: 40px;
+                height: 40px;
+                background: rgba($whatsapp-green, 0.1);
+                border-radius: 8px;
+                @include flex-center;
+
+                .MuiSvgIcon-root {
+                    color: $whatsapp-green;
+                    font-size: 20px;
+                }
+            }
+
+            .document-info {
+                flex: 1;
+                min-width: 0; // Allow flex item to shrink below content size
+
+                .document-name {
+                    font-size: 16px !important;
+                    font-weight: 500 !important;
+                    color: $text-primary;
+                    margin-bottom: 2px !important;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .document-type {
+                    font-size: 14px;
+                    color: $text-secondary;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+
+            .download-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 8px;
+                border-radius: 4px;
+                color: $text-secondary;
+                @include transition;
+                flex-shrink: 0; // Prevent button from shrinking
+
+                &:hover {
+                    background: $hover-bg;
+                    color: $text-primary;
+                }
+
+                .MuiSvgIcon-root {
+                    font-size: 20px;
+                }
+            }
+        }
+    }
+}
+
+// Links Tab
+.links-tab {
+    .links-header {
+        margin-bottom: 16px;
+
+        .links-count {
+            font-size: 14px;
+            color: $text-secondary;
+        }
+    }
+
+    .links-list {
+        .link-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            @include transition;
+
+            &:hover {
+                background: $hover-bg;
+                margin: 0 -12px;
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .link-icon {
+                width: 40px;
+                height: 40px;
+                background: rgba($whatsapp-green, 0.1);
+                border-radius: 8px;
+                @include flex-center;
+                flex-shrink: 0; // Prevent icon from shrinking
+
+                .MuiSvgIcon-root {
+                    color: $whatsapp-green;
+                    font-size: 20px;
+                }
+            }
+
+            .link-info {
+                flex: 1;
+                min-width: 0; // Allow flex item to shrink below content size
+
+                .link-title {
+                    font-size: 16px !important;
+                    font-weight: 500 !important;
+                    color: $text-primary;
+                    margin-bottom: 2px !important;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .link-url {
+                    font-size: 14px;
+                    color: $text-secondary;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            }
+
+            .share-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 8px;
+                border-radius: 4px;
+                color: $text-secondary;
+                @include transition;
+                flex-shrink: 0; // Prevent button from shrinking
+
+                &:hover {
+                    background: $hover-bg;
+                    color: $text-primary;
+                }
+
+                .MuiSvgIcon-root {
+                    font-size: 20px;
+                }
+            }
+        }
+    }
+}
+
+.starred-section,
+.groups-section,
+.danger-section {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e0e0e0;
+
+    .setting-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.9rem 0;
+        cursor: pointer;
+
+        .setting-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+
+            svg {
+                font-size: 1.6rem;
+                color: #54656f;
+            }
+
+            span {
+                font-size: 1rem;
+                color: #111b21;
+            }
+
+            .group-icon {
+                width: 36px;
+                height: 36px;
+                background-color: #d9fdd3;
+                border-radius: 50%;
+            }
+        }
+
+        .setting-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            .count {
+                font-size: 0.95rem;
+                color: #54656f;
+            }
+
+            .chevron {
+                font-size: 1.2rem;
+                color: #54656f;
+            }
+        }
+    }
+}
+
+.danger-section {
+
+    .setting-item {
+        border-top: 1px solid #f5f5f5;
+
+        .setting-left {
+            svg {
+                color: #ea0037; // red for danger icons
+            }
+
+            span {
+                color: #ea0037;
+                font-weight: 500;
+            }
+        }
+    }
+}
+
+.load-more-container {
+    padding: 16px;
+    text-align: center;
+    margin-top: 8px;
+
+    .load-more-button {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+
+        &:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+
+        &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.media-section {
+    margin-bottom: 24px;
+
+    h4 {
+        margin: 0 0 12px 12px;
+        font-size: 14px;
+        color: #666;
+        font-weight: 500;
+    }
+}
+
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.media-item {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; // 1:1 aspect ratio
+    cursor: pointer;
+    overflow: hidden;
+    border-radius: 4px;
+    background-color: #f5f5f5;
+}
+
+.media-thumbnail-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.media-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+
+    &:hover {
+        transform: scale(1.05);
+    }
+}
+
+.media-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+
+    .media-icon {
+        color: white;
+        font-size: 24px !important;
+    }
+}
+
+.media-item:hover .media-overlay {
+    opacity: 1;
+}
+
+.no-media {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    color: #999;
+
+    .no-media-icon {
+        font-size: 48px !important;
+        margin-bottom: 16px;
+        color: #e0e0e0;
+    }
+
+    p {
+        margin: 0;
+        font-size: 14px;
+    }
+}
+
+.no-items-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+    color: #999;
+    text-align: center;
+
+    .no-items-icon {
+        font-size: 48px;
+        color: #e0e0e0;
+        margin-bottom: 16px;
+        opacity: 0.7;
+    }
+
+    p {
+        margin: 0;
+        font-size: 14px;
+        color: #999;
+    }
+}
