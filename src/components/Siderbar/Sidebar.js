@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import './Sidebar.scss'
-import { HomeIcon, Users, Bell, Megaphone, MessageCircle } from 'lucide-react'
+import { HomeIcon, Users, Bell, Megaphone, MessageCircle, Workflow } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTagsContext } from '../../contexts/TagsContexts'
 import { fetchAllTagsApi } from '../../API/FetchTags/FetchAllTagsApi'
@@ -20,17 +20,31 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
         ...token, userId: auth?.userId, id: auth?.id, username: auth?.username
     }
 
-    const local = "http://localhost:3000";
-    const live = "https://nxtwababroadcast.optigoapps.com";
+    const urls = {
+        broadcast: {
+            local: "http://localhost:3000",
+            live: "https://nxtwababroadcast.optigoapps.com",
+            SECRET_KEY: "chat-broadcast-config"
+        },
+        automation: {
+            local: "http://localhost:3000",
+            live: "https://zen.optigoapps.com",
+            SECRET_KEY: "chat-automation-config"
+        },
+    };
 
-    const isLocal = process.env.NODE_ENV === "development" ? local : live;
+    const isLocal = process.env.NODE_ENV === "development";
 
-    const SECRET_KEY = "chat-broadcast-config";
+    const broadcastURL = urls.broadcast[isLocal ? "local" : "live"];
+    const automationURL = urls.automation[isLocal ? "local" : "live"];
 
-    const encryptToken = (token) => {
+    const broadcast_SECRET_KEY = urls.broadcast.SECRET_KEY;
+    const automation_SECRET_KEY = urls.automation.SECRET_KEY;
+
+    const encryptToken = (token, page) => {
         if (!token) return "";
         try {
-            const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(token), SECRET_KEY).toString();
+            const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(token), page === "broadcast" ? broadcast_SECRET_KEY : automation_SECRET_KEY).toString();
             return encodeURIComponent(ciphertext); // safe for URL
         } catch (error) {
             console.error('Error encrypting token:', error);
@@ -38,15 +52,19 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
         }
     };
 
+    const appURLs = {
+        broadcast: broadcastURL,
+        automation: automationURL,
+    };
+
     const menuItems = [
-        { path: '/', icon: <HomeIcon />, label: 'Inbox' },
-        { path: '/add-conversation', icon: <Users />, label: 'Add Conversation' },
-        { path: `${isLocal}?token=${encryptToken(Token)}`, icon: <Megaphone />, label: 'CRM Broadcast' },
-        // { path: '/notification', icon: <Bell />, label: 'Notification' },
-        // { path: '/users', icon: <Users />, label: 'Users' },
-        // { path: '/documents', icon: <FileText />, label: 'Documents' },
-        // { path: '/settings', icon: <Settings />, label: 'Settings' },
+        { type: "internal", path: "/", icon: <HomeIcon />, label: "Inbox" },
+        { type: "internal", path: "/add-conversation", icon: <Users />, label: "Add Conversation" },
+
+        { type: "external", app: "broadcast", icon: <Megaphone />, label: "CRM Broadcast" },
+        { type: "external", app: "automation", icon: <Workflow />, label: "Automation Workflow" }
     ];
+
     // Add archive menu dynamically if count > 1
     // if (archieve > 0) {
     //     menuItems.push({ path: '/archieve', icon: <ArchiveRestore />, label: "Archieve" });
@@ -103,35 +121,40 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
                     </div>
                     <div className="sidebar_main">
                         <ul>
-                            {menuItems.map((item) => (
-                                <li key={item.path}>
-                                    {item?.label === "CRM Broadcast" ? (
-                                        <a
-                                            href={`${isLocal}?token=${encryptToken(Token)}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            {item.icon}
-                                            <span>{item.label}</span>
-                                        </a>
-                                    ) : (
-                                        <Link
-                                            onClick={() => setActivePath(item.path)}
-                                            to={item.path}
-                                            className={
-                                                activePath === item.path ||
-                                                    (activePath === "/archieve" && item.path === "/")
-                                                    ? "active"
-                                                    : ""
-                                            }
-                                        >
-                                            {item.icon}
-                                            <span>{item.label}</span>
-                                        </Link>
-                                    )}
-                                </li>
-                            ))}
+                            {menuItems.map((item) => {
+                                const isExternal = item.type === "external";
+                                const isActive = activePath === item.path ||
+                                    (activePath === "/archieve" && item.path === "/");
 
+                                let content = (
+                                    <>
+                                        {item.icon}
+                                        <span>{item.label}</span>
+                                    </>
+                                );
+
+                                return (
+                                    <li key={item.label}>
+                                        {isExternal ? (
+                                            <a
+                                                href={`${appURLs[item.app]}?token=${encryptToken(Token, item.app)}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                {content}
+                                            </a>
+                                        ) : (
+                                            <Link
+                                                to={item.path}
+                                                onClick={() => setActivePath(item.path)}
+                                                className={isActive ? "active" : ""}
+                                            >
+                                                {content}
+                                            </Link>
+                                        )}
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </div>
 
