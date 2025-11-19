@@ -38,7 +38,7 @@ const MessageArea = ({
     markLoaded,
     uploadProgress
 }) => {
-
+    console.log("selectedCustomer", selectedCustomer)
     const [hoveredMessageId, setHoveredMessageId] = useState(null);
     const messagesEndRef = useRef(null);
     const { PERMISSION_SET } = useContext(LoginContext);
@@ -151,7 +151,7 @@ const MessageArea = ({
                         justifyContent: 'center',
                         alignItems: 'center',
                         height: '100%',
-                        minHeight: '300px',
+                        minHeight: '300px', 
                         gap: 2
                     }}
                 >
@@ -257,7 +257,11 @@ const MessageArea = ({
                                                                 data-message-id={msg.Id ?? msg.fileName}
                                                             >
                                                                 {msg.Direction === 0 && (
-                                                                    <Avatar src={'./avatar.jpg'} alt="Customer" sx={{ width: 32, height: 32, mr: 1 }} />
+                                                                    // <Avatar src={'./avatar.jpg'} alt="Customer" sx={{ width: 32, height: 32, mr: 1 }} />
+                                                                    <Avatar
+                                                                        {...(selectedCustomer?.avatarConfig || {})}
+                                                                        sx={{ width: 32, height: 32, mr: 1, fontSize: 12, background: selectedCustomer?.avatarConfig != null ? '#8e4ff3' : "#BDBDBD", color: '#fff' }}
+                                                                    />
                                                                 )}
 
                                                                 <div className="message-content" style={{ flexDirection: 'column' }}

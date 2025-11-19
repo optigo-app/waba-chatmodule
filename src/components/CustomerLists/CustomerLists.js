@@ -1,5 +1,5 @@
 import { addMessageHandler, addMessageHandlerFromAssigningUser, addStatusHandler, getSocket, isSocketConnected } from '../../socket';
-import { FileText, Image, Video, Pin, Star, Clock3, ArrowLeft } from 'lucide-react';
+import { FileText, Image, Video, Pin, Star, Clock3, ArrowLeft, UserPlus } from 'lucide-react';
 import { pinConversationApi } from '../../API/PinConversation/PinConversation';
 import toast from 'react-hot-toast';
 import { Check, CheckCheck, AlertCircle } from "lucide-react";
@@ -29,11 +29,12 @@ import {
     Tooltip,
     CircularProgress
 } from '@mui/material';
-import { Circle, Clear, MoreVert, Search } from '@mui/icons-material';
+import {Clear, MoreVert, Search } from '@mui/icons-material';
 import './CustomerLists.scss';
 import { fetchConversationLists } from '../../API/ConverLists/ConversationLists';
 import { formatChatTimestamp } from '../../utils/DateFnc';
 import { stringAvatar } from '../../utils/StringAvatar';
+import AddCustomerDialog from '../AddCustomerDialog/AddCustomerDialog';
 
 // Utility to generate message preview based on type
 const getMessagePreview = (msg) => {
@@ -118,10 +119,13 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     const [currentPage, setCurrentPage] = useState(1);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectMember, setSelectMember] = useState({});
+    const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
+    const [selectedMemberForDialog, setSelectedMemberForDialog] = useState(null);
     const containerRef = useRef(null);
     const pageSize = 100;
     const searchTimeoutRef = useRef(null);
     const { auth, PERMISSION_SET, isSyncing } = useContext(LoginContext);
+    console.log("auth",auth)
 
     const can = (perm) => PERMISSION_SET?.has(perm);
 
@@ -313,6 +317,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                 return member.tags && member.tags.some(tag => tag.TagId === selectedTag.Id);
             });
 
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'online':
@@ -436,6 +441,25 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         }
     };
 
+    const handleAddCustomer = (member) => {
+        if (!member?.CustomerPhone) {
+            toast.error("Missing customer phone number. Cannot add customer.");
+            return;
+        }
+        
+        setSelectedMemberForDialog(member);
+        setAddCustomerDialogOpen(true);
+    };
+
+    const handleCloseAddCustomerDialog = () => {
+        setAddCustomerDialogOpen(false);
+        setSelectedMemberForDialog(null);
+    };
+
+    const handleAddCustomerSuccess = () => {
+        loadMembers(currentPage, true);
+    };
+
     const handleMenuAction = (action, member) => {
         setSelectMember(member);
         onConversationList(member);
@@ -451,6 +475,11 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         if (action === "Archive" || action === "UnArchive") {
             handleArchieveChat(member, action === "Archive" ? "Archive" : "UnArchive", loadMembers, currentPage);
         }
+
+        if (action === "AddCustomer") {
+            handleAddCustomer(member);
+        }
+
         handleCloseMenu();
     };
 
@@ -793,6 +822,44 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                                                 </IconButton>
                                                                             </Tooltip>
                                                                         )}
+                                                                        {/* Add Customer Button */}
+                                                                        {member?.CustomerId == 0 && member?.CustomerName == "" &&
+                                                                            < Tooltip title="Add to Customer" arrow>
+                                                                                <IconButton
+                                                                                    size="small"
+                                                                                    className="action-btn add-customer-btn"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        handleAddCustomer(member);
+                                                                                    }}
+                                                                                    sx={{
+                                                                                        color: '#ffffff',
+                                                                                        backgroundColor: '#3b82f6 !important',
+                                                                                        border: '2px solid #2563eb',
+                                                                                        borderRadius: '12px',
+                                                                                        padding: '8px',
+                                                                                        // minWidth: '25px',
+                                                                                        // minHeight: '25px',
+                                                                                        boxShadow: '0 2px 8px rgba(59, 130, 246, 0.25)',
+                                                                                        transition: 'all 0.3s ease-in-out',
+                                                                                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                                                                        '&:hover': {
+                                                                                            backgroundColor: '#1d4ed8',
+                                                                                            borderColor: '#1e40af',
+                                                                                            transform: 'scale(1.1) translateY(-2px)',
+                                                                                            boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
+                                                                                            background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
+                                                                                        },
+                                                                                        '&:active': {
+                                                                                            transform: 'scale(0.95) translateY(0px)',
+                                                                                            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    <UserPlus size={17} />
+                                                                                </IconButton>
+                                                                            </Tooltip>
+                                                                        }
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -913,6 +980,15 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                     handleMenuAction={handleMenuAction}
                     member={selectMember}
                 />
+
+                {/* Add Customer Dialog */}
+                <AddCustomerDialog
+                    open={addCustomerDialogOpen}
+                    onClose={handleCloseAddCustomerDialog}
+                    selectedMember={selectedMemberForDialog}
+                    auth={auth}
+                    onSuccess={handleAddCustomerSuccess}
+                />
             </div>
         </div >
     );
@@ -959,6 +1035,11 @@ const MenuAction = ({
                 onClick={() => handleMenuItemClick(member?.IsArchived === 1 ? "UnArchive" : "Archive")}
             >
                 📂 {member?.IsArchived === 1 ? "Unarchive" : "Archive"}
+            </MenuItem>
+            <MenuItem
+                onClick={() => handleMenuItemClick("AddCustomer")}
+            >
+                👤 Add to Customer
             </MenuItem>
         </Menu>
     );

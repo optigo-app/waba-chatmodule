@@ -66,10 +66,10 @@ function App() {
 
   const [credentials, setCredentials] = useState(null);
 
-  useEffect(() => {
-    const creds = GetCredentialsFromCookie();
-    setCredentials(creds);
-  }, []);
+  // useEffect(() => {
+  //   const creds = GetCredentialsFromCookie();
+  //   setCredentials(creds);
+  // }, []);
 
   /** ------------------------------
    * Initialize socket after login
