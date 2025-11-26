@@ -23,7 +23,7 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
     const urls = {
         broadcast: {
             local: "http://localhost:3000",
-            live: "https://nxtwababroadcast.optigoapps.com",
+            live: "https://wababroadcast.optigoapps.com",
             SECRET_KEY: "chat-broadcast-config"
         },
         automation: {
