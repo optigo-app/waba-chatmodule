@@ -28,7 +28,7 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
         },
         automation: {
             local: "http://localhost:3000",
-            live: "https://zen.optigoapps.com",
+            live: "https://zen1.optigoapps.com",
             SECRET_KEY: "chat-automation-config"
         },
     };
