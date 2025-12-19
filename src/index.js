@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import './global.scss';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, useNavigate } from 'react-router-dom';

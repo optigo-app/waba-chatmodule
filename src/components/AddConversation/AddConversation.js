@@ -1,19 +1,15 @@
-import React, { useEffect, useState, useCallback, useRef, useContext } from 'react';
+import { useEffect, useState, useCallback, useRef, useContext } from 'react';
 import {
     Avatar,
-    Badge,
     Typography,
-    Box,
-    Chip,
     TextField,
     InputAdornment,
     Tabs,
     Tab
 } from '@mui/material';
-import { Circle, Search, Clear } from '@mui/icons-material';
+import { Search, Clear, Person as PersonIcon } from '@mui/icons-material';
 import './AddConversation.scss';
-import { formatChatTimestamp } from '../../utils/DateFnc';
-import { stringAvatar } from '../../utils/StringAvatar';
+import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import { fetchCustomerLists } from '../../API/CustomerLists/CustomerLists';
 import { useLocation } from 'react-router-dom';
 import { LoginContext } from '../../context/LoginData';
@@ -36,13 +32,12 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
 
     const transformMemberData = useCallback((items) => {
         return items?.map((item) => {
-            const name = item?.CustomerName || item?.CustomerPhone;
-            const includesNumber = /\d/.test(name);
+            const name = getCustomerDisplayName(item);
             return {
                 ...item,
                 name: name,
-                avatar: includesNumber ? "icon" : null,
-                avatarConfig: includesNumber ? null : stringAvatar(name),
+                avatar: null,
+                avatarConfig: getWhatsAppAvatarConfig(getCustomerAvatarSeed(item)),
             };
         }) || [];
     }, []);
@@ -57,7 +52,6 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
 
         setLoading(true);
         try {
-            // Use the provided search term or the current searchTerm state if not provided
             const searchToUse = search !== null ? search : searchTerm;
             const response = await fetchCustomerLists(page, pageSize, searchToUse, auth?.userId);
             const transformedData = transformMemberData(response.data);
@@ -70,7 +64,6 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
             const moreAvailable = response?.hasMore ?? transformedData.length > 0;
             setHasMore(moreAvailable);
 
-            // ✅ Only advance page if more data exists
             if (moreAvailable) setCurrentPage(page);
         } catch (error) {
             console.error('Error loading members:', error);
@@ -82,7 +75,6 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
     useEffect(() => {
         loadMembers(1, true);
 
-        // Cleanup function to clear any pending timeouts
         return () => {
             if (searchTimeoutRef.current) {
                 clearTimeout(searchTimeoutRef.current);
@@ -96,7 +88,7 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
         }
 
         searchTimeoutRef.current = setTimeout(() => {
-            loadMembers(1, true, value); // ✅ Pass the latest search value explicitly
+            loadMembers(1, true, value);
         }, 500);
     }, [loadMembers]);
 
@@ -110,7 +102,7 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
             }
             loadMembers(1, true, '');
         } else {
-            debouncedSearch(value); // ✅ Uses latest input
+            debouncedSearch(value);
         }
     };
 
@@ -119,7 +111,6 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
 
         const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
 
-        // More sensitive scroll detection - trigger when 80px from bottom
         if (scrollTop + clientHeight >= scrollHeight - 80) {
             console.log('Scroll triggered - Loading page:', currentPage + 1);
             loadMembers(currentPage + 1, false);
@@ -139,18 +130,14 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
     };
 
     const filteredMembers =
-        // Start with all members
         chatMembers?.data
-            // Filter by archive status based on route
             ?.filter((member) => {
                 if (location.pathname === '/archieve') {
                     return member.IsArchived === 1;
                 } else {
-                    return member.IsArchived !== 1; // Show non-archived in other routes
+                    return member.IsArchived !== 1;
                 }
             })
-            // Filter by tab (e.g. All, Assigned, Needs Attention, Done)
-            // Filter by tab (e.g. All, Escalated, Favorite)
             ?.filter((member) => {
                 const isFavorite = member.IsStar === 1;
                 switch (tabValue) {
@@ -159,14 +146,12 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
                     default: return true;
                 }
             })
-            // Filter by Sidebar status selection (e.g. Unread, favorite)
             ?.filter((member) => {
                 if (!selectedStatus || selectedStatus === 'All') return true;
                 const statusKey = selectedStatus.toLowerCase();
                 const isFavorite = member.IsStar === 1;
                 return member.ticketStatus === statusKey || (isFavorite && statusKey === 'favorite');
             })
-            // Filter by selected tag
             ?.filter((member) => {
                 if (!selectedTag || selectedTag === 'All') return true;
                 return member.tags && member.tags.some(tag => tag.TagId === selectedTag.Id);
@@ -176,12 +161,7 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
         <div className="customer_lists_mainDiv_2">
             <div className="customer_lists_header">
                 <Typography variant="h6" className="header_title">Chat Members</Typography>
-                {/* <Chip
-                    label={`${chatMembers?.data?.filter(member => member.isOnline).length || 0} online`}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                /> */}
+
             </div>
 
             {/* Search Input */}
@@ -204,9 +184,7 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
                                 position="end"
                                 style={{ cursor: 'pointer' }}
                                 onClick={() => {
-                                    // First clear the search term
                                     setSearchTerm('');
-                                    // Then immediately call loadMembers with empty search
                                     loadMembers(1, true, '');
                                 }}
                             >
@@ -233,7 +211,7 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
             </div>
 
             <div className="customer_lists_main">
-                <ul ref={containerRef} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                <ul ref={containerRef}>
                     {can(16) ? (
                         <>
                             {loading && (!chatMembers?.data || chatMembers?.data.length === 0) ? (
@@ -252,7 +230,15 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
                                                 onClick={() => onCustomerSelect(member)}
                                             >
                                                 <div className="member-avatar">
-                                                    <Avatar {...member.avatarConfig} />
+                                                    {!hasCustomerName(member) ? (
+                                                        <Avatar
+                                                            {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(member))}
+                                                        >
+                                                            <PersonIcon fontSize="small" />
+                                                        </Avatar>
+                                                    ) : (
+                                                        <Avatar {...member.avatarConfig} />
+                                                    )}
                                                 </div>
                                                 <div className="member-info">
                                                     <div className="member-header">

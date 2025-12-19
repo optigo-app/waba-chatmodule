@@ -1,5 +1,5 @@
 import { addMessageHandler, addMessageHandlerFromAssigningUser, addStatusHandler, getSocket, isSocketConnected } from '../../socket';
-import { FileText, Image, Video, Pin, Star, Clock3, ArrowLeft, UserPlus } from 'lucide-react';
+import { FileText, Image, Video, Clock3, ArrowLeft, Pin, UserPlus, ChevronDown } from 'lucide-react';
 import { pinConversationApi } from '../../API/PinConversation/PinConversation';
 import toast from 'react-hot-toast';
 import { Check, CheckCheck, AlertCircle } from "lucide-react";
@@ -11,102 +11,32 @@ import { archieveApi } from '../../API/ArchieveAPi/ArchieveApi';
 import { unArchieveApi } from '../../API/UnArchieveApi/UnArchieveApi';
 import { LoginContext } from '../../context/LoginData';
 import { useArchieveContext } from '../../contexts/ArchieveContext';
-import OneSignal from 'react-onesignal';
 import React, { useEffect, useState, useCallback, useRef, useContext } from 'react';
 import {
     Avatar,
     Badge,
     Typography,
     Box,
+    Button,
     Chip,
     TextField,
     InputAdornment,
-    Tabs,
-    Tab,
-    Menu,
-    MenuItem,
     IconButton,
     Tooltip,
     CircularProgress
 } from '@mui/material';
-import {Clear, MoreVert, Search } from '@mui/icons-material';
+import { alpha } from '@mui/material/styles';
+import { Clear, KeyboardArrowDown, Search } from '@mui/icons-material';
+import PersonIcon from '@mui/icons-material/Person';
 import './CustomerLists.scss';
 import { fetchConversationLists } from '../../API/ConverLists/ConversationLists';
 import { formatChatTimestamp } from '../../utils/DateFnc';
-import { stringAvatar } from '../../utils/StringAvatar';
+import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import AddCustomerDialog from '../AddCustomerDialog/AddCustomerDialog';
-
-// Utility to generate message preview based on type
-const getMessagePreview = (msg) => {
-    switch (msg?.MessageType) {
-        case "text":
-            return msg?.Message || "";
-        case "image":
-            return "📷 Photo";
-        case "video":
-            return "🎥 Video";
-        case "document":
-            return "📄 document";
-        case "file":
-            return "📄 File";
-        default:
-            return "New message";
-    }
-};
-
-// Process API response to match the format used by handleSocketUpdate
-const processApiResponse = (apiData) => {
-    if (!apiData || !Array.isArray(apiData)) return [];
-
-    return apiData.map(conversation => {
-        // Parse the LastMessage if it's a JSON string
-        let lastMessage = conversation.LastMessage;
-        if (typeof lastMessage === 'string') {
-            try {
-                const parsed = JSON.parse(lastMessage);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    lastMessage = parsed[0]; // Get the first message if it's an array
-                } else if (parsed && typeof parsed === 'object') {
-                    lastMessage = parsed;
-                }
-            } catch (e) {
-                console.error('Error parsing LastMessage:', e);
-            }
-        }
-
-        // Parse tags if they exist
-        let tags = [];
-        if (conversation.TagList) {
-            try {
-                tags = typeof conversation.TagList === 'string'
-                    ? JSON.parse(conversation.TagList)
-                    : conversation.TagList;
-            } catch (e) {
-                console.error('Error parsing TagList:', e);
-            }
-        }
-
-        // Format the conversation data to match the structure used by handleSocketUpdate
-        return {
-            ...conversation,
-            ConversationId: conversation.Id, // Ensure ConversationId is set
-            lastMessage: conversation.LastMessage ? getMessagePreview(lastMessage) : '',
-            lastMessageTime: formatChatTimestamp(lastMessage?.DateTime || conversation.DateTime),
-            lastMessageStatus: lastMessage?.Status,
-            lastMessageDirection: lastMessage?.Direction,
-            unreadCount: conversation.UnReadMsgCount || 0,
-            tags: tags,
-            name: conversation.CustomerName || conversation.CustomerPhone || 'Unknown',
-            avatar: /\d/.test(conversation.CustomerName || conversation.CustomerPhone || '') ? 'icon' : null,
-            avatarConfig: /\d/.test(conversation.CustomerName || conversation.CustomerPhone || '')
-                ? null
-                : stringAvatar(conversation.CustomerName || conversation.CustomerPhone || '')
-        };
-    });
-};
+import WhatsAppMenu from '../ReusableComponent/WhatsAppMenu';
+import { getMessagePreview, processApiResponse, getCustomerListMenuItems } from './CustomerListFunc';
 
 const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, selectedStatus = 'All', selectedTag = 'All', isConversationRead = false, viewConversationRead = false, onConversationList = () => { } }) => {
-
     const location = useLocation();
     const navigate = useNavigate();
     const { archieve, addArchieve } = useArchieveContext();
@@ -121,11 +51,12 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     const [selectMember, setSelectMember] = useState({});
     const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
     const [selectedMemberForDialog, setSelectedMemberForDialog] = useState(null);
+    const [hoveredId, setHoveredId] = useState(null);
     const containerRef = useRef(null);
     const pageSize = 100;
     const searchTimeoutRef = useRef(null);
     const { auth, PERMISSION_SET, isSyncing } = useContext(LoginContext);
-    console.log("auth",auth)
+    console.log("auth", auth)
 
     const can = (perm) => PERMISSION_SET?.has(perm);
 
@@ -133,30 +64,6 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         setAnchorEl(null);
     };
 
-    const transformMemberData = (items) => {
-        return items?.map((item) => {
-            const name = item?.CustomerName || item?.CustomerPhone;
-            const includesNumber = /\d/.test(name);
-            const tagList = item?.TagList ? JSON.parse(item.TagList) : [];
-            const lastMessageData = JSON?.parse(item?.LastMessage)?.[0];
-
-            return {
-                ...item,
-                name: item?.CustomerName || item?.CustomerPhone,
-                avatar: includesNumber ? "icon" : null,
-                avatarConfig: includesNumber ? null : stringAvatar(name),
-                status: item?.Status,
-                ticketStatus: selectedStatus?.ticketStatus,
-                lastMessage: lastMessageData?.Message || 'No message',
-                lastMessageTime: formatChatTimestamp(lastMessageData?.DateTime),
-                lastMessageStatus: lastMessageData?.Status,
-                lastMessageDirection: lastMessageData?.Direction,
-                unreadCount: item?.UnReadMsgCount,
-                ConversationId: Number(lastMessageData?.ConversationId),
-                tags: tagList,
-            };
-        }) || [];
-    };
 
     const loadMembers = useCallback(async (page = 1, reset = false, search = null) => {
         if (loading || (!reset && !hasMore)) return;
@@ -275,27 +182,24 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         return () => container.removeEventListener('scroll', handleScroll);
     }, [handleScroll]);
 
-    const handleTabChange = (e, newValue) => {
+    const handleTabChange = (newValue) => {
+        if (newValue === null || newValue === undefined) return;
         setTabValue(newValue);
     };
 
     const filteredMembers =
-        // Start with all members
         chatMembers?.data
-            // Filter by archive status based on route
             ?.filter((member) => {
                 if (location.pathname === '/archieve') {
                     return member.IsArchived === 1;
                 } else {
-                    return member.IsArchived !== 1; // Show non-archived in other routes
+                    return member.IsArchived !== 1;
                 }
             })
-            // Search by name
-            ?.filter((member) =>
-                member?.CustomerName?.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            // Filter by tab (e.g. All, Assigned, Needs Attention, Done)
-            // Filter by tab (e.g. All, Escalated, Favorite)
+            ?.filter((member) => {
+                const haystack = String(getCustomerDisplayName(member) || '').toLowerCase();
+                return haystack.includes(searchTerm.toLowerCase());
+            })
             ?.filter((member) => {
                 const isFavorite = member.IsStar === 1;
                 switch (tabValue) {
@@ -304,32 +208,16 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                     default: return true;
                 }
             })
-            // Filter by Sidebar status selection (e.g. Unread, favorite)
             ?.filter((member) => {
                 if (!selectedStatus || selectedStatus === 'All') return true;
                 const statusKey = selectedStatus.toLowerCase();
                 const isFavorite = member.IsStar === 1;
                 return member.ticketStatus === statusKey || (isFavorite && statusKey === 'favorite');
             })
-            // Filter by selected tag
             ?.filter((member) => {
                 if (!selectedTag || selectedTag === 'All') return true;
                 return member.tags && member.tags.some(tag => tag.TagId === selectedTag.Id);
             });
-
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'online':
-                return '#4caf50';
-            case 'away':
-                return '#ff9800';
-            case 'offline':
-                return '#9e9e9e';
-            default:
-                return '#9e9e9e';
-        }
-    };
 
     const archivedCount = chatMembers?.data?.filter(m => m.IsArchived === 1)?.length || 0;
 
@@ -368,9 +256,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
             toast.error("Missing Conversation ID or User ID. Cannot pin/unpin this chat.");
             return;
         }
-
         try {
-            // If trying to pin, check the limit first
             if (shouldPin === "Pin") {
                 const pinnedCount = chatMembers.data?.filter(m => m.IsPin === 1).length || 0;
                 if (pinnedCount >= 3) {
@@ -446,7 +332,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
             toast.error("Missing customer phone number. Cannot add customer.");
             return;
         }
-        
+
         setSelectedMemberForDialog(member);
         setAddCustomerDialogOpen(true);
     };
@@ -483,25 +369,6 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         handleCloseMenu();
     };
 
-    const showNotification = useCallback(async (title, message, icon = null) => {
-        if (!("Notification" in window)) return;
-
-        // Ask for permission if not already granted
-        if (Notification.permission === "default") {
-            await Notification.requestPermission();
-        }
-
-        if (Notification.permission === "granted") {
-            new Notification(
-                title, {
-                body: message,
-                icon: icon || "/logo.png",
-                badge: "/logo.png",
-                requireInteraction: true, // keeps notification until user clicks/dismisses
-            });
-        }
-    }, []);
-
     const handleSocketUpdate = (data, isStatusChange = false) => {
         setChatMembers((prev) => {
             if (!prev?.data) return prev;
@@ -517,16 +384,14 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
             if (index !== -1) {
                 const currentChat = updatedData[index];
 
-                // 🛡️ Prevent duplicate re-renders for same message
                 const isSameMessage =
                     currentChat.lastMessage === messagePreview &&
                     currentChat.lastMessageTime === formattedTime;
 
                 if (isSameMessage && !isStatusChange) {
-                    return prev; // same message received again → skip
+                    return prev;
                 }
 
-                // ✅ Update chat data
                 const updatedChat = {
                     ...currentChat,
                     lastMessage: messagePreview,
@@ -535,38 +400,31 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                     lastMessageDirection: data?.Direction ?? currentChat.lastMessageDirection,
                 };
 
-                // If this is a message status update, we won't increment unread count.
                 if (!isStatusChange) {
                     updatedChat.unreadCount = (currentChat.unreadCount || 0) + 1;
                 }
 
-                // If message status indicates read/delivered, you could reset unread count
-                if (isStatusChange && data?.Status === 1 /* example: delivered */) {
+                if (isStatusChange && data?.Status === 1) {
                     updatedChat.unreadCount = 0;
                 }
 
-                // Move updated chat to top if new message (not just a status update)
                 updatedData.splice(index, 1);
                 if (!isStatusChange) {
                     updatedData.unshift(updatedChat);
                 } else {
-                    // for status change, maintain position
                     updatedData.splice(index, 0, updatedChat);
                 }
             } else {
-                // ✅ Add new chat if not found (rare case)
                 const newChat = {
                     ConversationId: data?.ConversationId,
-                    name: data?.CustomerName || data?.CustomerPhone || data?.SenderInfo || "Unknown",
+                    name: getCustomerDisplayName(data),
                     lastMessage: messagePreview,
                     lastMessageTime: formattedTime,
                     lastMessageStatus: data?.Status ?? data?.status,
                     lastMessageDirection: data?.Direction,
                     unreadCount: isStatusChange ? 0 : 1,
-                    avatar: /\d/.test(data?.CustomerName || data?.SenderInfo || "") ? "icon" : null,
-                    avatarConfig: /\d/.test(data?.CustomerName || data?.SenderInfo || "")
-                        ? null
-                        : stringAvatar(data?.CustomerName || data?.SenderInfo || ""),
+                    avatar: null,
+                    avatarConfig: getWhatsAppAvatarConfig(getCustomerAvatarSeed(data)),
                 };
                 updatedData.unshift(newChat);
             }
@@ -595,9 +453,6 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         };
     }, [auth?.token, auth?.userId]);
 
-
-    // Trigger load when reading starts
-
     useEffect(() => {
         const conversationId = selectedCustomer?.ConversationId;
 
@@ -614,7 +469,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                     <div className="header-archive">
                         <IconButton
                             className="back-button"
-                            onClick={() => navigate(-1)} // 👈 Go back to the previous page
+                            onClick={() => navigate(-1)}
                             size="small"
                         >
                             <ArrowLeft />
@@ -656,9 +511,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                 position="end"
                                 style={{ cursor: 'pointer' }}
                                 onClick={() => {
-                                    // First clear the search term
                                     setSearchTerm('');
-                                    // Then immediately call loadMembers with empty search
                                     loadMembers(1, true, '');
                                 }}
                             >
@@ -670,28 +523,66 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
             </div>
 
             {/* Filters */}
-            <div className="customer_lists_filters">
-                <Tabs
-                    value={tabValue}
-                    onChange={handleTabChange}
-                    variant="fullWidth"
-                    textColor="primary"
-                    indicatorColor="primary"
+            <Box
+                className="customer_lists_filters"
+                sx={{
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                    px: '10px',
+                    py: '8px',
+                }}
+            >
+                <Box
+                    sx={{
+                        width: '100%',
+                        display: 'flex',
+                        gap: '6px',
+                        padding: '6px',
+                    }}
                 >
-                    <Tab label="All" />
-                    <Tab label="Escalated" />
-                    <Tab label="Favorite" />
-                    {/* <Tab label="Assigned" />
-                    <Tab label="Needs Attention" />
-                    <Tab label="Done" /> */}
-                </Tabs>
-            </div>
+                    {[{ label: 'All', value: 0 }, { label: 'Escalated', value: 1 }, { label: 'Favorite', value: 2 }].map((item) => {
+                        const isActive = tabValue === item.value;
+
+                        return (
+                            <Button
+                                key={item.value}
+                                type="button"
+                                disableElevation
+                                variant="text"
+                                aria-pressed={isActive}
+                                onClick={() => handleTabChange(item.value)}
+                                sx={(theme) => ({
+                                    flex: 1,
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    lineHeight: 1,
+                                    border: '1px solid',
+                                    borderColor: isActive ? alpha(theme.palette.borderColor.extraLight, 1) : theme.palette.borderColor.extraLight,
+                                    color: isActive ? alpha(theme.palette.primary.main, 1) : theme.palette.text.secondary,
+                                    backgroundColor: isActive ? alpha(theme.palette.primary.main, 0.14) : 'transparent',
+                                    transition: 'background-color 200ms ease, color 200ms ease, transform 200ms ease',
+                                    '&:hover': {
+                                        backgroundColor: isActive
+                                            ? alpha(theme.palette.primary.main, 0.18)
+                                            : alpha(theme.palette.primary.main, 0.08),
+                                    },
+                                    '&:active': {
+                                        transform: 'scale(0.98)',
+                                    },
+                                })}
+                            >
+                                {item.label}
+                            </Button>
+                        );
+                    })}
+                </Box>
+            </Box>
 
             <div className="customer_lists_main" >
-                <ul ref={containerRef} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                <ul ref={containerRef}>
                     {can(15) ? (
                         <>
-                            {/* ✅ Initial Loading (only when no data yet) */}
                             {loading && (!chatMembers?.data || chatMembers?.data.length === 0) ? (
                                 <li
                                     style={{
@@ -709,7 +600,6 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                 filteredMembers?.length > 0 ? (
                                     <>
 
-                                        {/* Regular Conversations */}
                                         {filteredMembers
                                             .filter(member => !member.isSearchResult)
                                             .map((member) => {
@@ -718,21 +608,31 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                     ((isConversationRead || viewConversationRead) ||
                                                         (isConversationRead && viewConversationRead));
                                                 const isSelected = selectedCustomer?.Id === member.Id;
+                                                const isMenuOpen = Boolean(anchorEl) && selectMember?.Id === member.Id;
                                                 const shouldShowUnreadBadge =
                                                     member.unreadCount > 0 && !isSelectedAndReading;
 
-                                                // Parse the LastMessage JSON string
                                                 const lastMessageData = member.LastMessage ? JSON.parse(member.LastMessage) : [];
-
+                                                console.log("member", member)
                                                 return (
                                                     <li
                                                         key={member.Id}
-                                                        className={`member-item ${isSelected ? 'active' : ''} ${isSelectedAndReading ? 'reading' : ''}`}
+                                                        className={`member-item ${isSelected ? 'active' : ''} ${isSelectedAndReading ? 'reading' : ''} ${isMenuOpen ? 'menu-open' : ''}`}
                                                         onClick={() => onCustomerSelect(member)}
+                                                        onMouseEnter={() => setHoveredId(member.Id)}
+                                                        onMouseLeave={() => setHoveredId(null)}
                                                     >
                                                         <div className={`member-item ${isSelected ? 'active' : ''} ${isSelectedAndReading ? 'reading' : ''}`}>
                                                             <div className="member-avatar">
-                                                                <Avatar {...member.avatarConfig} />
+                                                                {!hasCustomerName(member) ? (
+                                                                    <Avatar
+                                                                        {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(member))}
+                                                                    >
+                                                                        <PersonIcon fontSize="small" />
+                                                                    </Avatar>
+                                                                ) : (
+                                                                    <Avatar {...member.avatarConfig} />
+                                                                )}
                                                             </div>
 
                                                             <div className="member-info">
@@ -790,95 +690,70 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                                         </span>
                                                                     </Typography>
 
-                                                                    {shouldShowUnreadBadge && (
-                                                                        <Badge
-                                                                            badgeContent={member.unreadCount}
-                                                                            color="primary"
-                                                                            className="unread-badge"
-                                                                        />
-                                                                    )}
+                                                                    <div className="member-trailing">
+                                                                        {shouldShowUnreadBadge && (
+                                                                            <Badge
+                                                                                badgeContent={member.unreadCount}
+                                                                                color="primary"
+                                                                                className="unread-badge"
+                                                                            />
+                                                                        )}
 
-                                                                    <div className="member-actions-bar">
-                                                                        {member?.IsPin === 1 && (
-                                                                            <Tooltip title="Pinned" arrow>
+                                                                        <div className="member-actions-bar">
+                                                                            <Tooltip title={member?.IsPin === 1 ? "Unpin" : "Pin"} arrow>
                                                                                 <IconButton
                                                                                     size="small"
-                                                                                    color="primary"
-                                                                                    className="action-btn"
+                                                                                    className={`action-btn ${member?.IsPin === 1 ? 'is-on' : ''}`}
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        handlePinChat(member, member?.IsPin === 1 ? "UnPin" : "Pin");
+                                                                                    }}
                                                                                 >
                                                                                     <Pin size={17} />
                                                                                 </IconButton>
                                                                             </Tooltip>
-                                                                        )}
+                                                                            {member?.CustomerId == 0 && member?.CustomerName == "" &&
+                                                                                < Tooltip title="Add to Customer" arrow>
+                                                                                    <IconButton
+                                                                                        size="small"
+                                                                                        className="action-btn add-customer-btn"
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handleAddCustomer(member);
+                                                                                        }}
+                                                                                    >
+                                                                                        <UserPlus size={16} />
+                                                                                    </IconButton>
+                                                                                </Tooltip>
+                                                                            }
+                                                                            {(hoveredId === member.Id || isSelected || isMenuOpen) &&
+                                                                                <Tooltip
+                                                                                    title="More"
+                                                                                    arrow
+                                                                                >
+                                                                                    <IconButton
+                                                                                        className={'action-btn'}
+                                                                                        size="small"
+                                                                                        tabIndex={(hoveredId === member.Id || isSelected || isMenuOpen) ? 0 : -1}
+                                                                                        aria-hidden={!(hoveredId === member.Id || isSelected || isMenuOpen)}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
 
-                                                                        {member?.IsStar === 1 && (
-                                                                            <Tooltip title="Starred" arrow>
-                                                                                <IconButton
-                                                                                    size="small"
-                                                                                    color="warning"
-                                                                                    className="action-btn"
-                                                                                >
-                                                                                    <Star size={17} />
-                                                                                </IconButton>
-                                                                            </Tooltip>
-                                                                        )}
-                                                                        {/* Add Customer Button */}
-                                                                        {member?.CustomerId == 0 && member?.CustomerName == "" &&
-                                                                            < Tooltip title="Add to Customer" arrow>
-                                                                                <IconButton
-                                                                                    size="small"
-                                                                                    className="action-btn add-customer-btn"
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        handleAddCustomer(member);
-                                                                                    }}
-                                                                                    sx={{
-                                                                                        color: '#ffffff',
-                                                                                        backgroundColor: '#3b82f6 !important',
-                                                                                        border: '2px solid #2563eb',
-                                                                                        borderRadius: '12px',
-                                                                                        padding: '8px',
-                                                                                        // minWidth: '25px',
-                                                                                        // minHeight: '25px',
-                                                                                        boxShadow: '0 2px 8px rgba(59, 130, 246, 0.25)',
-                                                                                        transition: 'all 0.3s ease-in-out',
-                                                                                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                                                                                        '&:hover': {
-                                                                                            backgroundColor: '#1d4ed8',
-                                                                                            borderColor: '#1e40af',
-                                                                                            transform: 'scale(1.1) translateY(-2px)',
-                                                                                            boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
-                                                                                            background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
-                                                                                        },
-                                                                                        '&:active': {
-                                                                                            transform: 'scale(0.95) translateY(0px)',
-                                                                                            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
-                                                                                        }
-                                                                                    }}
-                                                                                >
-                                                                                    <UserPlus size={17} />
-                                                                                </IconButton>
-                                                                            </Tooltip>
-                                                                        }
+                                                                                            if (!(hoveredId === member.Id || isSelected || isMenuOpen)) return;
+
+                                                                                            setAnchorEl(e.currentTarget);
+                                                                                            setSelectMember(member);
+                                                                                            onConversationList(member);
+                                                                                        }}
+                                                                                    >
+                                                                                        <ChevronDown size={17} />
+                                                                                    </IconButton>
+                                                                                </Tooltip>
+                                                                            }
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-
-                                                        {/* 3-dot menu */}
-                                                        <div className={`member-actions ${isSelected ? 'active' : ''}`}>
-                                                            <IconButton
-                                                                size="small"
-                                                                sx={{ padding: 0, marginRight: '2px' }}
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setAnchorEl(e.currentTarget);
-                                                                    setSelectMember(member);
-                                                                    onConversationList(member);
-                                                                }}
-                                                            >
-                                                                <MoreVert fontSize="small" />
-                                                            </IconButton>
                                                         </div>
                                                     </li>
                                                 );
@@ -897,14 +772,19 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                             onClick={() => onCustomerSelect(member)}
                                                         >
                                                             <div className="member-avatar">
-                                                                <Avatar {...stringAvatar(member.name)} />
+                                                                {!hasCustomerName(member) ? (
+                                                                    <Avatar
+                                                                        {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(member))}
+                                                                    >
+                                                                        <PersonIcon fontSize="small" />
+                                                                    </Avatar>
+                                                                ) : (
+                                                                    <Avatar {...getWhatsAppAvatarConfig(member.name)} />
+                                                                )}
                                                             </div>
                                                             <div className="member-details">
                                                                 <div className="member-name">
                                                                     {member.name}
-                                                                    {/* <span className="member-phone">
-                                                                        {member.CustomerPhone}
-                                                                    </span> */}
                                                                 </div>
                                                             </div>
                                                         </li>
@@ -974,11 +854,13 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                         </li>
                     )}
                 </ul>
-                <MenuAction
+                <WhatsAppMenu
                     anchorEl={anchorEl}
-                    handleCloseMenu={handleCloseMenu}
-                    handleMenuAction={handleMenuAction}
-                    member={selectMember}
+                    open={Boolean(anchorEl)}
+                    onClose={handleCloseMenu}
+                    items={getCustomerListMenuItems(selectMember)}
+                    onAction={handleMenuAction}
+                    context={selectMember}
                 />
 
                 {/* Add Customer Dialog */}
@@ -995,52 +877,3 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
 };
 
 export default CustomerLists;
-
-const MenuAction = ({
-    anchorEl,
-    handleCloseMenu,
-    handleMenuAction,
-    member
-}) => {
-    const handleMenuItemClick = (action) => {
-        handleMenuAction(action, member);
-    };
-
-    return (
-        <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleCloseMenu}
-            anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-            }}
-            transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-            }}
-            onClick={(e) => e.stopPropagation()}
-        >
-            <MenuItem
-                onClick={() => handleMenuItemClick(member?.IsPin === 1 ? "UnPin" : "Pin")}
-            >
-                📌 {member?.IsPin === 1 ? "Unpin" : "Pin"}
-            </MenuItem>
-            <MenuItem
-                onClick={() => handleMenuItemClick(member?.IsStar === 1 ? "UnStar" : "Star")}
-            >
-                ⭐ {member?.IsStar === 1 ? "Unfavorite" : "Favorite"}
-            </MenuItem>
-            <MenuItem
-                onClick={() => handleMenuItemClick(member?.IsArchived === 1 ? "UnArchive" : "Archive")}
-            >
-                📂 {member?.IsArchived === 1 ? "Unarchive" : "Archive"}
-            </MenuItem>
-            <MenuItem
-                onClick={() => handleMenuItemClick("AddCustomer")}
-            >
-                👤 Add to Customer
-            </MenuItem>
-        </Menu>
-    );
-};

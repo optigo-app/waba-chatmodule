@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback, useContext } from 'react';
 import { Box, Typography, Avatar, Divider, Menu, MenuItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Plus } from 'lucide-react';
 import './Conversation.scss';
 import TagsModel from '../TagsModel/TagsModel';
 import { useTagsContext } from '../../contexts/TagsContexts';
 import CustomerDetails from '../CustomerDetails/CustomerDetails';
 import { formatDateHeader } from '../../utils/DateFnc';
-import EmojiPicker from "emoji-picker-react";
 import toast from 'react-hot-toast';
 import AssigneeDropdown from '../AssigneeDropdown/AssigneeDropdown';
 import EscalatedDropdown from '../EscalatedDropdown/EscalatedDropdown';
@@ -15,10 +16,13 @@ import { LoginContext } from '../../context/LoginData';
 import MessageContextMenu from '../MessageBubble/MessageContextMenu';
 import ForwardMessage from '../ForwardMessage/ForwardMessage';
 import MediaViewer from '../MediaViewer/MediaViewer';
+import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import ChatBox from './ChatBox';
 import MessageArea from './MessageArea';
+import ViewContext from './ViewContext';
 import { useConversation } from './useConversation';
 import { messageReaction } from '../../API/Reaction/Reaction';
+import PersonIcon from '@mui/icons-material/Person';
 
 const Conversation = ({ selectedCustomer, onConversationRead, onViewConversationRead, onCustomerSelect }) => {
     const { tags, addTags, removeTags, triggerRefetch } = useTagsContext();
@@ -29,7 +33,6 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
     const [contextMenu, setContextMenu] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedMessage, setSelectedMessage] = useState(null);
-    const [emojiAnchorEl, setEmojiAnchorEl] = useState(null);
     const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
     const containerRef = useRef(null);
     const scrollTimeoutRef = useRef(null);
@@ -120,6 +123,42 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
         can
     } = useConversation(selectedCustomer, onConversationRead, onViewConversationRead);
 
+    const tagsScrollRef = useRef(null);
+    const [tagsOverflow, setTagsOverflow] = useState(false);
+    const [canScrollTagsLeft, setCanScrollTagsLeft] = useState(false);
+    const [canScrollTagsRight, setCanScrollTagsRight] = useState(false);
+
+    const updateTagsScrollState = useCallback(() => {
+        const el = tagsScrollRef.current;
+        if (!el) return;
+
+        const hasOverflow = el.scrollWidth > el.clientWidth + 1;
+        setTagsOverflow(hasOverflow);
+        setCanScrollTagsLeft(el.scrollLeft > 0);
+        setCanScrollTagsRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+    }, []);
+
+    const scrollTagsBy = useCallback((delta) => {
+        const el = tagsScrollRef.current;
+        if (!el) return;
+        el.scrollBy({ left: delta, behavior: 'smooth' });
+    }, []);
+
+    useEffect(() => {
+        updateTagsScrollState();
+        const el = tagsScrollRef.current;
+        if (!el) return;
+
+        const onScroll = () => updateTagsScrollState();
+        el.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', updateTagsScrollState);
+
+        return () => {
+            el.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', updateTagsScrollState);
+        };
+    }, [tagsList, selectedCustomer?.CustomerId, updateTagsScrollState]);
+
 
     useEffect(() => {
         setLength(messages?.data?.length)
@@ -152,24 +191,14 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
         setAnchorEl(event.currentTarget);
     };
 
-    const handleReactionClick = (event, message) => {
-        event.stopPropagation();
-        setSelectedMessage(message);
-        setEmojiAnchorEl(event.currentTarget);
-    };
-
-    const handleCloseEmojiPicker = () => {
-        setEmojiAnchorEl(null);
-        setSelectedMessage(null);
-    };
-
     const handleMessageEmojiClick = async (emojiObject, message) => {
         console.log("TCL: handleMessageEmojiClick -> message", message)
 
         try {
             if (!selectedCustomer?.CustomerId && selectedCustomer?.CustomerId !== 0) return;
 
-            const emoji = emojiObject.emoji || emojiObject; // Extract emoji
+            const emoji = emojiObject?.emoji || emojiObject; // Extract emoji character
+            const unified = emojiObject?.unified;
 
             // Determine current reaction state (toggle logic)
             let isSameReaction = false;
@@ -208,7 +237,7 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                 // ✅ Add new agent reaction
                 // Remove any previous agent reaction
                 const filtered = currentReactions.filter(r => r.Direction !== 1);
-                const newReaction = { Reaction: emoji, Direction: 1 };
+                const newReaction = { Reaction: emoji, Unified: unified, Direction: 1 };
                 updatedReactions = [...filtered, newReaction];
                 reactionPayload = JSON.stringify(updatedReactions);
             }
@@ -258,8 +287,6 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
             } else {
                 toast.success("Reaction sent!");
             }
-
-            handleCloseEmojiPicker();
         } catch (error) {
             console.error("Error sending reaction:", error);
             toast.error("Failed to send reaction");
@@ -491,14 +518,23 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
             <div className="conversation-header">
                 <div className="header-left">
                     <div style={{ width: 40, height: 40, marginRight: 10, cursor: "pointer" }}>
-                        <Avatar
-                            {...(selectedCustomer?.avatarConfig || {})}
-                            onClick={() => setDrawerOpen(true)}
-                        />
+                        {!hasCustomerName(selectedCustomer) ? (
+                            <Avatar
+                                {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40)}
+                                onClick={() => setDrawerOpen(true)}
+                            >
+                                <PersonIcon fontSize="small" />
+                            </Avatar>
+                        ) : (
+                            <Avatar
+                                {...(selectedCustomer?.avatarConfig || getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40))}
+                                onClick={() => setDrawerOpen(true)}
+                            />
+                        )}
                     </div>
                     <div className="customer-info">
                         <Typography variant="subtitle1" className="customer-name">
-                            {selectedCustomer.name}
+                            {getCustomerDisplayName(selectedCustomer)}
                         </Typography>
                     </div>
                     {selectedCustomer?.CustomerId ? (
@@ -511,42 +547,50 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                         </Box>
                     ) : null}
                     {selectedCustomer?.CustomerId && tagsList?.length > 0 ? (
-                        tagsList.map((tag, index) => (
-                            <Box
-                                key={index}
-                                sx={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    backgroundColor: '#e0f2f1',
-                                    color: '#111',
-                                    borderRadius: 10,
-                                    px: 1,
-                                    py: 0.3,
-                                    fontSize: '12px',
-                                    ml: 1,
-                                    '&:hover': {
-                                        backgroundColor: '#b2dfdb',
-                                        cursor: 'pointer'
-                                    }
-                                }}
-                            >
-                                {tag?.TagName}
-                                <CloseIcon
-                                    sx={{
-                                        fontSize: '14px',
-                                        ml: 0.5,
-                                        '&:hover': {
-                                            color: 'black',
-                                            transform: "scale(1.1)",
-                                            transition: "all 0.2s ease-in-out"
-                                        }
-                                    }}
+                        <div className="customer-tags-wrapper">
+                            {tagsOverflow && canScrollTagsLeft ? (
+                                <button
+                                    type="button"
+                                    className="tag-scroll-btn left"
                                     onClick={(e) => {
-                                        handleDeletetags(tag?.Id)
+                                        e.stopPropagation();
+                                        scrollTagsBy(-300);
                                     }}
-                                />
-                            </Box>
-                        ))
+                                >
+                                    <ChevronLeftIcon fontSize="small" />
+                                </button>
+                            ) : null}
+
+                            <div className="customer-tags-scroll" ref={tagsScrollRef}>
+                                {tagsList.map((tag, index) => (
+                                    <Box
+                                        className="customer-tags-chip"
+                                        key={index}
+                                    >
+                                        {tag?.TagName}
+                                        <CloseIcon
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeletetags(tag?.Id)
+                                            }}
+                                        />
+                                    </Box>
+                                ))}
+                            </div>
+
+                            {tagsOverflow && canScrollTagsRight ? (
+                                <button
+                                    type="button"
+                                    className="tag-scroll-btn right"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        scrollTagsBy(300);
+                                    }}
+                                >
+                                    <ChevronRightIcon fontSize="small" />
+                                </button>
+                            ) : null}
+                        </div>
                     ) : null}
                 </div>
                 <div className="header-right">
@@ -592,7 +636,7 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                 parseTemplateData={parseTemplateData}
                 getMediaSrcForMessage={getMediaSrcForMessage}
                 handleMediaClick={handleMediaClick}
-                handleReactionClick={handleReactionClick}
+                handleMessageEmojiClick={handleMessageEmojiClick}
                 handleMenuClick={handleMenuClick}
                 handleContextMenu={handleContextMenu}
                 scrollToMessage={scrollToMessage}
@@ -669,66 +713,8 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                     <CustomerDetails customer={selectedCustomer} onClose={() => setDrawerOpen(false)} open={drawerOpen} />
                 )
             }
-            <Menu
-                anchorEl={emojiAnchorEl}
-                open={Boolean(emojiAnchorEl)}
-                onClose={handleCloseEmojiPicker}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
-                }}
-                transformOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                }}
-            >
-                <EmojiPicker
-                    onEmojiClick={(emojiObject) => handleMessageEmojiClick(emojiObject, selectedMessage)}
-                    width={300}
-                    height={350}
-                />
-            </Menu>
         </Box>
     );
 };
 
 export default Conversation;
-
-const ViewContext = ({ contextMenu, handleCloseMenu, handleMenuAction, setContextMenu, selectedCustomer }) => {
-    const handleMenuItemClick = (action) => {
-        handleMenuAction(action);
-        handleCloseMenu(); // Close after action
-    };
-
-    return (
-        <Menu
-            open={Boolean(contextMenu)}
-            onClose={handleCloseMenu}
-            anchorReference="anchorPosition"
-            anchorPosition={
-                contextMenu
-                    ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-                    : undefined
-            }
-            PaperProps={{
-                style: {
-                    width: "200px",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                    position: "fixed",
-                },
-            }}
-            onContextMenu={(e) => {
-                e.preventDefault();
-                setContextMenu({
-                    mouseX: e.clientX + 2,
-                    mouseY: e.clientY + 2,
-                });
-            }}
-        >
-            <MenuItem onClick={() => handleMenuItemClick("Close")}>
-                ❌ Close Chat
-            </MenuItem>
-        </Menu>
-    );
-};

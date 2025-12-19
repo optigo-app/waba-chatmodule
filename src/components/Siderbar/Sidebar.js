@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import './Sidebar.scss'
-import { HomeIcon, Users, Bell, Megaphone, MessageCircle, Workflow } from 'lucide-react'
+import { HomeIcon, Users, Megaphone, MessageCircle, Workflow } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTagsContext } from '../../contexts/TagsContexts'
 import { fetchAllTagsApi } from '../../API/FetchTags/FetchAllTagsApi'
@@ -57,30 +57,19 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
         automation: automationURL,
     };
 
+    const ICON_PROPS = { size: 20, strokeWidth: 2 };
+
     const menuItems = [
-        { type: "internal", path: "/", icon: <HomeIcon />, label: "Inbox" },
-        { type: "internal", path: "/add-conversation", icon: <Users />, label: "Add Conversation" },
+        { type: "internal", path: "/", icon: <HomeIcon {...ICON_PROPS} />, label: "Inbox" },
+        { type: "internal", path: "/add-conversation", icon: <Users {...ICON_PROPS} />, label: "Add Conversation" },
 
-        { type: "external", app: "broadcast", icon: <Megaphone />, label: "CRM Broadcast" },
-        { type: "external", app: "automation", icon: <Workflow />, label: "Automation Workflow" }
+        { type: "external", app: "broadcast", icon: <Megaphone {...ICON_PROPS} />, label: "CRM Broadcast" },
+        { type: "external", app: "automation", icon: <Workflow {...ICON_PROPS} />, label: "Automation Workflow" }
     ];
-
-    // Add archive menu dynamically if count > 1
-    // if (archieve > 0) {
-    //     menuItems.push({ path: '/archieve', icon: <ArchiveRestore />, label: "Archieve" });
-    // }
-
-    const handleStatusClick = (status) => {
-        if (selectedStatus === status) {
-            onStatusSelect('All'); // Reset to default
-        } else {
-            onStatusSelect(status);
-        }
-    };
 
     const handleTagsClick = (tag) => {
         if (selectedTag === tag) {
-            onTagSelect('All'); // Reset to default
+            onTagSelect('All');
         } else {
             onTagSelect(tag);
         }
@@ -110,11 +99,11 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
     return (
         <div className="sidebar_mainDiv">
             <div className="sidebar-content">
-                <div>
-                    <div className="agentic-chat-header" onClick={() => navigate("/")}>
+                <div className="sidebar-sections">
+                    <div className="agentic-chat-header" onClick={() => navigate("/")}> 
                         <div className="agentic-chat-header__icon">
                             <div className="icon-bg">
-                                <MessageCircle className="icon" />
+                                <MessageCircle className="icon" {...ICON_PROPS} />
                             </div>
                             <h1 className="title">Agentic chat</h1>
                         </div>
@@ -169,9 +158,13 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
                                             className={selectedTag?.Id === tag.Id ? 'active' : ''}
                                             onClick={() => handleTagsClick(tag)}
                                         >
-                                            <span style={{ backgroundColor: tag.color || '#e0f2f1' }}>
-                                                {tag.TagName}
-                                            </span>
+                                            <div className="tag-chip">
+                                                <span
+                                                    className="tag-dot"
+                                                    style={{ backgroundColor: tag.color || '#e0f2f1' }}
+                                                />
+                                                <span className="tag-name">{tag.TagName}</span>
+                                            </div>
                                         </li>
                                     )
                                 })}
@@ -179,9 +172,6 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
                         </div>
                     }
                 </div>
-
-                {/* This empty div pushes the content above it to take available space */}
-                <div style={{ flexGrow: 1 }}></div>
 
                 {/* Powered by section at the bottom */}
                 <div className="powered-by">

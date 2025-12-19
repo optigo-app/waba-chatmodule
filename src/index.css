@@ -3,6 +3,7 @@ body {
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #444050;
 }
 
 code {
@@ -10,11 +11,16 @@ code {
     monospace;
 }
 
+:root {
+  --theme-text: #444050;
+}
+
 .app_mainDiv {
   height: 100vh;
   width: 100vw;
   /* background-color: #f0f2f5; */
   background-color: #fff;
+  color: #444050;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -27,8 +33,10 @@ code {
 
 /* Hide scrollbars for the entire project */
 * {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
 }
 
 /* Webkit browsers (Chrome, Safari, Edge) */
@@ -37,7 +45,8 @@ code {
 }
 
 /* Specific scrollbar hiding for common elements */
-html, body {
+html,
+body {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -48,7 +57,11 @@ body::-webkit-scrollbar {
 }
 
 /* For any div or container that might have scroll */
-div, section, main, aside, article {
+div,
+section,
+main,
+aside,
+article {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }

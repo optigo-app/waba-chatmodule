@@ -1,3 +1,5 @@
+@use "../../global.scss" as *;
+
 .header_mainDiv {
     position: fixed;
     top: 0;
@@ -7,10 +9,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
-    background-color: #fff;
-    border-bottom: 1px solid #fff;
-    height: 60px;
+    padding: $header-padding-y $header-padding-x;
+    background-color: rgba(255, 255, 255, 0.85);
+    background:$sidebar-Bgcolor;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    height: $header-height;
+    backdrop-filter: blur(10px);
     box-sizing: border-box;
 
     .header_main {
@@ -21,11 +25,36 @@
 
         .header_left {
             flex: 1;
-            height: 40px;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+
+            .header_brand {
+                position: relative;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-width: 0;
+                padding: 6px 10px;
+                border-radius: $header-radius;
+                cursor: pointer;
+                overflow: hidden;
+                transition: background-color $transition-duration ease, transform $transition-duration ease;
+
+                &:hover {
+                    background-color: rgba(0, 0, 0, 0.04);
+                }
+
+                &:active {
+                    transform: translateY(0px) scale(0.99);
+                }
+            }
 
             .header_left_logo {
-                width: 150px;
-                height: auto;
+                position: relative;
+                height: 28px;
+                width: auto;
+                flex: 0 0 auto;
             }
         }
         
@@ -38,6 +67,9 @@
         .header_right {
             flex: 0 0 250px;
             min-width: 250px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
         }
     }
 }

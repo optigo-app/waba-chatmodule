@@ -19,6 +19,7 @@ import './ProfileAvatar.scss';
 import { LoginContext } from '../../context/LoginData';
 import { LogoutApi } from '../../API/Logout/Logout';
 import { DataSync } from '../../API/DataSync/DataSync';
+import { getWhatsAppAvatarConfig } from '../../utils/globalFunc';
 
 const ProfileAvatar = () => {
     const [anchorEl, setAnchorEl] = useState(null);
@@ -28,6 +29,7 @@ const ProfileAvatar = () => {
     const getId = JSON.parse(sessionStorage.getItem("hasSocketId"));
 
     const username = auth?.username;
+    const avatarConfig = getWhatsAppAvatarConfig(username || 'User', 36);
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -100,19 +102,9 @@ const ProfileAvatar = () => {
             <IconButton onClick={handleClick} className="profile-avatar" size="large">
                 <Avatar
                     alt={username || "User"}
-                    src={username ? "" : "https://mui.com/static/images/avatar/2.jpg"} // show initials if no image
-                    sx={{
-                        bgcolor: "#8e4ff3",
-                        width: 40,
-                        height: 40,
-                        fontSize: 16,
-                        fontWeight: 500,
-                    }}
+                    sx={avatarConfig.sx}
                 >
-                    {username?.split(' ')
-                        .map((word) => word[0])
-                        .join('')
-                        .toUpperCase()}
+                    {avatarConfig.children}
                 </Avatar>
             </IconButton>
 

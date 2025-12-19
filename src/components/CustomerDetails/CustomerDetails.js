@@ -281,106 +281,135 @@ const CustomerDetails = ({ customer, onClose, open }) => {
         }
     }, [pagination]);
 
+    useEffect(() => {
+        if (!open) return;
+
+        const prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        const onKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                onClose?.();
+            }
+        };
+
+        window.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            document.body.style.overflow = prevOverflow;
+            window.removeEventListener('keydown', onKeyDown);
+        };
+    }, [open, onClose]);
+
     return (
-        <div className={`customer-details-container ${open ? 'slide-in' : ''} ${open ? 'visible' : ''}`}>
-            <div className="details-content">
-                {/* Header Section */}
-                <div className="header-section">
-                    <div className="header-left">
-                        <Typography className="header-title">Contact Info</Typography>
+        <>
+            <div
+                className={`customer-details-backdrop ${open ? 'open' : ''}`}
+                onClick={onClose}
+            />
+            <div
+                className={`customer-details-container ${open ? 'slide-in' : ''} ${open ? 'visible' : ''}`}
+                role="dialog"
+                aria-modal={open ? 'true' : 'false'}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="details-content">
+                    {/* Header Section */}
+                    <div className="header-section">
+                        <div className="header-left">
+                            <Typography className="header-title">Contact Info</Typography>
+                        </div>
+                        <div className="header-right">
+                            <IconButton className="back-button" onClick={onClose}>
+                                <Close />
+                            </IconButton>
+                        </div>
                     </div>
-                    <div className="header-right">
-                        <IconButton className="back-button" onClick={onClose}>
-                            <Close />
-                        </IconButton>
-                    </div>
-                </div>
 
-                <div className="content-scroll">
-                    {/* Profile Section */}
-                    <div className="profile-section">
-                        <div className="avatar-container">
-                            <Avatar
-                                {...(customer?.avatarConfig || {})}
-                                alt={customer.name}
-                                className="profile-avatar"
-                            />
+                    <div className="content-scroll">
+                        {/* Profile Section */}
+                        <div className="profile-section">
+                            <div className="avatar-container">
+                                <Avatar
+                                    {...(customer?.avatarConfig || {})}
+                                    alt={customer.name}
+                                    className="profile-avatar"
+                                />
+                            </div>
+
+                            <Typography className="customer-name">{customer.name}</Typography>
+                            <Typography className="customer-phone">{customer.phone}</Typography>
+                            <Typography className="last-seen">
+                                {customer.CustomerPhone}
+                            </Typography>
                         </div>
 
-                        <Typography className="customer-name">{customer.name}</Typography>
-                        <Typography className="customer-phone">{customer.phone}</Typography>
-                        <Typography className="last-seen">
-                            {customer.CustomerPhone}
-                        </Typography>
-                    </div>
+                        {/* Media Tabs */}
+                        <div className="media-section">
+                            <div className="media-tabs">
+                                <button
+                                    className={`tab-button ${activeTab === 'media' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('media')}
+                                >
+                                    <Image />
+                                    <span>Media</span>
+                                </button>
+                                <button
+                                    className={`tab-button ${activeTab === 'docs' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('docs')}
+                                >
+                                    <Description />
+                                    <span>Docs</span>
+                                </button>
+                                <button
+                                    className={`tab-button ${activeTab === 'links' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('links')}
+                                >
+                                    <LinkIcon />
+                                    <span>Links</span>
+                                </button>
+                            </div>
 
-                    {/* Media Tabs */}
-                    <div className="media-section">
-                        <div className="media-tabs">
-                            <button
-                                className={`tab-button ${activeTab === 'media' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('media')}
-                            >
-                                <Image />
-                                <span>Media</span>
-                            </button>
-                            <button
-                                className={`tab-button ${activeTab === 'docs' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('docs')}
-                            >
-                                <Description />
-                                <span>Docs</span>
-                            </button>
-                            <button
-                                className={`tab-button ${activeTab === 'links' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('links')}
-                            >
-                                <LinkIcon />
-                                <span>Links</span>
-                            </button>
-                        </div>
-
-                        <div className="tab-content">
-                            {activeTab === 'media' && (
-                                <MediaSection
-                                    mediaItems={mediaItems}
-                                    mediaCache={mediaCache}
-                                    isLoading={pagination.images.isLoading || pagination.videos.isLoading}
-                                    hasMore={pagination.images.hasMore || pagination.videos.hasMore}
-                                    onLoadMore={loadMoreMedia}
-                                    onMediaClick={handleMediaClick}
-                                    paginationFlag={enablePagination}
-                                />
-                            )}
-                            {activeTab === 'docs' && (
-                                <DocumentsSection
-                                    documents={mediaItems.documents}
-                                    mediaCache={mediaCache}
-                                    isLoading={pagination.documents.isLoading}
-                                    hasMore={pagination.documents.hasMore}
-                                    onLoadMore={loadMoreDocuments}
-                                    onDocumentClick={handleMediaClick}
-                                    onDownload={handleDownload}
-                                    paginationFlag={enablePagination}
-                                />
-                            )}
-                            {activeTab === 'links' && (
-                                <LinksSection
-                                    links={mediaItems.links}
-                                    isLoading={pagination.links.isLoading}
-                                    hasMore={pagination.links.hasMore}
-                                    onLoadMore={loadMoreDocuments}
-                                    onShare={handleShare}
-                                    paginationFlag={enablePagination}
-                                />
-                            )}
-
+                            <div className="tab-content">
+                                {activeTab === 'media' && (
+                                    <MediaSection
+                                        mediaItems={mediaItems}
+                                        mediaCache={mediaCache}
+                                        isLoading={pagination.images.isLoading || pagination.videos.isLoading}
+                                        hasMore={pagination.images.hasMore || pagination.videos.hasMore}
+                                        onLoadMore={loadMoreMedia}
+                                        onMediaClick={handleMediaClick}
+                                        paginationFlag={enablePagination}
+                                    />
+                                )}
+                                {activeTab === 'docs' && (
+                                    <DocumentsSection
+                                        documents={mediaItems.documents}
+                                        mediaCache={mediaCache}
+                                        isLoading={pagination.documents.isLoading}
+                                        hasMore={pagination.documents.hasMore}
+                                        onLoadMore={loadMoreDocuments}
+                                        onDocumentClick={handleMediaClick}
+                                        onDownload={handleDownload}
+                                        paginationFlag={enablePagination}
+                                    />
+                                )}
+                                {activeTab === 'links' && (
+                                    <LinksSection
+                                        links={mediaItems.links}
+                                        isLoading={pagination.links.isLoading}
+                                        hasMore={pagination.links.hasMore}
+                                        onLoadMore={loadMoreDocuments}
+                                        onShare={handleShare}
+                                        paginationFlag={enablePagination}
+                                    />
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
-
 export default CustomerDetails;

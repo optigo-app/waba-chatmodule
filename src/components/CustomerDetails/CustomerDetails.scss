@@ -1,14 +1,16 @@
+@use "../../global.scss" as *;
+
 // Variables
-$whatsapp-green: #1976d2;
-$whatsapp-dark-green: #128c7e;
-$whatsapp-light-green: #dcf8c6;
-$header-bg: #1976d2;
-$text-primary: #000;
-$text-secondary: #667781;
-$text-muted: #8696a0;
-$border-color: #e9edef;
-$hover-bg: #f0f2f5;
-$danger-color: #e53e3e;
+$whatsapp-green: $primary-main;
+$whatsapp-dark-green: $primary-main;
+$whatsapp-light-green: $primary-light-bg;
+$header-bg: $button-Bgcolor;
+$text-primary: $titleColor;
+$text-secondary: $secondaryColor;
+$text-muted: $text2ndColor;
+$border-color: rgba(0, 0, 0, 0.08);
+$hover-bg: $bg-light;
+$danger-color: $error-main;
 $white: #ffffff;
 
 // Mixins
@@ -25,24 +27,45 @@ $white: #ffffff;
 }
 
 @mixin transition {
-    transition: all 0.3s ease;
+    transition: all $transition-duration ease;
 }
 
 // Main Container
+.customer-details-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 1199;
+
+    &.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
 .customer-details-container {
     position: fixed;
     top: 0;
-    right: -100%;
+    right: 0;
     width: 100%;
     max-width: 420px;
     height: 100vh;
     background: $white;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
+    box-shadow: $box-shadow-value;
+    border-left: 1px solid $border-color;
+    border-top-left-radius: 24px;
+    border-bottom-left-radius: 24px;
+    z-index: 1200;
     @include transition;
+    transform: translateX(100%);
+    will-change: transform;
 
     &.slide-in {
-        right: 0;
+        transform: translateX(0);
     }
 
     &.visible {
@@ -51,11 +74,6 @@ $white: #ffffff;
 
     @media (max-width: 768px) {
         max-width: 100%;
-        right: -100%;
-
-        &.slide-in {
-            right: 0;
-        }
     }
 }
 
@@ -69,10 +87,10 @@ $white: #ffffff;
 .header-section {
     @include flex-between;
     padding: 16px 20px;
-    // background: $header-bg;
-    background: #8e4ff3;
+    background: $header-bg;
     color: $white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: $box-shadow-value;
+    border-top-left-radius: 24px;
 
     .header-left {
         display: flex;
@@ -84,7 +102,7 @@ $white: #ffffff;
             padding: 8px !important;
 
             &:hover {
-                background: rgba(255, 255, 255, 0.1) !important;
+                background: rgba(255, 255, 255, 0.12) !important;
             }
         }
 
@@ -104,7 +122,7 @@ $white: #ffffff;
             padding: 8px !important;
 
             &:hover {
-                background: rgba(255, 255, 255, 0.1) !important;
+                background: rgba(255, 255, 255, 0.12) !important;
             }
         }
     }

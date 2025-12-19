@@ -1,30 +1,92 @@
 import { createTheme } from '@mui/material/styles';
 
-// Import Poppins font
 const poppinsFont = "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif";
 
 const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#1976d2',
-      light: '#42a5f5',
-      dark: '#1565c0',
+      main: '#7367f0',
+      light: '#7367f0',
+      dark: '#7367f0',
+      gradient: 'linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%)',
+      blue: '#007bfc',
+      secondary: '#7D7f85',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#9c27b0',
-      light: '#ba68c8',
-      dark: '#7b1fa2',
+      main: '#7367f0',
+      light: '#7367f0',
+      dark: '#7367f0',
       contrastText: '#ffffff',
+    },
+    success: {
+      main: '#1d9051ff',
+      light: '#c8e6c9',
+      lightBg: 'rgba(40, 199, 111, 0.16)',
+    },
+
+    error: {
+      main: '#d32f2f',
+      light: '#ffcdd2',
+      lightBg: 'rgba(211, 47, 47, 0.16)',
+    },
+
+    warning: {
+      main: '#f57c00',
+      light: '#ffe0b2',
+      lightBg: 'rgba(245, 124, 0, 0.16)',
+    },
+
+    info: {
+      main: '#00CFE8',
+      light: '#b3e5fc',
+      lightBg: 'rgba(0, 207, 232, 0.16)',
     },
     background: {
       default: '#f5f5f5',
       paper: '#ffffff',
     },
     text: {
-      primary: '#1a1a1a',
-      secondary: '#666666',
+      primary: '#444050',
+      secondary: '#7D7f85',
+      disabled: '#666666',
+      dark: '#0A0A0A',
+      light: '#bebebeff',
+      extraLight: '#f1f1f1',
+    },
+    borderColor: {
+      main: '#7367f0',
+      light: '#7367f0',
+      dark: '#7367f0',
+      secondary: '#7D7f85',
+      extraLight: '#cbcbcbff',
+      contrastText: '#ffffff',
+    },
+    button: {
+      background: 'linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%);',
+      color: '#ffffff',
+      hilightColor: '#7367f0',
+      hoverColor: '#7367f0',
+      activeColor: '#7367f0',
+      disabledColor: '#7367f0',
+      focusColor: '#7367f0',
+      selectedColor: '#7367f0',
+    },
+    importance: {
+      high: {
+        background: 'linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%);',
+        text: '#444050',
+      },
+      low: {
+        background: 'linear-gradient(135deg, #f7f7f7 0%, #e5e5e5 100%)',
+        text: '#444050',
+      },
+    },
+    shadow: {
+      boxShadow: 'rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px;',
+      boxShadow1:
+        "0 4px 16px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.08)",
     },
     grey: {
       50: '#fafafa',

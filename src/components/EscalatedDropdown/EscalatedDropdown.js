@@ -24,19 +24,6 @@ export const colors = [
     "#9E9E9E", "#4CAF50", "#00BCD4", "#8B4513", "#6A5ACD", "#F08080", "#32CD32", "#FF6347"
 ];
 
-const dummyUsers = [
-    { id: 1, name: "Alice Johnson" },
-    { id: 2, name: "Bob Smith" },
-    { id: 3, name: "Charlie Brown" },
-    { id: 4, name: "Diana Prince" },
-    { id: 5, name: "Ethan Hunt" },
-    { id: 6, name: "John snow" },
-    { id: 7, name: "Daenerys Targaryen" },
-    { id: 8, name: "Sansa Stark" },
-    { id: 9, name: "Arya Stark" },
-    { id: 10, name: "Bran Stark" },
-];
-
 export const getRandomAvatarColor = (name) => {
     const charSum = name
         ?.split("")
@@ -96,44 +83,14 @@ const EscalatedDropdown = ({ options, label, assignedList = [], selectedCustomer
     return (
         <Box className="form-group-escalated">
             <Typography variant="subtitle1" className="form-label">{label}</Typography>
-
-            {/* Avatar Group for assigned users */}
-            <Box>
-                {/* <AvatarGroup max={5}>
-                    {options.map((option) => {
-                        const conversationIds = option?.ConversationIds ? JSON.parse(option.ConversationIds) : [];
-
-                        const isAssigned = conversationIds.some(item =>
-                            item.ConversationId === selectedCustomer?.ConversationId &&
-                            item.UserId === option.UserId
-                        );
-                        if (!isAssigned) return null;
-
-                        return (
-                            <Avatar
-                                key={option.UserId}
-                                sx={{
-                                    width: 28,
-                                    height: 28,
-                                    fontSize: "14px",
-                                    backgroundColor: getRandomAvatarColor(option.FullName),
-                                }}
-                            >
-                                {option.FirstName?.charAt(0).toUpperCase()}
-                            </Avatar>
-                        );
-                    })}
-
-                </AvatarGroup> */}
-            </Box>
-
             <FormControl fullWidth size="small">
                 <Select
                     value="" // always empty → no chip shown
                     displayEmpty
                     renderValue={() => "Escalate User"}
                     sx={{
-                        borderRadius: "8px",
+                        borderRadius: 2,
+                        fontSize: 14,
                         "& .MuiSelect-select": {
                             paddingY: "6px",
                         },

@@ -1,11 +1,13 @@
 import React, { useMemo, useState, useEffect, memo, useRef } from 'react'
 import ReplyPreview from '../ReplyToComponents/ReplyPreview'
-import { IconButton } from '@mui/material'
+import { IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material'
 import AttachFile from '@mui/icons-material/AttachFile'
-import Image from '@mui/icons-material/Image'
+import ImageIcon from '@mui/icons-material/Image'
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary'
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import EmojiPicker from 'emoji-picker-react'
 import TextField from '@mui/material/TextField'
-import { SendHorizontal, Video, Smile, FileText } from 'lucide-react'
+import { SendHorizontal, Smile } from 'lucide-react'
 import debounce from 'lodash.debounce'
 
 const ChatBox = ({
@@ -29,6 +31,7 @@ const ChatBox = ({
     handleSendMessage
 }) => {
     const inputRef = useRef(null);
+    const attachButtonRef = useRef(null);
 
     // ✅ Focus whenever replyToMessage becomes true
     useEffect(() => {
@@ -72,7 +75,7 @@ const ChatBox = ({
             )}
 
             <div className="input-container">
-                <IconButton size="small" className="attach-button" onClick={handleAttachClick}>
+                <IconButton ref={attachButtonRef} size="small" className="attach-button" onClick={handleAttachClick}>
                     <AttachFile />
                 </IconButton>
 
@@ -85,37 +88,81 @@ const ChatBox = ({
                         <EmojiPicker
                             onEmojiClick={onEmojiClick}
                             width={350}
-                            height={400}
+                            height={400}    
                             searchDisabled={false}
-                            skinTonesDisabled={false}
-                            previewConfig={{ showPreview: false }}
+                            skinTonesDisabled={true}
+                            previewConfig={{ showPreview: true }}
+                            emojiStyle="apple"
                         />
                     </div>
                 )}
 
-                {showMedia && (
-                    <div className="floating-card">
-                        <div className="floating-card-1">
-                            <div className="menu-item" onClick={(e) => openFilePicker(e, imageParams)}>
-                                <Image size={25} color={'#0046FF'} /> <span>Photo</span>
-                            </div>
-                            <div className="menu-item" onClick={(e) => openFilePicker(e, videoParams)}>
-                                <Video size={27} color={'#FF8040'} /> <span>Video</span>
-                            </div>
-                            <div className="menu-item" onClick={(e) => openFilePicker(e, docsParams)}>
-                                <FileText size={25} color={'#9929EA'} /> <span>Document</span>
-                            </div>
+                <Menu
+                    anchorEl={attachButtonRef.current}
+                    open={Boolean(attachButtonRef.current) && Boolean(showMedia)}
+                    onClose={handleAttachClick}
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{ zIndex: (theme) => theme.zIndex.modal + 20 }}
+                    PaperProps={{
+                        elevation: 0,
+                        sx: {
+                            minWidth: 200,
+                            borderRadius: 2,
+                            py: 0.5,
+                            mb: 1,
+                            boxShadow: "0px 6px 18px rgba(0,0,0,0.12), 0px 3px 6px rgba(0,0,0,0.08)",
+                        },
+                    }}
+                    transformOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+                    anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
+                >
+                    <MenuItem
+                        onClick={(e) => {
+                            handleAttachClick(e);
+                            openFilePicker(e, imageParams);
+                        }}
+                        sx={{ py: 1.1, px: 2, borderRadius: 1.5 }}
+                    >
+                        <ListItemIcon sx={{ minWidth: '34px', color: '#0046FF' }}>
+                            <ImageIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="Photo" />
+                    </MenuItem>
 
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                style={{ display: 'none' }}
-                                onChange={handleFileChange}
-                                multiple
-                            />
-                        </div>
-                    </div>
-                )}
+                    <MenuItem
+                        onClick={(e) => {
+                            handleAttachClick(e);
+                            openFilePicker(e, videoParams);
+                        }}
+                        sx={{ py: 1.1, px: 2, borderRadius: 1.5 }}
+                    >
+                        <ListItemIcon sx={{ minWidth: '34px', color: '#FF8040' }}>
+                            <VideoLibraryIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="Video" />
+                    </MenuItem>
+
+                    <MenuItem
+                        onClick={(e) => {
+                            handleAttachClick(e);
+                            openFilePicker(e, docsParams);
+                        }}
+                        sx={{ py: 1.1, px: 2, borderRadius: 1.5 }}
+                    >
+                        <ListItemIcon sx={{ minWidth: '34px', color: '#9929EA' }}>
+                            <InsertDriveFileIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText primary="Document" />
+                    </MenuItem>
+                </Menu>
+
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange}
+                    multiple
+                />
 
                 <TextField
                     fullWidth

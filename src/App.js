@@ -1,5 +1,5 @@
 import './App.css';
-import { useEffect, useState, useContext, useCallback, useMemo } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useNavigate, Routes, Route, useLocation, matchPath } from 'react-router-dom';
 import { Box } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
@@ -11,14 +11,14 @@ import Sidebar from './components/Siderbar/Sidebar';
 import CustomerDetails from './components/CustomerDetails/CustomerDetails';
 import { TagsProvider } from './contexts/TagsContexts';
 import { ArchieveProvider } from './contexts/ArchieveContext';
-import { getSocket, disconnectSocket, initializeSocket, isSocketConnected, addSessionLogoutHandler } from './socket';
+import { disconnectSocket, initializeSocket, isSocketConnected } from './socket';
 import { toastConfig } from './toastConfig';
 import { LoginContext } from './context/LoginData';
 import { registerSocketId } from './utils/socketHelper';
-import { fetchToken, GetCredentialsFromCookie } from './utils/FetchToken';
 import LoginExists from './components/LoginExists/LoginExists';
 import Lottie from 'lottie-react';
 import loader from './assets/lotties/loader.json';
+import ChatHeader from './TestPage/ChatHeader';
 
 const PagenotFound = () => <div>404 - Page Not Found</div>;
 
@@ -46,7 +46,7 @@ function Layout({ children, onStatusSelect, selectedStatus, onTagSelect, selecte
             </Box>
           )}
 
-          <Box sx={{ marginLeft: '300px' }}>
+          <Box sx={{ marginLeft: '260px' }}>
             {children}
           </Box>
         </ArchieveProvider>
@@ -223,7 +223,7 @@ function App() {
   return (
     <>
       <Toaster position="top-right" toastOptions={toastConfig} />
-      
+
       {/* Global Sync Loader Overlay */}
       {isSyncing && (
         <Box
@@ -278,6 +278,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage1 />} />
           <Route path="/session-check" element={<LoginExists />} />
+            <Route path="/test" element={<ChatHeader chatId="123" />} />
           <Route
             path="*"
             element={
@@ -298,7 +299,7 @@ function App() {
                   <Route path="*" element={<PagenotFound />} />
                 </Routes>
               </Layout>
-            }
+            } 
           />
         </Routes>
       </div>

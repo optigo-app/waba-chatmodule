@@ -6,9 +6,7 @@ import {
     Box,
     Button,
     Typography,
-    Divider,
     IconButton,
-    Popper,
     ClickAwayListener,
     MenuList,
     MenuItem,
@@ -17,7 +15,6 @@ import {
     Checkbox,
     InputAdornment,
     Chip,
-    Menu
 } from '@mui/material';
 import {
     Close as CloseIcon,
@@ -29,8 +26,7 @@ import {
 import { styled } from '@mui/material/styles';
 import { LoginContext } from '../../context/LoginData';
 import { fetchConversationLists } from '../../API/ConverLists/ConversationLists';
-import { stringAvatar } from '../../utils/StringAvatar';
-import { formatChatTimestamp } from '../../utils/DateFnc';
+import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 
 const ForwardDropdown = styled(Paper)(({ theme }) => ({
     width: '320px',
@@ -44,8 +40,8 @@ const ForwardDropdown = styled(Paper)(({ theme }) => ({
 }));
 
 const DropdownHeader = styled(Box)(({ theme }) => ({
-    backgroundColor: '#8e4ff3',
-    color: 'white',
+    background: theme.palette.importance?.high?.background,
+    color: theme.palette.importance?.high?.text,
     padding: '12px 16px',
     display: 'flex',
     alignItems: 'center',
@@ -138,7 +134,7 @@ const useDebounce = (value, delay) => {
 const ForwardMessage = ({ message, onSend, onClose, anchorEl, open }) => {
     const [selectedContacts, setSelectedContacts] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const debouncedSearchTerm = useDebounce(searchTerm, 500); 
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const menuRef = useRef(null);
     const [loading, setLoading] = useState(false);
@@ -148,13 +144,11 @@ const ForwardMessage = ({ message, onSend, onClose, anchorEl, open }) => {
 
     const transformMemberData = (items) => {
         return items?.map((item) => {
-            const name = item?.CustomerName || item?.CustomerPhone;
-            const includesNumber = /\d/.test(name);
-
             return {
-                name: item?.CustomerName || item?.CustomerPhone,
-                avatar: includesNumber ? "icon" : null,
-                avatarConfig: includesNumber ? null : stringAvatar(name),
+                ...item,
+                name: getCustomerDisplayName(item),
+                avatar: null,
+                avatarConfig: getWhatsAppAvatarConfig(getCustomerAvatarSeed(item)),
                 CustomerId: item?.CustomerId,
                 CustomerPhone: item?.CustomerPhone,
             };
@@ -359,17 +353,18 @@ const ForwardMessage = ({ message, onSend, onClose, anchorEl, open }) => {
                                         className={isSelected ? 'selected' : ''}
                                     >
                                         <ListItemAvatar>
-                                            {contact.avatar === 'icon' ? (
-                                                <Avatar sx={{ width: 32, height: 32, bgcolor: '#e0e0e0' }}>
+                                            {!hasCustomerName(contact) ? (
+                                                <Avatar
+                                                    sx={{ width: 32, height: 32 }}
+                                                    {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(contact), 32)}
+                                                >
                                                     <PersonIcon fontSize="small" />
                                                 </Avatar>
-                                            ) : contact.avatarConfig ? (
-                                                <Avatar sx={{ width: 32, height: 32 }} {...contact.avatarConfig} />
                                             ) : (
-                                                <Avatar sx={{ bgcolor: '#8e4ff3' }}>
-                                                    {/* {contact.name.charAt(0).toUpperCase()} */}
-                                                    <PersonIcon fontSize="small" />
-                                                </Avatar>
+                                                <Avatar
+                                                    sx={{ width: 32, height: 32 }}
+                                                    {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(contact), 32)}
+                                                />
                                             )}
                                         </ListItemAvatar>
                                         <ListItemText

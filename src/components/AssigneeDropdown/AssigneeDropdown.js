@@ -24,19 +24,6 @@ export const colors = [
     "#9E9E9E", "#4CAF50", "#00BCD4", "#8B4513", "#6A5ACD", "#F08080", "#32CD32", "#FF6347"
 ];
 
-const dummyUsers = [
-    { id: 1, name: "Alice Johnson" },
-    { id: 2, name: "Bob Smith" },
-    { id: 3, name: "Charlie Brown" },
-    { id: 4, name: "Diana Prince" },
-    { id: 5, name: "Ethan Hunt" },
-    { id: 6, name: "John snow" },
-    { id: 7, name: "Daenerys Targaryen" },
-    { id: 8, name: "Sansa Stark" },
-    { id: 9, name: "Arya Stark" },
-    { id: 10, name: "Bran Stark" },
-];
-
 export const getRandomAvatarColor = (name) => {
     const charSum = name
         ?.split("")
@@ -132,7 +119,8 @@ const AssigneeDropdown = ({ options, label, assignedList = [], selectedCustomer,
                     displayEmpty
                     renderValue={() => "Assign User"}
                     sx={{
-                        borderRadius: "8px",
+                        borderRadius: 2,
+                        fontSize: 14,
                         "& .MuiSelect-select": {
                             paddingY: "6px",
                         },
