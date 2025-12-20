@@ -1,19 +1,18 @@
-import React from 'react';
-import { Link as LinkIcon, Share } from '@mui/icons-material';
 import useLazyLoading from './useLazyLoading';
 import './CustomerDetails.scss';
+import { Link, Share2 } from 'lucide-react';
 
-const LinksSection = ({ 
-    links, 
-    isLoading, 
-    hasMore, 
-    onLoadMore, 
+const LinksSection = ({
+    links,
+    isLoading,
+    hasMore,
+    onLoadMore,
     onShare,
     paginationFlag
 }) => {
     // Lazy loading hook
     const lastLinkElementRef = useLazyLoading(onLoadMore, hasMore && paginationFlag, isLoading);
-    
+
     // Show nothing if loading and no items
     if (isLoading && links.length === 0) {
         return null;
@@ -24,9 +23,10 @@ const LinksSection = ({
         return (
             <div className="no-items-message">
                 <div className="no-items-icon">
-                    <LinkIcon className="media-icon" />
+                    <Link className="media-icon" />
                 </div>
-                <p>No links found</p>
+                <div className="no-items-title">No Links found</div>
+                <div className="no-items-subtitle">Shared Links and Url will appear here</div>
             </div>
         );
     }
@@ -39,16 +39,15 @@ const LinksSection = ({
                 </div>
                 <div className="links-list">
                     {links.map((link, index) => {
-                        // Apply ref to the last element for lazy loading
                         const isLastElement = index === links.length - 1;
                         return (
-                            <div 
+                            <div
                                 ref={isLastElement ? lastLinkElementRef : null}
-                                key={link.Id} 
+                                key={link.Id}
                                 className="link-item"
                             >
                                 <div className="link-icon">
-                                    <LinkIcon />
+                                    <Link />
                                 </div>
                                 <div className="link-info">
                                     <div className="link-title" title={link.MediaName || `Link ${link.Id}`}>
@@ -58,12 +57,12 @@ const LinksSection = ({
                                         {link.MediaUrl}
                                     </div>
                                 </div>
-                                <button 
-                                    className="share-btn" 
+                                <button
+                                    className="share-btn"
                                     onClick={() => onShare(link.MediaUrl)}
                                     title="Share link"
                                 >
-                                    <Share />
+                                    <Share2 />
                                 </button>
                             </div>
                         );

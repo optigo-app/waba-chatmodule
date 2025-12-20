@@ -72,22 +72,6 @@ const WordPreview = ({ fileObject }) => {
             backgroundColor: 'white',
             boxShadow: '0 0 10px rgba(0,0,0,0.1)',
 
-            /* ✅ Thin scrollbar styling */
-            '&::-webkit-scrollbar': {
-              width: '6px',
-              height: '6px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: '#f1f1f1',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: '#c1c1c1',
-              borderRadius: '10px',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              backgroundColor: '#a0a0a0',
-            },
-
             '& p, & h1, & h2, & h3, & h4, & h5, & h6, & li, & ul, & ol, & table': {
               margin: '0.5em 0',
               lineHeight: 1.5,

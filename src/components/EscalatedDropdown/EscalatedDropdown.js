@@ -10,12 +10,15 @@ import {
     ListItemText,
     FormControl,
     AvatarGroup,
+    Tooltip,
 } from "@mui/material";
+import { alpha, useTheme } from '@mui/material/styles';
 import CheckIcon from "@mui/icons-material/Check";
 import { addAssignUser } from "../../API/AssignUser/AssignUserApi";
 import toast from "react-hot-toast";
 import { removeAssignUser } from "../../API/UnAssignUser/UnAssignUserApi";
 import { LoginContext } from "../../context/LoginData";
+import { getWhatsAppAvatarConfig } from "../../utils/globalFunc";
 
 export const colors = [
     "#FF5722", "#4CAF50", "#2196F3", "#FFC107", "#E91E63", "#9C27B0", "#3F51B5", "#00BCD4",
@@ -34,6 +37,12 @@ export const getRandomAvatarColor = (name) => {
 const EscalatedDropdown = ({ options, label, assignedList = [], selectedCustomer, fetchEscalatedList }) => {
     const [assigned, setAssigned] = useState(options);
     const { auth } = useContext(LoginContext);
+    const theme = useTheme();
+
+    const getUserAvatar = (user, size = 38) => {
+        const seed = String(user?.FullName ?? user?.FirstName ?? user?.UserId ?? '').trim();
+        return getWhatsAppAvatarConfig(seed || 'user', size);
+    };
 
     const handleAssign = async (userId) => {
         if (!selectedCustomer?.ConversationId) {
@@ -113,22 +122,40 @@ const EscalatedDropdown = ({ options, label, assignedList = [], selectedCustomer
                                     display: "flex",
                                     justifyContent: "space-between",
                                     alignItems: "center",
+                                    backgroundColor: isAssigned
+                                        ? alpha(theme.palette.primary.main, 0.14)
+                                        : 'transparent',
+                                    '&:hover': {
+                                        backgroundColor: isAssigned
+                                            ? alpha(theme.palette.primary.main, 0.2)
+                                            : alpha(theme.palette.primary.main, 0.1),
+                                    },
                                 }}
                             >
                                 <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
-                                    <Avatar
-                                        sx={{
-                                            width: 28,
-                                            height: 28,
-                                            fontSize: "14px",
-                                            backgroundColor: getRandomAvatarColor(option?.FullName),
-                                            mr: 1.5,
-                                        }}
-                                    >
-                                        {option.FirstName?.charAt(0)}
-                                    </Avatar>
+                                    {(() => {
+                                        const avatarCfg = getUserAvatar(option, 32);
+                                        return (
+                                            <Tooltip
+                                                title={option?.FullName || option?.FirstName || 'User'}
+                                                arrow
+                                                placement="left"
+                                            >
+                                                <Avatar
+                                                    {...avatarCfg}
+                                                    sx={{
+                                                        ...avatarCfg.sx,
+                                                        mr: 1.5,
+                                                        fontSize:'13px'
+                                                    }}
+                                                >
+                                                    {avatarCfg.children}
+                                                </Avatar>
+                                            </Tooltip>
+                                        );
+                                    })()}
                                     <ListItemText primary={option.FullName} />
-                                    {isAssigned && <CheckIcon sx={{ color: "#06923E" }} />}
+                                    {isAssigned && <CheckIcon sx={{ color: theme.palette.primary.main }} />}
                                 </Box>
                             </MenuItem>
                         );

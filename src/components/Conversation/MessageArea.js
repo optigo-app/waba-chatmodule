@@ -1,12 +1,13 @@
 import React, { useState, useRef, useContext, useCallback, useEffect } from 'react';
 import { Box, CircularProgress, Typography, Avatar } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { ChevronDownCircle, Clock3, Check, CheckCheck, AlertCircle } from 'lucide-react';
+import { Clock3, Check, CheckCheck, AlertCircle } from 'lucide-react';
 import MediaPreview from '../MediaPreview/MediaPreview';
 import { LoginContext } from '../../context/LoginData';
 import { getCustomerAvatarSeed, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import MessageContent from './MessageContent';
 import PersonIcon from '@mui/icons-material/Person';
+import ScrollToBottomButton from './ScrollToBottomButton';
 
 const MessageArea = ({
     showMedia,
@@ -268,31 +269,10 @@ const MessageArea = ({
                         }}
                     >
                         {/* Scroll to Bottom Button */}
-                        {showScrollToBottom && (
-                            <div
-                                className="scroll-to-bottom"
-                                onClick={() => scrollToBottom()}
-                                title="Scroll to bottom"
-                                style={{
-                                    position: 'fixed',
-                                    bottom: '100px',
-                                    right: '30px',
-                                    width: '40px',
-                                    height: '40px',
-                                    borderRadius: '50%',
-                                    backgroundColor: 'white',
-                                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    zIndex: 1000,
-                                    transition: 'all 0.3s ease',
-                                }}
-                            >
-                                <ChevronDownCircle size={40} color="#8e4ff3" />
-                            </div>
-                        )}
+                        <ScrollToBottomButton
+                            open={showScrollToBottom}
+                            onClick={scrollToBottom}
+                        />
 
                         {Object.entries(groupMessagesByDate).map(([date, dateMessages], dateIdx, allDates) => {
                             return (

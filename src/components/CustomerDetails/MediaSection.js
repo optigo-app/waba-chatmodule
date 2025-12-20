@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Image, PlayArrow } from '@mui/icons-material';
+import React from 'react';
 import useLazyLoading from './useLazyLoading';
 import './CustomerDetails.scss';
+import { Image, Play } from 'lucide-react';
 
 const MediaSection = ({
     mediaItems,
@@ -30,7 +30,10 @@ const MediaSection = ({
                 <div className="no-items-icon">
                     <Image className="media-icon" />
                 </div>
-                <p>No media found</p>
+                <div className="no-items-text">
+                    <div className="no-items-title">No media found</div>
+                    <div className="no-items-subtitle">Shared photos and videos will appear here</div>
+                </div>
             </div>
         );
     }
@@ -71,7 +74,7 @@ const MediaSection = ({
                                     />
                                 )}
                                 <div className="media-overlay">
-                                    {isVideo ? <PlayArrow className="media-icon" /> : <Image className="media-icon" />}
+                                    {isVideo ? <Play className="media-icon" /> : <Image className="media-icon" />}
                                 </div>
                             </div>
                         </div>

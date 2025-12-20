@@ -82,7 +82,7 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
         mediaViewerIndex,
         setMediaViewerIndex,
         groupMessagesByDate,
-        
+
         // Functions
         handleFetchtags,
         fetchAssigneeList,

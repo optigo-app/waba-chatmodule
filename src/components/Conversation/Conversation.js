@@ -320,9 +320,17 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
     const scrollToBottom = useCallback((behavior = 'smooth') => {
         if (containerRef.current) {
             isAutoScrollingRef.current = true;
+
+            const normalizedBehavior =
+                behavior === 'instant'
+                    ? 'auto'
+                    : (behavior === 'smooth' || behavior === 'auto')
+                        ? behavior
+                        : 'smooth';
+
             containerRef.current.scrollTo({
                 top: containerRef.current.scrollHeight,
-                behavior
+                behavior: normalizedBehavior
             });
 
             // Hide the scroll-to-bottom button and reset the auto-scrolling flag

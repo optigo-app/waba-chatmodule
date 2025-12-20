@@ -46,6 +46,7 @@ const theme = createTheme({
     background: {
       default: '#f5f5f5',
       paper: '#ffffff',
+      hightlight: '#7367f0'
     },
     text: {
       primary: '#444050',
@@ -193,78 +194,55 @@ const theme = createTheme({
       styleOverrides: {
         body: {
           fontFamily: poppinsFont,
-          WebkitFontSmoothing: 'antialiased',
-          MozOsxFontSmoothing: 'grayscale',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-        },
-        '*': {
-          fontFamily: poppinsFont,
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-        },
-        // Hide scrollbars for MUI components
-        '.MuiBox-root, .MuiContainer-root, .MuiPaper-root, .MuiCard-root, .MuiList-root, .MuiMenu-root': {
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          '&::-webkit-scrollbar': {
-            display: 'none',
-          },
-        },
       },
     },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          fontFamily: poppinsFont,
-          fontWeight: 500,
-          textTransform: 'none',
-          borderRadius: 8,
-          padding: '8px 16px',
-        },
+  },
+  MuiButton: {
+    styleOverrides: {
+      root: {
+        fontFamily: poppinsFont,
+        fontWeight: 500,
+        textTransform: 'none',
+        borderRadius: 8,
+        padding: '8px 16px',
       },
     },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            fontFamily: poppinsFont,
-          },
-          '& .MuiInputLabel-root': {
-            fontFamily: poppinsFont,
-          },
-        },
-      },
-    },
-    MuiMenuItem: {
-      styleOverrides: {
-        root: {
-          fontFamily: poppinsFont,
-          fontWeight: 500,
-        },
-      },
-    },
-    MuiTypography: {
-      styleOverrides: {
-        root: {
+  },
+  MuiTextField: {
+    styleOverrides: {
+      root: {
+        '& .MuiOutlinedInput-root': {
           fontFamily: poppinsFont,
         },
-      },
-    },
-    MuiIconButton: {
-      styleOverrides: {
-        root: {
+        '& .MuiInputLabel-root': {
           fontFamily: poppinsFont,
         },
       },
     },
   },
+  MuiMenuItem: {
+    styleOverrides: {
+      root: {
+        fontFamily: poppinsFont,
+        fontWeight: 500,
+      },
+    },
+  },
+  MuiTypography: {
+    styleOverrides: {
+      root: {
+        fontFamily: poppinsFont,
+      },
+    },
+  },
+  MuiIconButton: {
+    styleOverrides: {
+      root: {
+        fontFamily: poppinsFont,
+      },
+    },
+  },
+},
 });
 
 export default theme; 

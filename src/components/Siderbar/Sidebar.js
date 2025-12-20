@@ -100,7 +100,7 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
         <div className="sidebar_mainDiv">
             <div className="sidebar-content">
                 <div className="sidebar-sections">
-                    <div className="agentic-chat-header" onClick={() => navigate("/")}> 
+                    <div className="agentic-chat-header" onClick={() => navigate("/")}>
                         <div className="agentic-chat-header__icon">
                             <div className="icon-bg">
                                 <MessageCircle className="icon" {...ICON_PROPS} />

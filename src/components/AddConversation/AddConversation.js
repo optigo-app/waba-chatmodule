@@ -7,7 +7,7 @@ import {
     Tabs,
     Tab
 } from '@mui/material';
-import { Search, Clear, Person as PersonIcon } from '@mui/icons-material';
+import { Search, Clear, Person as PersonIcon, ChatBubbleOutline } from '@mui/icons-material';
 import './AddConversation.scss';
 import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import { fetchCustomerLists } from '../../API/CustomerLists/CustomerLists';
@@ -258,9 +258,12 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
                                 })
                             ) : (
                                 <li style={{ textAlign: 'center', padding: '20px' }}>
-                                    <Typography variant="body2" color="textSecondary">
-                                        No conversations found.
-                                    </Typography>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                                        <ChatBubbleOutline sx={{ fontSize: 34, color: 'rgba(0,0,0,0.35)' }} />
+                                        <Typography variant="body2" color="textSecondary">
+                                            No conversations found.
+                                        </Typography>
+                                    </div>
                                 </li>
                             )}
                             {/* ✅ Show pagination loader only when fetching next pages */}

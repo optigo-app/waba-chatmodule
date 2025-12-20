@@ -1,21 +1,21 @@
 import React from 'react';
-import { Description, Download } from '@mui/icons-material';
 import useLazyLoading from './useLazyLoading';
 import './CustomerDetails.scss';
+import { Download, FileText } from 'lucide-react';
 
-const DocumentsSection = ({ 
-    documents, 
-    mediaCache, 
-    isLoading, 
-    hasMore, 
-    onLoadMore, 
+const DocumentsSection = ({
+    documents,
+    mediaCache,
+    isLoading,
+    hasMore,
+    onLoadMore,
     onDocumentClick,
     onDownload,
     paginationFlag
 }) => {
     // Lazy loading hook
     const lastDocumentElementRef = useLazyLoading(onLoadMore, hasMore && paginationFlag, isLoading);
-    
+
     // Show nothing if loading and no items
     if (isLoading && documents.length === 0) {
         return null;
@@ -26,9 +26,10 @@ const DocumentsSection = ({
         return (
             <div className="no-items-message">
                 <div className="no-items-icon">
-                    <Description className="media-icon" />
+                    <FileText className="media-icon" />
                 </div>
-                <p>No documents found</p>
+                <div className="no-items-title">No Document found</div>
+                <div className="no-items-subtitle">Shared Document will appear here</div>
             </div>
         );
     }
@@ -44,14 +45,14 @@ const DocumentsSection = ({
                         // Apply ref to the last element for lazy loading
                         const isLastElement = index === documents.length - 1;
                         return (
-                            <div 
+                            <div
                                 ref={isLastElement ? lastDocumentElementRef : null}
-                                key={doc.Id} 
-                                className="document-item" 
+                                key={doc.Id}
+                                className="document-item"
                                 onClick={() => onDocumentClick(doc)}
                             >
                                 <div className="document-icon">
-                                    <Description />
+                                    <FileText />
                                 </div>
                                 <div className="document-info">
                                     <div className="document-name" title={doc.MediaName || `Document ${doc.Id}`}>

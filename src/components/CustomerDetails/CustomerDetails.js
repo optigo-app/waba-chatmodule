@@ -1,36 +1,15 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Typography,
     Avatar,
-    Badge,
-    Chip,
     IconButton
 } from '@mui/material';
 import {
-    ArrowBack,
-    Phone,
-    VideoCall,
-    Search,
-    MoreVert,
-    Star,
-    Notifications,
-    NotificationsOff,
-    Security,
-    Delete,
-    Block,
-    PersonOff,
-    Message,
     Description,
-    Image,
     Link as LinkIcon,
-    ChevronRight,
-    VolumeUp,
-    VolumeOff,
-    Share,
-    Download,
     Close,
-    PlayArrow
+    Person
 } from '@mui/icons-material';
 import './CustomerDetails.scss';
 import { LoginContext } from '../../context/LoginData';
@@ -39,6 +18,8 @@ import { MediaApi } from '../../API/InitialApi/MediaApi';
 import MediaSection from './MediaSection';
 import DocumentsSection from './DocumentsSection';
 import LinksSection from './LinksSection';
+import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
+import { FileText, Image, Link } from 'lucide-react';
 
 const CustomerDetails = ({ customer, onClose, open }) => {
     const { id } = useParams();
@@ -69,6 +50,23 @@ const CustomerDetails = ({ customer, onClose, open }) => {
     const enablePagination = true;
 
     const can = (perm) => PERMISSION_SET?.has(perm);
+
+    const inFlightRequestsRef = useRef(new Set());
+    const fetchedPagesRef = useRef(new Set());
+
+    const getItemKey = (item) => item?.Id ?? item?.MediaUrl;
+    const mergeUniqueByKey = (prevList, nextList) => {
+        const map = new Map();
+        (prevList || []).forEach((it) => {
+            const k = getItemKey(it);
+            if (k != null) map.set(k, it);
+        });
+        (nextList || []).forEach((it) => {
+            const k = getItemKey(it);
+            if (k != null) map.set(k, it);
+        });
+        return Array.from(map.values());
+    };
 
     const fetchMediaItem = async (mediaUrl) => {
         if (!mediaUrl || mediaCache[mediaUrl]) return mediaCache[mediaUrl];
@@ -112,7 +110,17 @@ const CustomerDetails = ({ customer, onClose, open }) => {
     };
 
     const fetchMediaData = async (type, page = 1) => {
-        if (pagination[type]?.isLoading) return;
+        if (!customer?.ConversationId) return;
+
+        const group = (type === 'images' || type === 'videos') ? 'media' : 'docs';
+        const requestKey = `${customer.ConversationId}:${group}:${page}`;
+        if (inFlightRequestsRef.current.has(requestKey) || fetchedPagesRef.current.has(requestKey)) return;
+
+        inFlightRequestsRef.current.add(requestKey);
+        if (pagination[type]?.isLoading) {
+            inFlightRequestsRef.current.delete(requestKey);
+            return;
+        }
 
         setPagination(prev => ({
             ...prev,
@@ -128,8 +136,8 @@ const CustomerDetails = ({ customer, onClose, open }) => {
                 if (type === 'images' || type === 'videos') {
                     setMediaItems(prev => ({
                         ...prev,
-                        images: page === 1 ? categorized.images : [...prev.images, ...categorized.images],
-                        videos: page === 1 ? categorized.videos : [...prev.videos, ...categorized.videos]
+                        images: page === 1 ? categorized.images : mergeUniqueByKey(prev.images, categorized.images),
+                        videos: page === 1 ? categorized.videos : mergeUniqueByKey(prev.videos, categorized.videos)
                     }));
 
                     const hasMoreItems = response.data.length === pageSize;
@@ -153,8 +161,8 @@ const CustomerDetails = ({ customer, onClose, open }) => {
                 else if (type === 'documents' || type === 'links') {
                     setMediaItems(prev => ({
                         ...prev,
-                        documents: page === 1 ? categorized.documents : [...prev.documents, ...categorized.documents],
-                        links: page === 1 ? categorized.links : [...prev.links, ...categorized.links]
+                        documents: page === 1 ? categorized.documents : mergeUniqueByKey(prev.documents, categorized.documents),
+                        links: page === 1 ? categorized.links : mergeUniqueByKey(prev.links, categorized.links)
                     }));
 
                     const hasMoreItems = response.data.length === pageSize;
@@ -181,6 +189,8 @@ const CustomerDetails = ({ customer, onClose, open }) => {
                         .filter(item => item.MediaUrl)
                         .map(item => fetchMediaItem(item.MediaUrl))
                 );
+
+                fetchedPagesRef.current.add(requestKey);
             }
         } catch (error) {
             console.error(`Error fetching ${type}:`, error);
@@ -188,6 +198,8 @@ const CustomerDetails = ({ customer, onClose, open }) => {
                 ...prev,
                 [type]: { ...prev[type], hasMore: false, isLoading: false }
             }));
+        } finally {
+            inFlightRequestsRef.current.delete(requestKey);
         }
     };
 
@@ -223,6 +235,9 @@ const CustomerDetails = ({ customer, onClose, open }) => {
                 documents: { page: 1, hasMore: true, isLoading: false },
                 links: { page: 1, hasMore: true, isLoading: false }
             });
+
+            inFlightRequestsRef.current.clear();
+            fetchedPagesRef.current.clear();
 
             // Initial fetch for media (images and videos) and documents/links
             fetchMediaData('images', 1);
@@ -301,6 +316,10 @@ const CustomerDetails = ({ customer, onClose, open }) => {
         };
     }, [open, onClose]);
 
+    const displayName = getCustomerDisplayName(customer);
+    const avatarSeed = getCustomerAvatarSeed(customer);
+    const cfg = customer?.avatarConfig || getWhatsAppAvatarConfig(avatarSeed, 80);
+
     return (
         <>
             <div
@@ -331,17 +350,19 @@ const CustomerDetails = ({ customer, onClose, open }) => {
                         <div className="profile-section">
                             <div className="avatar-container">
                                 <Avatar
-                                    {...(customer?.avatarConfig || {})}
-                                    alt={customer.name}
+                                    {...cfg}
+                                    alt={displayName}
                                     className="profile-avatar"
-                                />
+                                >
+                                    {!hasCustomerName(customer) ? (
+                                        <Person fontSize="small" />
+                                    ) : (
+                                        cfg?.children
+                                    )}
+                                </Avatar>
                             </div>
 
-                            <Typography className="customer-name">{customer.name}</Typography>
-                            <Typography className="customer-phone">{customer.phone}</Typography>
-                            <Typography className="last-seen">
-                                {customer.CustomerPhone}
-                            </Typography>
+                            <Typography className="customer-name">{displayName}</Typography>
                         </div>
 
                         {/* Media Tabs */}
@@ -351,21 +372,21 @@ const CustomerDetails = ({ customer, onClose, open }) => {
                                     className={`tab-button ${activeTab === 'media' ? 'active' : ''}`}
                                     onClick={() => setActiveTab('media')}
                                 >
-                                    <Image />
+                                    <Image size={20} />
                                     <span>Media</span>
                                 </button>
                                 <button
                                     className={`tab-button ${activeTab === 'docs' ? 'active' : ''}`}
                                     onClick={() => setActiveTab('docs')}
                                 >
-                                    <Description />
+                                    <FileText size={20} />
                                     <span>Docs</span>
                                 </button>
                                 <button
                                     className={`tab-button ${activeTab === 'links' ? 'active' : ''}`}
                                     onClick={() => setActiveTab('links')}
                                 >
-                                    <LinkIcon />
+                                    <Link size={20} />
                                     <span>Links</span>
                                 </button>
                             </div>

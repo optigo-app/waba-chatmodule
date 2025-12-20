@@ -64,6 +64,7 @@ const MessageContent = ({
 
                     '&& .message-text': {
                         color: theme.palette.text.primary + ' !important',
+                        fontWeight:500,
                         marginRight: '0px !important',
                         ...(msg?.MessageType !== 'template' ? { paddingRight: '28px' } : {}),
                     },

@@ -110,6 +110,7 @@
                 align-items: center;
                 min-width: 0;
                 max-width: 520px;
+                width: 480px;
             }
 
             .customer-tags-scroll {
@@ -118,7 +119,7 @@
                 overflow-x: auto;
                 white-space: nowrap;
                 scroll-behavior: smooth;
-                gap: 6px;
+                gap: 5px;
                 padding-inline: 22px;
                 min-width: 0;
 
@@ -201,30 +202,6 @@
             height: 100%;
             overflow-y: auto;
             box-sizing: content-box;
-
-            /* Custom thin scrollbar */
-            scrollbar-width: thin;
-            scrollbar-color: #c1c1c1 #f1f1f1;
-
-            &::-webkit-scrollbar {
-                width: 4px;
-            }
-
-            &::-webkit-scrollbar-track {
-                background: #f1f1f1;
-                border-radius: 3px;
-                margin-top: 2px;
-                margin-bottom: 2px;
-            }
-
-            &::-webkit-scrollbar-thumb {
-                background: #c1c1c1;
-                border-radius: 3px;
-
-                &:hover {
-                    background: #a8a8a8;
-                }
-            }
 
             .message-item {
                 display: flex;
@@ -707,13 +684,13 @@
             position: relative;
 
             .attach-button {
-                color: #6b7280;
+                color: $text2ndColor;
                 transition: all 0.2s ease;
                 margin-bottom: 1px;
 
                 &:hover {
-                    color: #374151;
-                    background-color: #f3f4f6;
+                    color: $primary-main;
+                    background-color: rgba($primary-main, 0.12);
                 }
             }
 
@@ -853,18 +830,20 @@
 
 
             .send-button {
-                background-color: #8e4ff3;
-                color: white;
+                background-color: $primary-main;
+                color: $text-white;
                 transition: all 0.2s ease;
 
                 &:hover {
-                    background-color: #773dd4;
+                    background-color: darken($primary-main, 7%);
                     transform: scale(1.05);
                 }
 
+                &.Mui-disabled,
                 &:disabled {
-                    background-color: #e5e7eb;
-                    color: #9ca3af;
+                    background-color: $bg-light;
+                    color: $text2ndColor;
+                    transform: none;
                 }
             }
 
@@ -963,7 +942,6 @@
     margin-top: 0px;
     font-size: 11px;
     font-weight: 500;
-    color: #000;
     text-align: right;
     letter-spacing: 0.3px;
     background: rgba(255, 255, 255, 0.1);
