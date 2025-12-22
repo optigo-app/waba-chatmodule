@@ -1,21 +1,38 @@
 import { formatChatTimestamp } from '../../utils/DateFnc';
 import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig } from '../../utils/globalFunc';
+import React from 'react';
+import { Archive, ArchiveRestore, File, FileText, Image, MessageCircle, Pin, PinOff, Star, StarOff, UserPlus, Video } from 'lucide-react';
 
 export const getMessagePreview = (msg) => {
-  switch (msg?.MessageType) {
-    case 'text':
-      return msg?.Message || '';
-    case 'image':
-      return '📷 Photo';
-    case 'video':
-      return '🎥 Video';
-    case 'document':
-      return '📄 document';
-    case 'file':
-      return '📄 File';
-    default:
-      return 'New message';
+  const type = msg?.MessageType;
+  const text = type === 'text' ? (msg?.Message || '')
+    : type === 'image' ? 'Photo'
+    : type === 'video' ? 'Video'
+    : type === 'document' ? 'Document'
+    : type === 'file' ? 'File'
+    : 'New message';
+
+  const showIcon = type === 'image' || type === 'video' || type === 'document' || type === 'file';
+  const Icon = type === 'image' ? Image
+    : type === 'video' ? Video
+    : type === 'document' ? FileText
+    : type === 'file' ? File
+    : null;
+
+  if (!text) {
+    return { text: '', node: '' };
   }
+
+  const node = showIcon && Icon
+    ? React.createElement(
+      'span',
+      { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } },
+      React.createElement(Icon, { size: 14 }),
+      React.createElement('span', null, text)
+    )
+    : text;
+
+  return { text, node };
 };
 
 export const processApiResponse = (apiData) => {
@@ -48,10 +65,13 @@ export const processApiResponse = (apiData) => {
       }
     }
 
+    const preview = conversation.LastMessage ? getMessagePreview(lastMessage) : { text: '', node: '' };
+
     return {
       ...conversation,
       ConversationId: conversation.Id,
-      lastMessage: conversation.LastMessage ? getMessagePreview(lastMessage) : '',
+      lastMessage: preview.node,
+      lastMessageText: preview.text,
       lastMessageTime: formatChatTimestamp(lastMessage?.DateTime || conversation.DateTime),
       lastMessageStatus: lastMessage?.Status,
       lastMessageDirection: lastMessage?.Direction,
@@ -67,18 +87,24 @@ export const processApiResponse = (apiData) => {
 export const getCustomerListMenuItems = (member) => [
   {
     action: member?.IsPin === 1 ? 'UnPin' : 'Pin',
-    label: `📌 ${member?.IsPin === 1 ? 'Unpin' : 'Pin'}`,
+    icon: member?.IsPin === 1 ? React.createElement(PinOff, { size: 18 }) : React.createElement(Pin, { size: 18 }),
+    label: member?.IsPin === 1 ? 'Unpin' : 'Pin',
   },
   {
     action: member?.IsStar === 1 ? 'UnStar' : 'Star',
-    label: `⭐ ${member?.IsStar === 1 ? 'Unfavorite' : 'Favorite'}`,
+    icon: member?.IsStar === 1 ? React.createElement(StarOff, { size: 18 }) : React.createElement(Star, { size: 18 }),
+    label: member?.IsStar === 1 ? 'Unfavorite' : 'Favorite',
   },
   {
     action: member?.IsArchived === 1 ? 'UnArchive' : 'Archive',
-    label: `📂 ${member?.IsArchived === 1 ? 'Unarchive' : 'Archive'}`,
+    icon: member?.IsArchived === 1
+      ? React.createElement(ArchiveRestore, { size: 18 })
+      : React.createElement(Archive, { size: 18 }),
+    label: member?.IsArchived === 1 ? 'Unarchive' : 'Archive',
   },
   {
     action: 'AddCustomer',
-    label: '👤 Add to Customer',
+    icon: React.createElement(UserPlus, { size: 18 }),
+    label: 'Add to Customer',
   },
 ];

@@ -1,6 +1,6 @@
 import React from 'react';
+import { Box, Button, ImageList, ImageListItem, Skeleton, Typography } from '@mui/material';
 import useLazyLoading from './useLazyLoading';
-import './CustomerDetails.scss';
 import { Image, Play } from 'lucide-react';
 
 const MediaSection = ({
@@ -12,6 +12,7 @@ const MediaSection = ({
     onMediaClick,
     paginationFlag
 }) => {
+
     // Combine images and videos
     const combinedMedia = [...(mediaItems.images || []), ...(mediaItems.videos || [])];
 
@@ -20,80 +21,139 @@ const MediaSection = ({
 
     // Show nothing if loading and no items
     if (isLoading && combinedMedia.length === 0) {
-        return null;
+        return (
+            <Box>
+                <Typography
+                    variant="subtitle2"
+                    sx={{ color: 'text.secondary', fontWeight: 500, mb: 1 }}
+                >
+                    Media
+                </Typography>
+                <ImageList cols={3} gap={6} sx={{ m: 0 }}>
+                    {Array.from({ length: 9 }).map((_, idx) => (
+                        <ImageListItem key={`media-skel-${idx}`} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+                            <Box sx={{ position: 'relative', width: '100%', aspectRatio: '1 / 1' }}>
+                                <Skeleton variant="rounded" width="100%" height="100%" sx={{ position: 'absolute', inset: 0 }} />
+                            </Box>
+                        </ImageListItem>
+                    ))}
+                </ImageList>
+            </Box>
+        );
     }
 
     // Show "No items" message if no items after loading
     if (combinedMedia.length === 0) {
         return (
-            <div className="no-items-message">
-                <div className="no-items-icon">
-                    <Image className="media-icon" />
-                </div>
-                <div className="no-items-text">
-                    <div className="no-items-title">No media found</div>
-                    <div className="no-items-subtitle">Shared photos and videos will appear here</div>
-                </div>
-            </div>
+            <Box sx={{ py: 4, textAlign: 'center', color: 'text.secondary' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5, opacity: 0.5 }}>
+                    <Image size={44} />
+                </Box>
+                <Typography sx={{ fontWeight: 600, color: 'text.primary' }}>No media found</Typography>
+                <Typography variant="body2" sx={{ mt: 0.5, color: 'text.secondary' }}>
+                    Shared photos and videos will appear here
+                </Typography>
+            </Box>
         );
     }
 
     return (
-        <div className="media-section">
-            <h4>Media</h4>
-            <div className="media-grid">
+        <Box>
+            <Typography
+                variant="subtitle2"
+                sx={{ color: 'text.secondary', fontWeight: 500, mb: 1 }}
+            >
+                Media
+            </Typography>
+            <ImageList cols={3} gap={6} sx={{ m: 0 }}>
                 {combinedMedia.map((item, index) => {
                     const isVideo = item.MessageType === 'video';
-                    // Apply ref to the last element for lazy loading
                     const isLastElement = index === combinedMedia.length - 1;
+                    const title = item.MediaName || (isVideo ? 'Video' : 'Image');
+                    const src = mediaCache[item.MediaUrl] || '';
+
                     return (
-                        <div
+                        <ImageListItem
                             ref={isLastElement ? lastMediaElementRef : null}
                             key={item.Id}
-                            className="media-item"
                             onClick={() => onMediaClick(item)}
-                            title={item.MediaName || (isVideo ? 'Video' : 'Image')}
+                            title={title}
+                            sx={{ cursor: 'pointer' }}
                         >
-                            <div className="media-thumbnail-container">
-                                {isVideo ? (
-                                    <video
-                                        className="media-thumbnail"
+                            <Box
+                                sx={{
+                                    position: 'relative',
+                                    width: '100%',
+                                    aspectRatio: '1 / 1',
+                                    borderRadius: 2,
+                                    overflow: 'hidden',
+                                    bgcolor: 'action.hover'
+                                }}
+                            >
+                                {!src ? (
+                                    <Skeleton
+                                        variant="rounded"
+                                        width="100%"
+                                        height="100%"
+                                        sx={{ position: 'absolute', inset: 0, borderRadius: 0 }}
+                                    />
+                                ) : isVideo ? (
+                                    <Box
+                                        component="video"
                                         preload="metadata"
                                         playsInline
                                         muted
+                                        sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                                     >
-                                        <source src={mediaCache[item.MediaUrl] || ''} type="video/mp4" />
-                                        Your browser does not support the video tag.
-                                    </video>
+                                        <source src={src} type="video/mp4" />
+                                    </Box>
                                 ) : (
-                                    <img
-                                        src={mediaCache[item.MediaUrl] || ''}
+                                    <Box
+                                        component="img"
+                                        src={src}
                                         alt=""
-                                        className="media-thumbnail"
-                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                        }}
+                                        sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                                     />
                                 )}
-                                <div className="media-overlay">
-                                    {isVideo ? <Play className="media-icon" /> : <Image className="media-icon" />}
-                                </div>
-                            </div>
-                        </div>
+
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        inset: 0,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        bgcolor: 'rgba(0,0,0,0.28)',
+                                        opacity: 0,
+                                        transition: 'opacity 160ms ease',
+                                        '&:hover': { opacity: 1 }
+                                    }}
+                                >
+                                    {src ? (
+                                        isVideo ? (
+                                            <Play size={22} color="#fff" />
+                                        ) : (
+                                            <Image size={22} color="#fff" />
+                                        )
+                                    ) : null}
+                                </Box>
+                            </Box>
+                        </ImageListItem>
                     );
                 })}
-            </div>
-            {/* Manual load more button for non-lazy loading scenarios */}
-            {!paginationFlag && hasMore && (
-                <div className="load-more-container">
-                    <button
-                        className="load-more-button"
-                        onClick={onLoadMore}
-                        disabled={isLoading}
-                    >
+            </ImageList>
+
+            {!paginationFlag && hasMore ? (
+                <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'center' }}>
+                    <Button variant="outlined" onClick={onLoadMore} disabled={isLoading} size="small">
                         {isLoading ? 'Loading...' : 'Load More'}
-                    </button>
-                </div>
-            )}
-        </div>
+                    </Button>
+                </Box>
+            ) : null}
+        </Box>
     );
 };
 

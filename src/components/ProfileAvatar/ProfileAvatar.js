@@ -133,7 +133,11 @@ const ProfileAvatar = () => {
                     />
                 </MenuItem>
 
-                <MenuItem onClick={handleDataSync} className="menu-item">
+                <MenuItem
+                    onClick={handleDataSync}
+                    className="menu-item"
+                    disabled={!startSync}
+                >
                     <ListItemIcon className="menu-icon" sx={{ minWidth: "30px !important" }}>
                         <SyncIcon fontSize="small" />
                     </ListItemIcon>
@@ -145,7 +149,7 @@ const ProfileAvatar = () => {
 
                 <Divider className="menu-divider" />
 
-                <MenuItem onClick={handleLogout} className="menu-item">
+                <MenuItem onClick={handleLogout} className="menu-item logout">
                     <ListItemIcon className="menu-icon" sx={{ minWidth: "30px !important" }}>
                         <LogoutIcon fontSize="small" />
                     </ListItemIcon>

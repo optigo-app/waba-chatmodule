@@ -4,8 +4,8 @@
     min-width: 260px;
     height: calc(100vh - 3.2rem);
     background: $sidebar-Bgcolor;
-    box-shadow: $box-shadow-value;
     padding: $sidebar-padding;
+    border-right: 1px solid $sidebar-borderColor;
     position: fixed;
     top: 3.2rem;
     left: 0;
@@ -38,15 +38,29 @@
     // Powered by section
     .powered-by {
         margin-top: auto;
-        padding: 12px 8px 8px;
+        padding: 12px 10px 10px;
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         justify-content: center;
-        gap: 0.5rem;
-        font-size: 0.8125rem;
+        gap: 10px;
+        font-size: 12px;
         font-weight: 500;
-        color: #6b7280;
-        border-top: 1px solid #e5e7eb;
+        font-family: $font-family;
+        color: $text2ndColor;
+        background: rgba($primary-main, 0.035);
+        border: 1px solid $sidebar-borderColor;
+        border-radius: 16px;
+        transition: transform $transition-duration ease, box-shadow $transition-duration ease;
+
+        &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(17, 24, 39, 0.08);
+        }
+
+        span {
+            line-height: 1;
+            color: $text2ndColor;
+        }
 
         .optigo-logo {
             display: flex;
@@ -57,12 +71,19 @@
                 height: 100%;
                 width: auto;
                 max-width: 80px;
+                filter: grayscale(1) opacity(0.8);
+                transition: filter $transition-duration ease, transform $transition-duration ease;
+            }
+
+            &:hover img {
+                filter: grayscale(0) opacity(1);
+                transform: translateY(-1px);
             }
         }
     }
 
     .sidebar_main {
-        flex: 0 1 50%;
+        flex: 0 1 48%;
         min-height: 0;
 
         ul {
@@ -144,13 +165,14 @@
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
-            color: #6b7280;
-            padding: 12px 16px 4px;
+            color: $text2ndColor;
+            padding: 12px 16px 10px;
             letter-spacing: 0.5px;
             position: sticky;
             top: 0;
             z-index: 2;
             background: $sidebar-Bgcolor;
+            border-bottom: 1px solid $sidebar-borderColor;
         }
 
         ul {
@@ -162,11 +184,11 @@
             flex-direction: column;
             gap: 6px;
             min-height: 0;
-            margin-block: 2px;
+            margin-block: 8px;
 
             li {
-                padding: 0 16px;
-                font-size: 13px;
+                padding: 0 10px;
+                font-size: 12.5px;
                 color: $titleColor;
                 cursor: pointer;
                 transition: all $transition-duration ease;
@@ -180,25 +202,31 @@
                     display: flex;
                     align-items: center;
                     gap: $sidebar-tag-gap;
-                    padding: $sidebar-item-padding-y $sidebar-item-padding-x;
-                    border-radius: $sidebar-item-radius;
-                    background: rgba(255, 255, 255, 0.65);
-                    border: 1px solid rgba(0, 0, 0, 0.06);
+                    padding: 7px 10px;
+                    border-radius: 999px;
+                    border: 1px solid $sidebar-borderColor;
                     transition: all $transition-duration ease;
+                    box-shadow: 0 1px 0 rgba(17, 24, 39, 0.02);
+
+                    &:hover {
+                        background: rgba($primary-main, 0.06);
+                        transform: translateY(-1px);
+                        box-shadow: 0 6px 16px rgba(17, 24, 39, 0.06);
+                    }
                 }
 
                 .tag-dot {
-                    width: $sidebar-tag-dot-size;
-                    height: $sidebar-tag-dot-size;
+                    width: 9px;
+                    height: 9px;
                     border-radius: 999px;
-                    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85);
+                    box-shadow: 0 0 0 3px rgba($sidebar-Bgcolor, 0.95);
                     flex: 0 0 auto;
                 }
 
                 .tag-name {
-                    font-size: 13px;
+                    font-size: 12.5px;
                     font-weight: 600;
-                    color: $titleColor;
+                    color: $text2ndColor;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -208,17 +236,17 @@
 
                 &.active {
                     .tag-chip {
-                        background: $sidebar-Activebg;
-                        border-color: rgba(255, 255, 255, 0.12);
-                        box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+                        background: rgba($primary-main, 0.10);
+                        border-color: rgba($primary-main, 0.22);
+                        box-shadow: 0 6px 16px rgba(17, 24, 39, 0.06);
                     }
 
                     .tag-name {
-                        color: $text-white;
+                        color: $titleColor;
                     }
 
                     .tag-dot {
-                        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+                        box-shadow: 0 0 0 3px rgba($primary-main, 0.12);
                     }
                 }
             }

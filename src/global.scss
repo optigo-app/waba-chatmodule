@@ -7,13 +7,15 @@ $button-DangerBgcolor-hover: #c20225;
 $button-Dangercolor: #ffffff;
 
 $sidebar-Activebg: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%) !important;
-$sidebar-Bgcolor: #F7F5F3;
+$sidebar-Bgcolor: #ffffff;
+$sidebar-borderColor:#5a5a5a0e;
+$side-bar-boxShadow:rgba(0, 0, 0, 0.1) 0px 4px 10px;
 $sidebar-padding: 16px;
 $sidebar-section-gap: 12px;
 $sidebar-item-gap: 10px;
 $sidebar-item-padding-y: 10px;
 $sidebar-item-padding-x: 12px;
-$sidebar-item-radius: 14px;
+$sidebar-item-radius: 16px;
 $sidebar-icon-size: 20px;
 $sidebar-icon-stroke: 2;
 $sidebar-header-icon-size: 40px;
@@ -21,8 +23,8 @@ $sidebar-tag-gap: 10px;
 $sidebar-tag-dot-size: 10px;
 
 $header-height: 3.2rem;
-$header-padding-x: 16px;
-$header-padding-y: 10px;
+$header-padding-x: 12px;
+$header-padding-y: 8px;
 $header-radius: 14px;
 
 $font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;

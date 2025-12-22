@@ -236,8 +236,24 @@ const AssigneeDropdown = ({ options, label, assignedList = [], selectedCustomer,
                     sx={{
                         borderRadius: 2,
                         fontSize: 14,
+                        '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: theme.palette.borderColor.extraLight,
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: theme.palette.borderColor.extraLight,
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: theme.palette.borderColor.extraLight,
+                        },
                         "& .MuiSelect-select": {
                             paddingY: "6px",
+                        },
+                    }}
+                    MenuProps={{
+                        PaperProps: {
+                            sx: {
+                                border: `1px solid ${theme.palette.borderColor.extraLight}`,
+                            },
                         },
                     }}
                 >

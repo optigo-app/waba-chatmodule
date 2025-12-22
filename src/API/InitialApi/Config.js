@@ -1,7 +1,7 @@
 import { GetCredentialsFromCookie } from "../../utils/FetchToken";
 import { useNavigate } from "react-router-dom";
 
-const isLocal = ["localhost", "nzen", '7afbf14fb357.ngrok-free.app'].includes(window.location.hostname);
+const isLocal = ["localhost", "nzen", '9511a53f910a.ngrok-free.app'].includes(window.location.hostname);
 
 // export const APIURL = isLocal ? "http://nextjswhatsapp.web/api/report" : "https://livenx.optigoapps.com/api/report";
 // export const MEDIAAPIURL = "https://messagingapi.charteredinfo.com/v19.0/622385334300738/Media/";

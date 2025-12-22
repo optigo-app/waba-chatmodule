@@ -61,7 +61,7 @@ const theme = createTheme({
       light: '#7367f0',
       dark: '#7367f0',
       secondary: '#7D7f85',
-      extraLight: '#cbcbcbff',
+      extraLight: '#5a5a5a0e',
       contrastText: '#ffffff',
     },
     button: {

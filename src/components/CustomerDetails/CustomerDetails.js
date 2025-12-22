@@ -21,7 +21,7 @@ import LinksSection from './LinksSection';
 import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import { FileText, Image, Link } from 'lucide-react';
 
-const CustomerDetails = ({ customer, onClose, open }) => {
+const CustomerDetails = ({ customer, onClose, open, variant = 'drawer' }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('media');
@@ -299,9 +299,6 @@ const CustomerDetails = ({ customer, onClose, open }) => {
     useEffect(() => {
         if (!open) return;
 
-        const prevOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
-
         const onKeyDown = (e) => {
             if (e.key === 'Escape') {
                 onClose?.();
@@ -310,11 +307,19 @@ const CustomerDetails = ({ customer, onClose, open }) => {
 
         window.addEventListener('keydown', onKeyDown);
 
+        if (variant !== 'panel') {
+            const prevOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = prevOverflow;
+                window.removeEventListener('keydown', onKeyDown);
+            };
+        }
+
         return () => {
-            document.body.style.overflow = prevOverflow;
             window.removeEventListener('keydown', onKeyDown);
         };
-    }, [open, onClose]);
+    }, [open, onClose, variant]);
 
     const displayName = getCustomerDisplayName(customer);
     const avatarSeed = getCustomerAvatarSeed(customer);
@@ -322,12 +327,14 @@ const CustomerDetails = ({ customer, onClose, open }) => {
 
     return (
         <>
+            {variant !== 'panel' ? (
+                <div
+                    className={`customer-details-backdrop ${open ? 'open' : ''}`}
+                    onClick={onClose}
+                />
+            ) : null}
             <div
-                className={`customer-details-backdrop ${open ? 'open' : ''}`}
-                onClick={onClose}
-            />
-            <div
-                className={`customer-details-container ${open ? 'slide-in' : ''} ${open ? 'visible' : ''}`}
+                className={`customer-details-container ${variant === 'panel' ? 'panel' : ''} ${open ? 'slide-in' : ''} ${open ? 'visible' : ''}`}
                 role="dialog"
                 aria-modal={open ? 'true' : 'false'}
                 onClick={(e) => e.stopPropagation()}

@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback, useContext } from 'react';
-import { Box, Typography, Avatar, Divider, Menu, MenuItem } from '@mui/material';
+import { Box, Typography, Avatar, Divider, Menu, MenuItem, IconButton, useMediaQuery } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Plus } from 'lucide-react';
+import { Plus, Tag } from 'lucide-react';
 import './Conversation.scss';
 import TagsModel from '../TagsModel/TagsModel';
 import { useTagsContext } from '../../contexts/TagsContexts';
@@ -35,6 +35,8 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
     const containerRef = useRef(null);
+    const mediaPreviewScrollStateRef = useRef(null);
+    const prevMediaFilesLenRef = useRef(0);
     const scrollTimeoutRef = useRef(null);
     const lastScrollTriggerRef = useRef(0);
     const isAutoScrollingRef = useRef(false);
@@ -45,6 +47,12 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
     const { auth } = useContext(LoginContext);
     const [getLength, setLength] = useState("");
+    const isNarrowScreen = useMediaQuery('(max-width: 992px)');
+    const isCompactDockedPanel = useMediaQuery('(max-width: 1200px)');
+    const [tagsMenuAnchorEl, setTagsMenuAnchorEl] = useState(null);
+    const isDetailsPanelDocked = drawerOpen === true && !isNarrowScreen;
+    const dockedPanelWidth = isCompactDockedPanel ? 380 : 420;
+    const scrollToBottomRightOffset = isDetailsPanelDocked ? dockedPanelWidth + 30 : 30;
 
     // Use the conversation hook
     const {
@@ -178,6 +186,22 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
     }, [getMediaKey]);
 
     const open = Boolean(anchorEl);
+    const tagsMenuOpen = Boolean(tagsMenuAnchorEl);
+
+    const handleOpenTagsMenu = (event) => {
+        event.stopPropagation();
+        setTagsMenuAnchorEl(event.currentTarget);
+    };
+
+    const handleCloseTagsMenu = () => {
+        setTagsMenuAnchorEl(null);
+    };
+
+    useEffect(() => {
+        if (!isDetailsPanelDocked) {
+            setTagsMenuAnchorEl(null);
+        }
+    }, [isDetailsPanelDocked]);
 
     // Close message actions menu
     const handleCloseMessageMenu = () => {
@@ -293,6 +317,50 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
         }
     };
 
+    const captureMessageScrollState = useCallback(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        mediaPreviewScrollStateRef.current = {
+            scrollTop: el.scrollTop,
+            bottomGap: el.scrollHeight - el.clientHeight - el.scrollTop,
+        };
+    }, []);
+
+    const mediaFilesLength = mediaFiles?.length || 0;
+    useEffect(() => {
+        const prevLen = prevMediaFilesLenRef.current;
+
+        if (prevLen === 0 && mediaFilesLength > 0) {
+            // The message list may already be unmounted at this point.
+            // We prefer capturing scroll state in openFilePicker (before opening preview).
+            // Only capture here if we still have access to the container and no state exists.
+            const el = containerRef.current;
+            if (el && !mediaPreviewScrollStateRef.current) {
+                mediaPreviewScrollStateRef.current = {
+                    scrollTop: el.scrollTop,
+                    bottomGap: el.scrollHeight - el.clientHeight - el.scrollTop,
+                };
+            }
+        }
+
+        if (prevLen > 0 && mediaFilesLength === 0) {
+            const state = mediaPreviewScrollStateRef.current;
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const el = containerRef.current;
+                    if (!el || !state) return;
+                    const nextTop = typeof state.bottomGap === 'number'
+                        ? Math.max(0, el.scrollHeight - el.clientHeight - state.bottomGap)
+                        : Math.max(0, Math.min(el.scrollHeight - el.clientHeight, state.scrollTop ?? 0));
+                    el.scrollTop = nextTop;
+                });
+            });
+        }
+
+        prevMediaFilesLenRef.current = mediaFilesLength;
+    }, [mediaFilesLength]);
+
     const openFilePicker = (e, acceptType) => {
         e.preventDefault();
         e.stopPropagation();
@@ -301,6 +369,7 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
             fileInputRef.current.value = ''; // Reset the input to allow selecting the same file again
             fileInputRef.current.oninput = (changeEvent) => {
                 if (changeEvent.target.files.length > 0) {
+                    captureMessageScrollState();
                     // File was selected, handle it in the change handler
                     handleFileChange(changeEvent, toast);
                 }
@@ -522,169 +591,271 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                     onClose={() => setMediaViewerOpen(false)}
                 />
             )}
-            {/* Header */}
-            <div className="conversation-header">
-                <div className="header-left">
-                    <div style={{ width: 40, height: 40, marginRight: 10, cursor: "pointer" }}>
-                        {!hasCustomerName(selectedCustomer) ? (
-                            <Avatar
-                                {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40)}
-                                onClick={() => setDrawerOpen(true)}
-                            >
-                                <PersonIcon fontSize="small" />
-                            </Avatar>
-                        ) : (
-                            <Avatar
-                                {...(selectedCustomer?.avatarConfig || getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40))}
-                                onClick={() => setDrawerOpen(true)}
-                            />
-                        )}
-                    </div>
-                    <div className="customer-info">
-                        <Typography variant="subtitle1" className="customer-name">
-                            {getCustomerDisplayName(selectedCustomer)}
-                        </Typography>
-                    </div>
-                    {selectedCustomer?.CustomerId ? (
-                        <Box
-                            className="customer-tags"
-                            onClick={() => setOpenTagModal(true)}
-                        >
-                            <Plus size={12} style={{ marginRight: 4 }} />
-                            <Typography variant="caption">Add tag</Typography>
-                        </Box>
-                    ) : null}
-                    {selectedCustomer?.CustomerId && tagsList?.length > 0 ? (
-                        <div className="customer-tags-wrapper">
-                            {tagsOverflow && canScrollTagsLeft ? (
-                                <button
-                                    type="button"
-                                    className="tag-scroll-btn left"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        scrollTagsBy(-300);
-                                    }}
-                                >
-                                    <ChevronLeftIcon fontSize="small" />
-                                </button>
-                            ) : null}
-
-                            <div className="customer-tags-scroll" ref={tagsScrollRef}>
-                                {tagsList.map((tag, index) => (
-                                    <Box
-                                        className="customer-tags-chip"
-                                        key={index}
+            <div className="conversation-layout">
+                <div className="conversation-main">
+                    {/* Header */}
+                    <div className="conversation-header">
+                        <div className="header-left">
+                            <div style={{ width: 40, height: 40, marginRight: 10, cursor: "pointer" }}>
+                                {!hasCustomerName(selectedCustomer) ? (
+                                    <Avatar
+                                        {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40)}
+                                        onClick={() => setDrawerOpen(true)}
                                     >
-                                        {tag?.TagName}
-                                        <CloseIcon
+                                        <PersonIcon fontSize="small" />
+                                    </Avatar>
+                                ) : (
+                                    <Avatar
+                                        {...(selectedCustomer?.avatarConfig || getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40))}
+                                        onClick={() => setDrawerOpen(true)}
+                                    />
+                                )}
+                            </div>
+                            <div className="customer-info">
+                                <Typography variant="subtitle1" className="customer-name">
+                                    {getCustomerDisplayName(selectedCustomer)}
+                                </Typography>
+                            </div>
+                            {selectedCustomer?.CustomerId ? (
+                                isDetailsPanelDocked ? (
+                                    <IconButton
+                                        size="small"
+                                        onClick={handleOpenTagsMenu}
+                                        sx={{
+                                            ml: 1,
+                                            width: 34,
+                                            height: 34,
+                                            borderRadius: '10px',
+                                            border: '1px solid rgba(0,0,0,0.08)',
+                                            background: 'rgba(255,255,255,0.9)',
+                                        }}
+                                    >
+                                        <Tag size={16} />
+                                    </IconButton>
+                                ) : (
+                                    <Box
+                                        className="customer-tags"
+                                        onClick={() => setOpenTagModal(true)}
+                                    >
+                                        <Plus size={12} style={{ marginRight: 4 }} />
+                                        <Typography variant="caption">Add tag</Typography>
+                                    </Box>
+                                )
+                            ) : null}
+                            {selectedCustomer?.CustomerId && !isDetailsPanelDocked && tagsList?.length > 0 ? (
+                                <div className="customer-tags-wrapper">
+                                    {tagsOverflow && canScrollTagsLeft ? (
+                                        <button
+                                            type="button"
+                                            className="tag-scroll-btn left"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleDeletetags(tag?.Id)
+                                                scrollTagsBy(-300);
                                             }}
-                                        />
-                                    </Box>
-                                ))}
-                            </div>
+                                        >
+                                            <ChevronLeftIcon fontSize="small" />
+                                        </button>
+                                    ) : null}
 
-                            {tagsOverflow && canScrollTagsRight ? (
-                                <button
-                                    type="button"
-                                    className="tag-scroll-btn right"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        scrollTagsBy(300);
-                                    }}
-                                >
-                                    <ChevronRightIcon fontSize="small" />
-                                </button>
+                                    <div className="customer-tags-scroll" ref={tagsScrollRef}>
+                                        {tagsList.map((tag, index) => (
+                                            <Box
+                                                className="customer-tags-chip"
+                                                key={index}
+                                            >
+                                                {tag?.TagName}
+                                                <CloseIcon
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeletetags(tag?.Id)
+                                                    }}
+                                                />
+                                            </Box>
+                                        ))}
+                                    </div>
+
+                                    {tagsOverflow && canScrollTagsRight ? (
+                                        <button
+                                            type="button"
+                                            className="tag-scroll-btn right"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                scrollTagsBy(300);
+                                            }}
+                                        >
+                                            <ChevronRightIcon fontSize="small" />
+                                        </button>
+                                    ) : null}
+                                </div>
                             ) : null}
                         </div>
-                    ) : null}
-                </div>
-                <div className="header-right">
-                    {can(5) &&
-                        <AssigneeDropdown
-                            options={assigneeList}
-                            onChange={handleAssigneeChange}
-                            value={selectedAssignees}
-                            selectedCustomer={selectedCustomer}
-                            fetchAssigneeList={fetchAssigneeList}
+                        <div className="header-right">
+                            {can(5) &&
+                                <AssigneeDropdown
+                                    options={assigneeList}
+                                    onChange={handleAssigneeChange}
+                                    value={selectedAssignees}
+                                    selectedCustomer={selectedCustomer}
+                                    fetchAssigneeList={fetchAssigneeList}
+                                />
+                            }
+                            {can(5) &&
+                                <EscalatedDropdown
+                                    options={escalatedLists}
+                                    onChange={handleEscalateChange}
+                                    value={selectedEscalated}
+                                    selectedCustomer={selectedCustomer}
+                                    fetchEscalatedList={fetchEscalatedList}
+                                />
+                            }
+                        </div>
+                    </div>
+
+                    <Menu
+                        anchorEl={tagsMenuAnchorEl}
+                        open={tagsMenuOpen}
+                        onClose={handleCloseTagsMenu}
+                        PaperProps={{
+                            sx: {
+                                borderRadius: 2,
+                                border: '1px solid rgba(0,0,0,0.08)',
+                                minWidth: 220,
+                            }
+                        }}
+                    >
+                        <MenuItem
+                            onClick={() => {
+                                handleCloseTagsMenu();
+                                setOpenTagModal(true);
+                            }}
+                            dense
+                        >
+                            <Plus size={14} style={{ marginRight: 8 }} />
+                            Add tag
+                        </MenuItem>
+                        <Divider />
+                        {(tagsList || []).length > 0 ? (
+                            tagsList.map((tag) => (
+                                <MenuItem
+                                    key={tag?.Id ?? tag?.TagName}
+                                    dense
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: 1,
+                                    }}
+                                >
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {tag?.TagName}
+                                    </span>
+                                    <IconButton
+                                        size="small"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeletetags(tag?.Id);
+                                        }}
+                                        sx={{
+                                            width: 28,
+                                            height: 28,
+                                            borderRadius: 2,
+                                        }}
+                                    >
+                                        <CloseIcon sx={{ fontSize: 16 }} />
+                                    </IconButton>
+                                </MenuItem>
+                            ))
+                        ) : (
+                            <MenuItem dense disabled>
+                                No tags
+                            </MenuItem>
+                        )}
+                    </Menu>
+
+                    {/* Messages Area - Using the MessageArea component */}
+                    <MessageArea
+                        showMedia={showMedia}
+                        setShowMedia={setShowMedia}
+                        loading={loading}
+                        mediaFiles={mediaFiles}
+                        setMediaFiles={setMediaFiles}
+                        handleClosePreview={handleClosePreview}
+                        containerRef={containerRef}
+                        showScrollToBottom={showScrollToBottom}
+                        scrollToBottomRightOffset={scrollToBottomRightOffset}
+                        setContextMenu={setContextMenu}
+                        selectedCustomer={selectedCustomer}
+                        scrollToBottom={scrollToBottom}
+                        groupMessagesByDate={groupMessagesByDate}
+                        formatDateHeader={formatDateHeader}
+                        getMessageStatusIcon={getMessageStatusIconCallback}
+                        parseTemplateData={parseTemplateData}
+                        getMediaSrcForMessage={getMediaSrcForMessage}
+                        handleMediaClick={handleMediaClick}
+                        handleMessageEmojiClick={handleMessageEmojiClick}
+                        handleMenuClick={handleMenuClick}
+                        handleContextMenu={handleContextMenu}
+                        scrollToMessage={scrollToMessage}
+                        handleReply={handleReply}
+                        handleForward={handleForward}
+                        blinkMessageId={blinkMessageId}
+                        setBlinkMessageId={setBlinkMessageId}
+                        loadedMedia={loadedMedia}
+                        setLoadedMedia={setLoadedMedia}
+                        getMediaKey={getMediaKeyCallback}
+                        markLoaded={markLoadedCallback}
+                        uploadProgress={uploadProgress}
+                        replyToMessage={replyToMessage}
+                    />
+
+                    {can(6) ? (
+                        <ChatBox
+                            replyToMessage={replyToMessage}
+                            handleCancelReply={handleCancelReply}
+                            handleAttachClick={handleAttachClick}
+                            toggleEmojiPicker={toggleEmojiPicker}
+                            showPicker={showPicker}
+                            emojiPickerRef={emojiPickerRef}
+                            showMedia={showMedia}
+                            fileInputRef={fileInputRef}
+                            openFilePicker={openFilePicker}
+                            imageParams={imageParams}
+                            videoParams={videoParams}
+                            docsParams={docsParams}
+                            handleFileChange={(e) => handleFileChange(e, toast)}
+                            inputValue={inputValue}
+                            setInputValue={setInputValue}
+                            handleKeyPress={handleKeyPress}
+                            handleSendMessage={() => handleSendMessage(containerRef, scrollToBottom, toast)}
+                            mediaFiles={mediaFiles}
                         />
-                    }
-                    {can(5) &&
-                        <EscalatedDropdown
-                            options={escalatedLists}
-                            onChange={handleEscalateChange}
-                            value={selectedEscalated}
-                            selectedCustomer={selectedCustomer}
-                            fetchEscalatedList={fetchEscalatedList}
-                        />
+                    ) :
+                        <div className="message-input-area no-permission">
+                            <p className="no-permission-text">🚫 You don’t have permission to send or reply to messages.</p>
+                        </div>
                     }
                 </div>
+
+                {drawerOpen === true && (
+                    isNarrowScreen ? (
+                        <CustomerDetails
+                            customer={selectedCustomer}
+                            onClose={() => setDrawerOpen(false)}
+                            open={drawerOpen}
+                            variant="drawer"
+                        />
+                    ) : (
+                        <div className="conversation-right-panel">
+                            <CustomerDetails
+                                customer={selectedCustomer}
+                                onClose={() => setDrawerOpen(false)}
+                                open={drawerOpen}
+                                variant="panel"
+                            />
+                        </div>
+                    )
+                )}
             </div>
-
-            <Divider />
-
-            {/* Messages Area - Using the MessageArea component */}
-            <MessageArea
-                showMedia={showMedia}
-                setShowMedia={setShowMedia}
-                loading={loading}
-                mediaFiles={mediaFiles}
-                setMediaFiles={setMediaFiles}
-                handleClosePreview={handleClosePreview}
-                containerRef={containerRef}
-                showScrollToBottom={showScrollToBottom}
-                setContextMenu={setContextMenu}
-                selectedCustomer={selectedCustomer}
-                scrollToBottom={scrollToBottom}
-                groupMessagesByDate={groupMessagesByDate}
-                formatDateHeader={formatDateHeader}
-                getMessageStatusIcon={getMessageStatusIconCallback}
-                parseTemplateData={parseTemplateData}
-                getMediaSrcForMessage={getMediaSrcForMessage}
-                handleMediaClick={handleMediaClick}
-                handleMessageEmojiClick={handleMessageEmojiClick}
-                handleMenuClick={handleMenuClick}
-                handleContextMenu={handleContextMenu}
-                scrollToMessage={scrollToMessage}
-                handleReply={handleReply}
-                handleForward={handleForward}
-                blinkMessageId={blinkMessageId}
-                setBlinkMessageId={setBlinkMessageId}
-                loadedMedia={loadedMedia}
-                setLoadedMedia={setLoadedMedia}
-                getMediaKey={getMediaKeyCallback}
-                markLoaded={markLoadedCallback}
-                uploadProgress={uploadProgress}
-            />
-
-            {can(6) ? (
-                <ChatBox
-                    replyToMessage={replyToMessage}
-                    handleCancelReply={handleCancelReply}
-                    handleAttachClick={handleAttachClick}
-                    toggleEmojiPicker={toggleEmojiPicker}
-                    showPicker={showPicker}
-                    emojiPickerRef={emojiPickerRef}
-                    showMedia={showMedia}
-                    fileInputRef={fileInputRef}
-                    openFilePicker={openFilePicker}
-                    imageParams={imageParams}
-                    videoParams={videoParams}
-                    docsParams={docsParams}
-                    handleFileChange={(e) => handleFileChange(e, toast)}
-                    inputValue={inputValue}
-                    setInputValue={setInputValue}
-                    handleKeyPress={handleKeyPress}
-                    handleSendMessage={() => handleSendMessage(containerRef, scrollToBottom, toast)}
-                    mediaFiles={mediaFiles}
-                />
-            ) :
-                <div className="message-input-area no-permission">
-                    <p className="no-permission-text">🚫 You don’t have permission to send or reply to messages.</p>
-                </div>
-            }
 
             <TagsModel openTagModal={openTagModal} setOpenTagModal={setOpenTagModal} tags={tags} addTags={addTags} removeTags={removeTags} tagInput={tagInput} setTagInput={setTagInput} color={color} setColor={setColor} selectedCustomer={selectedCustomer} handleFetchtags={handleFetchtags} />
 
@@ -716,11 +887,6 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                 onSend={handleSendForward}
             />
 
-            {
-                drawerOpen === true && (
-                    <CustomerDetails customer={selectedCustomer} onClose={() => setDrawerOpen(false)} open={drawerOpen} />
-                )
-            }
         </Box>
     );
 };

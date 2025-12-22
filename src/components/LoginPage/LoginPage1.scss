@@ -1,7 +1,9 @@
-$background-light: #ececec99;
+@use "../../global.scss" as *;
+
+$background-light: rgba($primary-main, 0.08);
 $white: #ffffff;
-$gray: gray;
-$text-muted: #8080808f;
+$gray: $text2ndColor;
+$text-muted: rgba($placeholderColor, 0.6);
 
 // Mixins
 @mixin flex-center {
@@ -10,7 +12,7 @@ $text-muted: #8080808f;
     justify-content: center;
 }
 
-@mixin circle($size: 80px, $color: #7367f0) {
+@mixin circle($size: 80px, $color: $primary-main) {
     width: $size;
     height: $size;
     background-color: $color;
@@ -22,6 +24,7 @@ $text-muted: #8080808f;
     @include flex-center;
     height: 100vh;
     padding: 0 8px;
+    background: $sidebar-Bgcolor;
 
     @media (min-width: 600px) {
         padding: 0 16px;
@@ -37,7 +40,7 @@ $text-muted: #8080808f;
     width: 100%;
     max-width: 600px;
     border-radius: 20px;
-    background: #ececec99;
+    background: $background-light;
     padding: 0;
     position: relative;
 
@@ -65,13 +68,13 @@ $text-muted: #8080808f;
     &--top-left {
         top: 35px;
         left: 35px;
-        background: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #f06787 100%);
+        background: $button-Bgcolor;
     }
 
     &--bottom-right {
         bottom: 35px;
         right: 35px;
-        background-color: #fff;
+        background-color: $sidebar-Bgcolor;
     }
 }
 
@@ -95,7 +98,7 @@ $text-muted: #8080808f;
 // Login form section
 .login-form-section {
     flex: 1;
-    background: #ffffff;
+    background: $white;
     padding: 30px;
     display: flex;
     flex-direction: column;
@@ -119,11 +122,14 @@ $text-muted: #8080808f;
 .login-title {
     font-weight: bold !important;
     margin-bottom: 8px;
+    color: $titleColor;
+    font-family: $font-family;
 }
 
 .login-subtitle {
-    color: gray;
+    color: $text2ndColor;
     margin-bottom: 26px !important;
+    font-family: $font-family;
 }
 
 // Form styles
@@ -144,7 +150,7 @@ $text-muted: #8080808f;
 
 // Password toggle button
 .password-toggle {
-    color: #8080808f;
+    color: $text-muted;
 }
 
 // Login button
@@ -155,15 +161,18 @@ $text-muted: #8080808f;
     justify-content: center;
 
     button {
-        background: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #f06787 100%);
-        color: white !important;
+        background: $button-Bgcolor;
+        color: $button-color !important;
+        border-radius: 16px !important;
+        font-family: $font-family !important;
+        text-transform: capitalize !important;
     }
 }
 
 // Image section
 .login-image-section {
     flex: 1;
-    background: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #f06787 100%);
+    background: $button-Bgcolor;
     @include flex-center;
 
     .image-container {
@@ -197,42 +206,41 @@ $text-muted: #8080808f;
     }
 }
 
-
 .textfieldsClass {
     font-size: 14px;
-    color: #808080;
+    color: $text2ndColor;
 
     .MuiTypography-root {
-        color: #808080;
+        color: $text2ndColor;
         font-size: 14px;
     }
 
     .MuiOutlinedInput-root {
-        color: #808080;
-        border-radius: 8px !important;
+        color: $text2ndColor;
+        border-radius: 12px !important;
         padding: 0px 5px !important;
         font-size: 14px;
     }
 
     .MuiPickersDay-root {
-        background-color: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%);
-        color: #fff;
+        background: $button-Bgcolor;
+        color: $text-white;
     }
 
     .MuiOutlinedInput-root fieldset {
-        border-color: #ccc;
+        border-color: rgba(0, 0, 0, 0.18);
     }
 
     .MuiOutlinedInput-root:hover fieldset {
-        border-color: #685dd8;
+        border-color: $button-Bordercolor;
     }
 
     .MuiOutlinedInput-root.Mui-focused fieldset {
-        border-color: #685dd8;
+        border-color: $button-Bordercolor;
     }
 
     .MuiInputBase-input {
-        color: #808080 !important;
+        color: $titleColor !important;
         padding: 7px 5px !important;
 
         &:not(textarea) {
@@ -253,6 +261,7 @@ $text-muted: #8080808f;
 
         &:not(.MuiInputBase-readOnly):not([readonly])::placeholder {
             transition: 200ms !important;
+            color: $placeholderColor;
         }
     }
 
@@ -272,24 +281,24 @@ $text-muted: #8080808f;
             .MuiSvgIcon-root {
                 width: 22px;
                 height: 22px;
-                color: #808080;
+                color: $placeholderColor;
             }
         }
     }
 
     // Apply to Chips
     .MuiChip-root {
-        color: #444050;
+        color: $titleColor;
         cursor: pointer;
 
         &:hover {
-            background: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%) !important;
-            color: #fff;
+            background: $button-Bgcolor !important;
+            color: $text-white;
         }
 
         .MuiChip-deleteIcon {
             &:hover {
-                color: #fff;
+                color: $text-white;
             }
         }
 

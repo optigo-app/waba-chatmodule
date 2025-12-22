@@ -10,9 +10,8 @@
     justify-content: space-between;
     align-items: center;
     padding: $header-padding-y $header-padding-x;
-    background-color: rgba(255, 255, 255, 0.85);
     background:$sidebar-Bgcolor;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid $sidebar-borderColor;
     height: $header-height;
     backdrop-filter: blur(10px);
     box-sizing: border-box;
@@ -52,7 +51,7 @@
 
             .header_left_logo {
                 position: relative;
-                height: 28px;
+                height: 25px;
                 width: auto;
                 flex: 0 0 auto;
             }

@@ -3,8 +3,7 @@
 .search-results-group {
     width: 100%;
     margin-bottom: 12px;
-    // background-color: $sidebar-Bgcolor;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid $sidebar-borderColor;
 
     .group-header {
         padding: 25px 5px;
@@ -47,10 +46,10 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                font-weight: 600;
+                font-weight: 500;
                 color: $titleColor;
                 margin-bottom: 2px;
-                font-size: 14px;
+                font-size: 15px;
 
                 .member-phone {
                     margin-left: 8px;
@@ -75,7 +74,7 @@
 
     .customer_lists_header {
         padding: 14px 16px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        border-bottom: 1px solid $sidebar-borderColor;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -91,7 +90,7 @@
 
     .customer_lists_search {
         padding: 10px 16px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        border-bottom: 1px solid $sidebar-borderColor;
 
         .MuiOutlinedInput-root {
             background-color: $sidebar-Bgcolor;
@@ -103,11 +102,11 @@
             }
 
             fieldset {
-                border-color: rgba(0, 0, 0, 0.12);
+                border-color: $sidebar-borderColor;
             }
 
             &:hover fieldset {
-                border-color: rgba(0, 0, 0, 0.2);
+                border-color: $sidebar-borderColor;
             }
 
             &.Mui-focused fieldset {
@@ -121,7 +120,7 @@
         overflow: hidden;
 
         ul {
-            padding: 6px 8px;
+            padding: 6px;
             margin: 0;
             list-style: none;
             height: 100%;
@@ -257,9 +256,10 @@
 
                             .member-name {
                                 font-family: $font-family;
-                                font-weight: 600;
-                                font-size: 14px;
+                                font-weight: 500;
+                                font-size: 15px;
                                 color: $titleColor;
+                                text-transform: capitalize;
                                 margin: 0;
                                 line-height: 1.2;
                             }
@@ -290,6 +290,7 @@
                             align-items: center;
                             width: 100%;
                             gap: 10px;
+                            min-height: 22px;
 
                             .member-trailing {
                                 display: flex;
@@ -377,7 +378,7 @@
 
 
                         &:hover {
-                            background: rgba(0, 0, 0, 0.08);
+                            background: $sidebar-borderColor;
                             transform: scale(1.05);
                         }
 
@@ -462,6 +463,7 @@
 
     .back-button {
         color: #333;
+        padding: 0px 2px;
         transition: all 0.2s ease;
 
         &:hover {

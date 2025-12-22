@@ -18,6 +18,7 @@ const MessageArea = ({
     handleClosePreview,
     containerRef,
     showScrollToBottom,
+    scrollToBottomRightOffset,
     setContextMenu,
     selectedCustomer,
     scrollToBottom,
@@ -39,7 +40,8 @@ const MessageArea = ({
     setLoadedMedia,
     getMediaKey,
     markLoaded,
-    uploadProgress
+    uploadProgress,
+    replyToMessage,
 }) => {
     const [hoveredMessageId, setHoveredMessageId] = useState(null);
     const [reactionMenuAnchorEl, setReactionMenuAnchorEl] = useState(null);
@@ -51,6 +53,9 @@ const MessageArea = ({
     const reactionMenuAnchorElRef = useRef(null);
     const { PERMISSION_SET } = useContext(LoginContext);
     const theme = useTheme();
+
+    const isMediaPreviewOpen = (mediaFiles?.length || 0) > 0;
+    const scrollToBottomBottomOffset = replyToMessage ? 170 : 110;
 
     useEffect(() => {
         hoveredMessageIdRef.current = hoveredMessageId;
@@ -114,7 +119,7 @@ const MessageArea = ({
                         color: queuedColor,
                     }}
                 >
-                    <Clock3 size={18} />
+                    <Clock3 size={16} />
                 </Box>
             );
         }
@@ -132,7 +137,7 @@ const MessageArea = ({
                         lineHeight: 1,
                     }}
                 >
-                    <AlertCircle size={18} style={{ color: failedColor, marginTop: "0px" }} />
+                    <AlertCircle size={16} style={{ color: failedColor, marginTop: "0px" }} />
                 </Box>
             );
         }
@@ -214,6 +219,8 @@ const MessageArea = ({
                 }),
             }}
             onContextMenu={(e) => {
+                if (isMediaPreviewOpen) return;
+
                 e.preventDefault();
 
                 if (can(8)) {
@@ -241,14 +248,6 @@ const MessageArea = ({
                         Loading conversation...
                     </Typography>
                 </Box>
-            ) : mediaFiles?.length > 0 ? (
-                <MediaPreview
-                    mediaFiles={mediaFiles}
-                    scrollToBottom={scrollToBottom}
-                    setMediaFiles={setMediaFiles}
-                    handleClosePreview={handleClosePreview}
-                    uploadProgress={uploadProgress}
-                />
             ) : (
                 <>
                     <div
@@ -261,17 +260,22 @@ const MessageArea = ({
                             transition: 'filter 0.3s ease-in-out',
                             position: 'relative',
                             // backgroundImage: 'linear-gradient(rgba(247, 245, 243, 0.65), rgba(247, 245, 243, 0.65)), url(/bg-3.jpg)',
-                            backgroundImage: 'linear-gradient(rgba(247, 245, 243, 0.78), rgba(247, 245, 243, 0.78)), url(/bg-3.jpg)',
+                            backgroundImage:
+                                'linear-gradient(rgba(249, 250, 251, 0.78), rgba(249, 250, 251, 0.78)), url(/bg-3.jpg)',
                             backgroundSize: 'auto, contain',
                             backgroundPosition: 'center, center',
                             backgroundRepeat: 'repeat, repeat',
                             backgroundAttachment: 'scroll, fixed',
+                            pointerEvents: isMediaPreviewOpen ? 'none' : 'auto',
+                            filter: isMediaPreviewOpen ? 'blur(2px)' : 'none',
                         }}
                     >
                         {/* Scroll to Bottom Button */}
                         <ScrollToBottomButton
                             open={showScrollToBottom}
                             onClick={scrollToBottom}
+                            right={scrollToBottomRightOffset ?? 30}
+                            bottom={scrollToBottomBottomOffset}
                         />
 
                         {Object.entries(groupMessagesByDate).map(([date, dateMessages], dateIdx, allDates) => {
@@ -305,6 +309,8 @@ const MessageArea = ({
                                                     )
                                                     .map((msg, index) => {
                                                         const isOutgoing = msg.Direction === 1;
+                                                        const messageDomId = msg.Id ?? msg.fileName;
+                                                        const isBlinking = blinkMessageId === messageDomId;
                                                         const currentHoverId = msg?.messageId || msg?.id || index;
                                                         const isHovered = hoveredMessageId === currentHoverId;
                                                         const isReactionMenuOpenForCurrent =
@@ -313,10 +319,10 @@ const MessageArea = ({
 
                                                         return (
                                                             <div
-                                                                key={msg.Id ?? msg.fileName}
-                                                                className={`message-item ${msg.Direction === 1 ? 'user-message' : 'customer-message'}`}
+                                                                key={messageDomId}
+                                                                className={`message-item ${msg.Direction === 1 ? 'user-message' : 'customer-message'} ${isBlinking ? 'blink-message' : ''}`}
                                                                 style={{ cursor: 'context-menu' }}
-                                                                data-message-id={msg.Id ?? msg.fileName}
+                                                                data-message-id={messageDomId}
                                                                 onMouseEnter={() => {
                                                                     if (hoverHideTimeoutRef.current) {
                                                                         clearTimeout(hoverHideTimeoutRef.current);
@@ -377,7 +383,6 @@ const MessageArea = ({
                                                                 <MessageContent
                                                                     msg={msg}
                                                                     isOutgoing={isOutgoing}
-                                                                    blinkMessageId={blinkMessageId}
                                                                     shouldShowActions={shouldShowActions}
                                                                     isReactionMenuOpenForCurrent={isReactionMenuOpenForCurrent}
                                                                     reactionMenuAnchorEl={reactionMenuAnchorEl}
@@ -410,6 +415,15 @@ const MessageArea = ({
                         })}
                         <div ref={messagesEndRef} />
                     </div>
+
+                    {isMediaPreviewOpen && (
+                        <MediaPreview
+                            mediaFiles={mediaFiles}
+                            scrollToBottom={scrollToBottom}
+                            setMediaFiles={setMediaFiles}
+                            handleClosePreview={handleClosePreview}
+                        />
+                    )}
                 </>
             )}
         </div>

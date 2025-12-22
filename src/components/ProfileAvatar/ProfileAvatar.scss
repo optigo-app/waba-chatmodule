@@ -42,8 +42,8 @@
     }
 
     .profile-dropdown {
-        border-radius: 8px !important;
-        padding: 6px 0;
+        border-radius: 12px !important;
+        padding: 8px 0;
         min-width: 280px;
         border: 1px solid #e5e7eb;
         background-color: #ffffff;
@@ -51,6 +51,7 @@
             0 10px 15px -3px rgba(0, 0, 0, 0.1),
             0 4px 6px -2px rgba(0, 0, 0, 0.05);
         font-family: $font-family;
+        overflow: hidden;
 
         /* Hide scrollbars for the dropdown menu */
         scrollbar-width: none;
@@ -77,19 +78,29 @@
         .menu-item {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            margin: 2px 6px;
-            border-radius: 6px;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 10px 12px;
+            margin: 3px 8px;
+            border-radius: 10px;
             font-size: 14px;
             font-weight: 500;
             color: #374151;
             transition: all 0.15s ease;
             font-family: $font-family;
 
+            &:focus-visible {
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(0, 70, 255, 0.18);
+            }
+
             &:hover {
                 background-color: #f9fafb;
                 color: #111827;
+
+                .menu-icon {
+                    color: #111827;
+                }
             }
 
             &:active {
@@ -101,6 +112,10 @@
                 cursor: not-allowed;
 
                 &:hover {
+                    background-color: transparent;
+                }
+
+                &:active {
                     background-color: transparent;
                 }
 
@@ -116,7 +131,6 @@
             .menu-icon {
                 min-width: 36px;
                 color: #6b7280;
-                margin-right: 8px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -129,16 +143,37 @@
                 color: inherit;
             }
 
-            .shortcut {
-                color: #9ca3af;
-                font-size: 12px;
-                font-weight: 500;
-                font-family: $font-family;
-                background-color: #f3f4f6;
-                padding: 2px 6px;
-                border-radius: 4px;
-                letter-spacing: 0.025em;
+            &.logout {
+                color: #b42318;
+
+                .menu-icon {
+                    color: #b42318;
+                }
+
+                &:hover {
+                    background-color: rgba(180, 35, 24, 0.08);
+                    color: #7a271a;
+
+                    .menu-icon {
+                        color: #7a271a;
+                    }
+                }
+
+                &:active {
+                    background-color: rgba(180, 35, 24, 0.14);
+                }
             }
+        }
+
+        .shortcut {
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: $font-family;
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.025em;
         }
 
         .menu-divider {

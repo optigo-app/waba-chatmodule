@@ -1,16 +1,17 @@
-import React from 'react';
-import { Box, IconButton, Skeleton, Typography } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, CircularProgress, IconButton, Skeleton, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import { ChevronDown, Download } from 'lucide-react';
+import { ChevronDown, Download, FileText } from 'lucide-react';
 import { Emoji } from 'emoji-picker-react';
 import { FormatDateIST } from '../../utils/DateFnc';
 import DynamicTemplate from '../DynamicTemplate/DynamicTemplate';
 import QuickReactionMenu from './QuickReactionMenu';
 
+const imageDimsCache = new Map();
+
 const MessageContent = ({
     msg,
     isOutgoing,
-    blinkMessageId,
     shouldShowActions,
     isReactionMenuOpenForCurrent,
     reactionMenuAnchorEl,
@@ -34,10 +35,82 @@ const MessageContent = ({
 }) => {
     const theme = useTheme();
 
+    const [imageDims, setImageDims] = useState(null);
+
+    useEffect(() => {
+        setImageDims(null);
+    }, [msg?.Id, msg?.MediaUrl, msg?.fileName]);
+
+    const UploadProgressOverlay = ({ percent, size = 52 }) => {
+        const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+        const thickness = size <= 40 ? 4.5 : 4;
+        const labelFontSize = size <= 40 ? 10 : 12;
+
+        return (
+            <Box
+                className="progress-overlay"
+                sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2,
+                    backgroundColor: alpha(theme.palette.background.paper, 0.92),
+                    backdropFilter: 'blur(4px)',
+                    borderRadius: 2,
+                }}
+            >
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                    <CircularProgress
+                        variant="determinate"
+                        value={100}
+                        size={size}
+                        thickness={thickness}
+                        sx={{ color: alpha(theme.palette.text.primary, 0.12) }}
+                    />
+                    <CircularProgress
+                        variant="determinate"
+                        value={safePercent}
+                        size={size}
+                        thickness={thickness}
+                        sx={{
+                            color: theme.palette.primary.main,
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                        }}
+                    />
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                fontWeight: 700,    
+                                color: theme.palette.text.primary,
+                                lineHeight: 1,
+                                fontSize: labelFontSize,
+                            }}
+                        >
+                            {Math.round(safePercent)}%
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
+        );
+    };
+
     return (
         <div className="message-content" style={{ flexDirection: 'column' }}>
             <Box
-                className={`message-bubble ${blinkMessageId === (msg.Id ?? msg.fileName) ? 'blink-message' : ''}`}
+                className="message-bubble"
                 sx={{
                     '&&': {
                         display: msg?.MessageType === 'text' ? 'flex' : 'block',
@@ -64,7 +137,7 @@ const MessageContent = ({
 
                     '&& .message-text': {
                         color: theme.palette.text.primary + ' !important',
-                        fontWeight:500,
+                        fontWeight: 500,
                         marginRight: '0px !important',
                         ...(msg?.MessageType !== 'template' ? { paddingRight: '28px' } : {}),
                     },
@@ -273,17 +346,37 @@ const MessageContent = ({
                 {msg?.MessageType === "image" && ((_, index) => {
                     const mediaKey = getMediaKey(msg, index);
                     const src = getMediaSrcForMessage(msg);
+
+                    const cachedDims = src ? imageDimsCache.get(src) : null;
+                    const dimsForCalc = imageDims || cachedDims;
+
+                    const mediaWidth = 220;
+                    const computedHeight = dimsForCalc?.w && dimsForCalc?.h
+                        ? Math.max(140, Math.min(220, Math.round(mediaWidth * (dimsForCalc.h / dimsForCalc.w))))
+                        : 220;
+
                     return (
-                        <div className="message-image" style={{ position: 'relative' }}>
+                        <div
+                            className="message-image"
+                            style={{
+                                position: 'relative',
+                                width: mediaWidth,
+                                height: computedHeight,
+                                borderRadius: 12,
+                                overflow: 'hidden',
+                            }}
+                        >
                             {/* Skeleton until loaded */}
                             {!loadedMedia[mediaKey] && (
                                 <Skeleton
                                     variant="rounded"
                                     className="media-skeleton"
                                     sx={{
-                                        borderRadius: 1.5,
-                                        width: "220px",
-                                        height: "220px",
+                                        borderRadius: 0,
+                                        position: 'absolute',
+                                        inset: 0,
+                                        width: '100%',
+                                        height: '100%',
                                     }}
                                 />
                             )}
@@ -303,25 +396,32 @@ const MessageContent = ({
                                     <img
                                         src={src}
                                         alt="sent-img"
-                                        onLoad={() => markLoaded(mediaKey)}
+                                        onLoad={(e) => {
+                                            const w = e?.currentTarget?.naturalWidth || 0;
+                                            const h = e?.currentTarget?.naturalHeight || 0;
+                                            if (w > 0 && h > 0) {
+                                                const nextDims = { w, h };
+                                                setImageDims(nextDims);
+                                                if (src) {
+                                                    imageDimsCache.set(src, nextDims);
+                                                }
+                                            }
+                                            markLoaded(mediaKey);
+                                        }}
                                         onError={() => markLoaded(mediaKey)}
-                                        style={{ display: 'block', borderRadius: 12, opacity: loadedMedia[mediaKey] ? 1 : 0, maxWidth: '100%', height: 'auto' }}
+                                        style={{
+                                            display: 'block',
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                            opacity: loadedMedia[mediaKey] ? 1 : 0,
+                                        }}
                                     />
                                 }
                             </div>
 
                             {msg.isUploading && (
-                                <div className="progress-overlay">
-                                    <svg className="progress-circle" viewBox="0 0 36 36">
-                                        <path className="progress-bg" d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <path
-                                            className="progress-bar"
-                                            strokeDasharray={`${msg.percent}, 100`}
-                                            d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831"
-                                        />
-                                        <text x="18" y="20.35" className="progress-text">{msg.percent}%</text>
-                                    </svg>
-                                </div>
+                                <UploadProgressOverlay percent={msg.percent} />
                             )}
                         </div>
                     );
@@ -332,14 +432,26 @@ const MessageContent = ({
                     const mediaKey = getMediaKey(msg, index);
                     const src = getMediaSrcForMessage(msg);
                     return (
-                        <div className="message-video" style={{ position: 'relative' }}>
+                        <div
+                            className="message-video"
+                            style={{
+                                position: 'relative',
+                                width: 220,
+                                height: 220,
+                                borderRadius: 12,
+                                overflow: 'hidden',
+                            }}
+                        >
                             {!loadedMedia[mediaKey] && (
                                 <Skeleton
                                     variant="rounded"
                                     className="media-skeleton"
                                     sx={{
-                                        width: "220px",
-                                        height: "220px",
+                                        borderRadius: 0,
+                                        position: 'absolute',
+                                        inset: 0,
+                                        width: '100%',
+                                        height: '100%',
                                     }}
                                 />
                             )}
@@ -361,20 +473,19 @@ const MessageContent = ({
                                         controls
                                         onLoadedData={() => markLoaded(mediaKey)}
                                         onError={() => markLoaded(mediaKey)}
-                                        style={{ borderRadius: 12, opacity: loadedMedia[mediaKey] ? 1 : 0, maxWidth: '100%' }}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                            opacity: loadedMedia[mediaKey] ? 1 : 0,
+                                        }}
                                         onClick={(e) => e.stopPropagation()}
                                     />
                                 }
                             </div>
 
                             {msg.isUploading && (
-                                <div className="progress-overlay">
-                                    <svg className="progress-circle" viewBox="0 0 36 36">
-                                        <path className="progress-bg" d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <path className="progress-bar" strokeDasharray={`${msg.percent}, 100`} d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <text x="18" y="20.35" className="progress-text">{msg.percent}%</text>
-                                    </svg>
-                                </div>
+                                <UploadProgressOverlay percent={msg.percent} />
                             )}
                         </div>
                     );
@@ -387,33 +498,82 @@ const MessageContent = ({
                     // For docs we can still show a brief skeleton bar for polish
                     return (
                         <div className="message-document" style={{ position: 'relative' }}>
-                            <div style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "5px"
-                            }}>
-                                <div className="doc-icon">📄</div>
-                                <div className="doc-info">
-                                    <span className="doc-name">{msg.fileName || "Document"}</span>
-                                    <span className="doc-type">{msg.fileType || "Unknown type"}</span>
-                                </div>
-                                <a
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    width: '100%'
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 34,
+                                        height: 34,
+                                        borderRadius: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                                        color: theme.palette.primary.main,
+                                        flex: '0 0 auto'
+                                    }}
+                                >
+                                    <FileText size={18} />
+                                </Box>
+
+                                <Box sx={{ minWidth: 0, flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
+                                            fontWeight: 600,
+                                            color: theme.palette.text.primary,
+                                            lineHeight: 1.2,
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }}
+                                        title={msg.fileName || 'Document'}
+                                    >
+                                        {msg.fileName || 'Document'}
+                                    </Typography>
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color: alpha(theme.palette.text.primary, 0.7),
+                                            lineHeight: 1.2,
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }}
+                                        title={msg.fileType || 'Unknown type'}
+                                    >
+                                        {msg.fileType || 'Unknown type'}
+                                    </Typography>
+                                </Box>
+
+                                <IconButton
+                                    component="a"
                                     href={href}
                                     download
+                                    size="small"
                                     className="doc-download"
+                                    sx={{
+                                        color: alpha(theme.palette.text.primary, 0.75),
+                                        flex: '0 0 auto',
+                                        '&:hover': {
+                                            color: theme.palette.text.primary,
+                                            backgroundColor: alpha(theme.palette.text.primary, 0.06),
+                                        }
+                                    }}
+                                    title="Download"
                                 >
-                                    <Download size={20} />
-                                </a>
-                            </div>
+                                    <Download size={18} />
+                                </IconButton>
+                            </Box>
 
                             {msg.isUploading && (
-                                <div className="progress-overlay">
-                                    <svg className="progress-circle" viewBox="0 0 36 36">
-                                        <path className="progress-bg" d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <path className="progress-bar" strokeDasharray={`${msg.percent}, 100`} d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                        <text x="18" y="20.35" className="progress-text">{msg.percent}%</text>
-                                    </svg>
-                                </div>
+                                <UploadProgressOverlay percent={msg.percent} size={40} />
                             )}
                         </div>
                     );

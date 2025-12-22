@@ -1,5 +1,5 @@
 import { addMessageHandler, addMessageHandlerFromAssigningUser, addStatusHandler, getSocket, isSocketConnected } from '../../socket';
-import { FileText, Image, Video, Clock3, ArrowLeft, Pin, UserPlus, ChevronDown } from 'lucide-react';
+import { FileText, Image, Video, Clock3, ArrowLeft, Pin, UserPlus, ChevronDown, Star } from 'lucide-react';
 import { pinConversationApi } from '../../API/PinConversation/PinConversation';
 import toast from 'react-hot-toast';
 import { Check, CheckCheck, AlertCircle } from "lucide-react";
@@ -72,8 +72,8 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
             console.log('⚠️ No auth token available, skipping conversation load');
             return;
         }
-
         setLoading(true);
+
         try {
             const searchToUse = search !== null ? search : searchTerm;
             const response = await fetchConversationLists(page, pageSize, auth?.userId, searchToUse);
@@ -85,6 +85,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                 Id: customer.CustomerId,
                 name: customer.CustomerName || customer.CustomerPhone,
                 lastMessage: '',
+                lastMessageText: '',
                 lastMessageTime: new Date().toISOString(),
                 unreadCount: 0,
                 isSearchResult: true // Flag to identify search results
@@ -228,19 +229,19 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
 
         switch (status) {
             case 0: // Queued/Sending
-                return <Clock3 size={17} style={{ marginRight: 5, color: "#9e9e9e" }} />;
+                return <Clock3 size={14} style={{ marginRight: 5, color: "#9e9e9e" }} />;
 
             case 1: // Sent (single grey tick)
-                return <Check size={17} style={{ marginRight: 5, color: "#9e9e9e" }} />;
+                return <Check size={15} style={{ marginRight: 5, color: "#9e9e9e" }} />;
 
             case 2: // Delivered (double grey tick)
-                return <CheckCheck size={17} style={{ marginRight: 5, color: "#9e9e9e" }} />;
+                return <CheckCheck size={15} style={{ marginRight: 5, color: "#9e9e9e" }} />;
 
             case 3: // Read (double blue tick)
-                return <CheckCheck size={17} style={{ marginRight: 5, color: "#1F51FF" }} />;
+                return <CheckCheck size={15} style={{ marginRight: 5, color: "#1F51FF" }} />;
 
             case 4: // Failed
-                return <AlertCircle size={17} style={{ marginRight: 5, color: "#ff4444" }} />;
+                return <AlertCircle size={14} style={{ marginRight: 5, color: "#ff4444" }} />;
 
             default:
                 return null;
@@ -379,13 +380,15 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
             );
 
             const messagePreview = getMessagePreview(data);
+            const messagePreviewText = messagePreview?.text ?? '';
+            const messagePreviewNode = messagePreview?.node ?? '';
             const formattedTime = formatChatTimestamp(data?.DateTime);
 
             if (index !== -1) {
                 const currentChat = updatedData[index];
 
                 const isSameMessage =
-                    currentChat.lastMessage === messagePreview &&
+                    currentChat.lastMessageText === messagePreviewText &&
                     currentChat.lastMessageTime === formattedTime;
 
                 if (isSameMessage && !isStatusChange) {
@@ -394,7 +397,8 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
 
                 const updatedChat = {
                     ...currentChat,
-                    lastMessage: messagePreview,
+                    lastMessage: messagePreviewNode,
+                    lastMessageText: messagePreviewText,
                     lastMessageTime: formattedTime,
                     lastMessageStatus: data?.Status ?? data?.status ?? currentChat.lastMessageStatus,
                     lastMessageDirection: data?.Direction ?? currentChat.lastMessageDirection,
@@ -418,7 +422,8 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                 const newChat = {
                     ConversationId: data?.ConversationId,
                     name: getCustomerDisplayName(data),
-                    lastMessage: messagePreview,
+                    lastMessage: messagePreviewNode,
+                    lastMessageText: messagePreviewText,
                     lastMessageTime: formattedTime,
                     lastMessageStatus: data?.Status ?? data?.status,
                     lastMessageDirection: data?.Direction,
@@ -558,7 +563,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                     fontWeight: 600,
                                     lineHeight: 1,
                                     border: '1px solid',
-                                    borderColor: isActive ? alpha(theme.palette.borderColor.extraLight, 1) : theme.palette.borderColor.extraLight,
+                                    borderColor: isActive ? alpha(theme.palette.borderColor.extraLight, 0.2) : theme.palette.borderColor.extraLight,
                                     color: isActive ? alpha(theme.palette.primary.main, 1) : theme.palette.text.secondary,
                                     backgroundColor: isActive ? alpha(theme.palette.primary.main, 0.14) : 'transparent',
                                     transition: 'background-color 200ms ease, color 200ms ease, transform 200ms ease',
@@ -592,9 +597,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                         padding: '20px'
                                     }}
                                 >
-                                    <Typography variant="body2" color="textSecondary">
-                                        No conversations found.
-                                    </Typography>
+                                    <CircularProgress />
                                 </li>
                             ) : (
                                 filteredMembers?.length > 0 ? (
@@ -644,7 +647,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                                         {member.name}
                                                                     </Typography>
 
-                                                                    {(member?.lastMessage && member?.lastMessage !== 'No message') && (
+                                                                    {(member?.lastMessageText && member?.lastMessageText !== 'No message') && (
                                                                         <Typography variant="caption" className="member-time">
                                                                             {member?.lastMessageTime}
                                                                         </Typography>
@@ -659,7 +662,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                                     >
                                                                         <span style={{ display: 'flex', alignItems: 'center' }}>
                                                                             {getMessageStatusIcon(member)}
-                                                                            {member.lastMessage !== 'No message' ? (
+                                                                            {member.lastMessageText !== 'No message' ? (
                                                                                 member.lastMessage
                                                                             ) : (
                                                                                 <span
@@ -700,18 +703,34 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                                         )}
 
                                                                         <div className="member-actions-bar">
-                                                                            <Tooltip title={member?.IsPin === 1 ? "Unpin" : "Pin"} arrow>
-                                                                                <IconButton
-                                                                                    size="small"
-                                                                                    className={`action-btn ${member?.IsPin === 1 ? 'is-on' : ''}`}
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        handlePinChat(member, member?.IsPin === 1 ? "UnPin" : "Pin");
-                                                                                    }}
-                                                                                >
-                                                                                    <Pin size={17} />
-                                                                                </IconButton>
-                                                                            </Tooltip>
+                                                                            {member?.IsPin === 1 &&
+                                                                                <Tooltip title={member?.IsPin === 1 ? "Unpin" : "Pin"} arrow>
+                                                                                    <IconButton
+                                                                                        size="small"
+                                                                                        className={`action-btn ${member?.IsPin === 1 ? 'is-on' : ''}`}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handlePinChat(member, member?.IsPin === 1 ? "UnPin" : "Pin");
+                                                                                        }}
+                                                                                    >
+                                                                                        <Pin size={17} />
+                                                                                    </IconButton>
+                                                                                </Tooltip>
+                                                                            }
+                                                                              {member?.IsStar === 1 &&
+                                                                                <Tooltip title={member?.IsStar === 1 ? "Unfavorite" : "favorite"} arrow>
+                                                                                    <IconButton
+                                                                                        size="small"
+                                                                                        className={`action-btn ${member?.IsStar === 1 ? 'is-on' : ''}`}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handlePinChat(member, member?.IsStar === 1 ? "UnStar" : "Star");
+                                                                                        }}
+                                                                                    >
+                                                                                        <Star size={17} />
+                                                                                    </IconButton>
+                                                                                </Tooltip>
+                                                                            }
                                                                             {member?.CustomerId == 0 && member?.CustomerName == "" &&
                                                                                 < Tooltip title="Add to Customer" arrow>
                                                                                     <IconButton
@@ -793,7 +812,6 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                         )}
                                     </>
                                 ) : (
-                                    // Only show "No conversations" when not loading
                                     !loading && (
                                         <li
                                             style={{
