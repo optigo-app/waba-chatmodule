@@ -8,6 +8,7 @@ import Lottie from "lottie-react";
 import { LogoutApi } from "../../API/Logout/Logout";
 import { savePlayerId } from "../../API/SavePlayerId/SavePlayerId";
 import { initializeSocket } from "../../socket";
+import { Button } from "@mui/material";
 
 const LoginExists = () => {
     const { setAuth } = useContext(LoginContext);
@@ -85,20 +86,20 @@ const LoginExists = () => {
                         You are already logged in on another device.
                     </div>
                     <div className="buttons">
-                        <button
+                        <Button
                             className="btn stay"
                             onClick={handleLogout}
                             disabled={loading}
                         >
                             Stay Logged In
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             className="btn logout"
                             onClick={handleStayLoggedIn}
                             disabled={loading}
                         >
                             Logout other sessions
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

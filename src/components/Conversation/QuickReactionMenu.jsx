@@ -18,7 +18,7 @@ const QuickReactionMenu = ({
     });
     const [pickerHeight, setPickerHeight] = useState(360);
 
-    const reactions = ['1f44d', '2764-fe0f', '1f602', '1f62e', '1f64f'];
+
 
     const handlePick = (emojiData, event) => {
         event?.stopPropagation?.();
@@ -42,13 +42,13 @@ const QuickReactionMenu = ({
         // Prefer opening where we have more space, but still allow opening down
         // when there's a reasonable amount of room.
         const openDown = availableDown >= 320 || availableDown >= availableUp;
-        
+
         const verticalAnchor = openDown ? 'bottom' : 'top';
         const verticalTransform = openDown ? 'top' : 'bottom';
 
         const availableInDirection = openDown ? availableDown : availableUp;
-        // Keep it readable but never overflow viewport
-        const nextPickerHeight = Math.max(220, Math.min(360, availableInDirection - 72));
+        // Compact default height for full emoji picker
+        const nextPickerHeight = Math.max(320, Math.min(380, availableInDirection - 64));
         setPickerHeight(nextPickerHeight);
 
         const preferRight = rect.right + estimatedMenuWidth > vw - margin;
@@ -98,30 +98,30 @@ const QuickReactionMenu = ({
                 PaperProps={{
                     elevation: 0,
                     sx: {
-                        borderRadius: 3.5,
-                        p: -0,
+                        borderRadius: 3,
+                        p: 0,
                         m: 0,
-                        backdropFilter: 'blur(10px)',
-                        backgroundColor: alpha(theme.palette.background.paper, 0.12),
-                        boxShadow: theme.palette.shadow.boxShadow1,
+                        backdropFilter: 'blur(12px)',
+                        backgroundColor: alpha(theme.palette.background.paper, 0.98),
+                        boxShadow: `0 8px 32px ${alpha('#000', 0.15)}`,
                         overflow: 'hidden',
-                        maxWidth: 'min(360px, calc(100vw - 24px))',
+                        maxWidth: 'min(350px, calc(100vw - 24px))',
                         maxHeight: 'calc(100vh - 24px)',
+                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                     },
                 }}
                 MenuListProps={{ sx: { p: 0 } }}
             >
                 <Box onClick={(e) => e.stopPropagation()}>
                     <EmojiPicker
-                        reactionsDefaultOpen={true}
+                        reactionsDefaultOpen={false}
                         allowExpandReactions={true}
-                        reactions={reactions}
-                        onReactionClick={handlePick}
                         onEmojiClick={handlePick}
                         emojiStyle="apple"
                         skinTonesDisabled={true}
                         width="100%"
                         height={pickerHeight}
+                        searchDisabled={false}
                     />
                 </Box>
             </Menu>
