@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useContext, useLayoutEffect } from 'react';
 import { Box, Typography, Avatar, Divider, Menu, MenuItem, IconButton, useMediaQuery } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -42,11 +42,14 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
     const isAutoScrollingRef = useRef(false);
     const scrollListenerAttachedRef = useRef(false);
     const fileInputRef = useRef(null);
+    const lastMessageIdRef = useRef(null);
+    const lastConversationIdRef = useRef(null);
     const [showPicker, setShowPicker] = useState(false);
     const emojiPickerRef = useRef(null);
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
     const { auth } = useContext(LoginContext);
     const [getLength, setLength] = useState("");
+    const [isSwitchingConversation, setIsSwitchingConversation] = useState(false);
     const isNarrowScreen = useMediaQuery('(max-width: 992px)');
     const isCompactDockedPanel = useMediaQuery('(max-width: 1200px)');
     const [tagsMenuAnchorEl, setTagsMenuAnchorEl] = useState(null);
@@ -281,7 +284,7 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                 selectedCustomer.CustomerId,
                 selectedCustomer.CustomerPhone,
                 messageIdToUse,
-                JSON.parse(reactionPayload)?.find(r => r.Direction === 1)?.Reaction || ""
+                JSON.parse(reactionPayload || "[]")?.find(r => r.Direction === 1)?.Reaction || ""
             );
 
             // 🧠 Update UI state
@@ -380,12 +383,6 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
         }
     };
 
-    useEffect(() => {
-        if (currentPage > 1) return;
-        // Scroll to bottom for new conversations or new messages on page 1
-        scrollToBottom("instant");
-    }, [messages, currentPage]);
-
     const scrollToBottom = useCallback((behavior = 'smooth') => {
         if (containerRef.current) {
             isAutoScrollingRef.current = true;
@@ -409,6 +406,62 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
             }, 150);
         }
     }, []);
+
+    // 🚀 Handle initial scroll on conversation switch (Synchronous)
+    useLayoutEffect(() => {
+        const currentConvId = selectedCustomer?.ConversationId;
+        if (!currentConvId) return;
+
+        // 1. Detect conversation switch
+        if (currentConvId !== lastConversationIdRef.current) {
+            setIsSwitchingConversation(true);
+            lastConversationIdRef.current = currentConvId;
+        }
+
+        // 2. Perform scroll once loading is finished and messages are available
+        if (!loading && isSwitchingConversation) {
+            const messageList = Array.isArray(messages?.data) ? messages.data : [];
+
+            if (containerRef.current) {
+                // Instant jump
+                containerRef.current.scrollTo({
+                    top: containerRef.current.scrollHeight,
+                    behavior: 'auto'
+                });
+
+                // Update last message ID to keep auto-scroll in sync
+                if (messageList.length > 0) {
+                    const lastMessage = messageList[messageList.length - 1];
+                    lastMessageIdRef.current = lastMessage?.Id || lastMessage?.MessageId || lastMessage?.id;
+                }
+
+                // Tiny delay to mask any DOM settling
+                const timer = setTimeout(() => {
+                    setIsSwitchingConversation(false);
+                }, 100);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [selectedCustomer?.ConversationId, loading, messages, isSwitchingConversation]);
+
+    // 🌊 Handle auto-scrolling for NEW messages in the same conversation
+    useEffect(() => {
+        if (currentPage > 1) return;
+
+        const messageList = Array.isArray(messages?.data) ? messages.data : [];
+        const currentConvId = selectedCustomer?.ConversationId;
+
+        if (messageList.length === 0) return;
+
+        const lastMessage = messageList[messageList.length - 1];
+        const lastId = lastMessage?.Id || lastMessage?.MessageId || lastMessage?.id;
+
+        // If it's the same conversation but a NEW message was added
+        if (currentConvId === lastConversationIdRef.current && lastId !== lastMessageIdRef.current) {
+            scrollToBottom('smooth');
+            lastMessageIdRef.current = lastId;
+        }
+    }, [messages, currentPage, scrollToBottom, selectedCustomer?.ConversationId]);
 
     const handleScroll = useCallback(() => {
         if (!containerRef.current) return;
@@ -806,6 +859,7 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                         markLoaded={markLoadedCallback}
                         uploadProgress={uploadProgress}
                         replyToMessage={replyToMessage}
+                        isSwitchingConversation={isSwitchingConversation}
                     />
 
                     {can(6) ? (

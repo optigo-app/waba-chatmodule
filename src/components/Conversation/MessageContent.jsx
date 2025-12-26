@@ -9,6 +9,18 @@ import QuickReactionMenu from './QuickReactionMenu';
 
 const imageDimsCache = new Map();
 
+/**
+ * Converts a raw emoji character into its unified hex string format.
+ * Handles ZWJ sequences and skin tone variations.
+ */
+const charToUnified = (char) => {
+    if (!char) return null;
+    return Array.from(char)
+        .map(c => c.codePointAt(0).toString(16))
+        .filter(hex => hex !== 'fe0f') // Remove variations selector
+        .join('-');
+};
+
 const MessageContent = ({
     msg,
     isOutgoing,
@@ -93,7 +105,7 @@ const MessageContent = ({
                         <Typography
                             variant="caption"
                             sx={{
-                                fontWeight: 700,    
+                                fontWeight: 700,
                                 color: theme.palette.text.primary,
                                 lineHeight: 1,
                                 fontSize: labelFontSize,
@@ -643,16 +655,18 @@ const MessageContent = ({
                                     const reactions = JSON.parse(msg.ReactionEmojis);
 
                                     if (Array.isArray(reactions)) {
-                                        return reactions.map((r, idx) => (
-                                            <React.Fragment key={idx}>
-                                                {idx > 0 ? ' ' : null}
-                                                {r?.Unified ? (
-                                                    <Emoji unified={r.Unified} size={18} emojiStyle="apple" />
-                                                ) : (
-                                                    r?.Reaction
-                                                )}
-                                            </React.Fragment>
-                                        ));
+                                        return reactions.map((r, idx) => {
+                                            const unified = r?.Unified || charToUnified(r?.Reaction);
+                                            return (
+                                                <React.Fragment key={idx}>
+                                                    {unified ? (
+                                                        <Emoji unified={unified} size={18} emojiStyle="apple" />
+                                                    ) : (
+                                                        r?.Reaction
+                                                    )}
+                                                </React.Fragment>
+                                            );
+                                        });
                                     }
 
                                     return "";

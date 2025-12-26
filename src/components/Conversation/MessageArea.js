@@ -42,6 +42,7 @@ const MessageArea = ({
     markLoaded,
     uploadProgress,
     replyToMessage,
+    isSwitchingConversation
 }) => {
     const [hoveredMessageId, setHoveredMessageId] = useState(null);
     const [reactionMenuAnchorEl, setReactionMenuAnchorEl] = useState(null);
@@ -268,6 +269,8 @@ const MessageArea = ({
                             backgroundAttachment: 'scroll, fixed',
                             pointerEvents: isMediaPreviewOpen ? 'none' : 'auto',
                             filter: isMediaPreviewOpen ? 'blur(2px)' : 'none',
+                            opacity: isSwitchingConversation ? 0 : 1,
+                            transition: 'opacity 0.1s ease-in-out',
                         }}
                     >
                         {/* Scroll to Bottom Button */}

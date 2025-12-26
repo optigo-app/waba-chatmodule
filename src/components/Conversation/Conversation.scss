@@ -480,25 +480,35 @@
                             /* Reaction Bubble */
                             .message-reaction {
                                 position: absolute;
-                                bottom: -21px;
-                                /* below message */
-                                right: 10px;
+                                bottom: -20px;
+                                right: 14px;
                                 background-color: #fff;
-                                border-radius: 999px;
-                                padding: 5px 3px;
-                                font-size: 14px;
-                                box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+                                border-radius: 50%;
+                                padding: 2px;
+                                font-size: 12px;
+                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+                                border: 1.5px solid #fff;
                                 line-height: 1;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
+                                min-width: 18px;
+                                min-height: 18px;
                                 transform: scale(1);
-                                transition: all 0.15s ease-in-out;
+                                transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                                 user-select: none;
                                 cursor: default;
+                                z-index: 2;
 
                                 &:hover {
-                                    transform: scale(1.1);
+                                    transform: scale(1.15);
+                                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+                                }
+
+                                span {
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 2px;
                                 }
                             }
                         }
@@ -658,33 +668,38 @@
                                 }
                             }
 
-                            /* Reaction Bubble */
+                            /* Reaction Bubble - matches user-message style */
                             .message-reaction {
                                 position: absolute;
-                                bottom: -21px;
-                                right: 10px;
+                                bottom: -20px;
+                                right: 14px;
                                 background-color: #fff;
                                 border-radius: 50%;
-                                padding: 3px;
-                                font-size: 14px;
-                                box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+                                padding: 2px;
+                                font-size: 12px;
+                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+                                border: 1.5px solid #fff;
                                 line-height: 1;
                                 display: flex;
                                 align-items: center;
                                 justify-content: center;
+                                min-width: 18px;
+                                min-height: 18px;
                                 transform: scale(1);
-                                transition: all 0.15s ease-in-out;
+                                transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                                 user-select: none;
                                 cursor: default;
-
-                                span {
-                                    padding: 0;
-                                    margin: 0;
-                                    line-height: inherit;
-                                }
+                                z-index: 2;
 
                                 &:hover {
-                                    transform: scale(1.1);
+                                    transform: scale(1.15);
+                                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+                                }
+
+                                span {
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 2px;
                                 }
                             }
                         }
