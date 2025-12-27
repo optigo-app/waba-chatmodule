@@ -77,9 +77,16 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
         if (!selectedCustomer?.CustomerId) return;
         try {
             const response = await fetchTagsApi(selectedCustomer?.CustomerId, auth?.userId);
-            setTagsList(response?.rd);
+            if (response?.rd?.stat === 0) {
+                setTagsList(response?.rd);
+            } else {
+                toast.error('Failed to fetch tags');
+            }
         } catch (error) {
             console.error("TCL: handleFetchtags -> error", error);
+            if (error?.message) {
+                toast.error(error.message);
+            }
         }
     };
 

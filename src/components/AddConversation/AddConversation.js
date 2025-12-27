@@ -4,10 +4,12 @@ import {
     Typography,
     TextField,
     InputAdornment,
-    Tabs,
-    Tab
+    Box,
+    Button,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { Search, Clear, Person as PersonIcon, ChatBubbleOutline } from '@mui/icons-material';
+import toast from 'react-hot-toast';
 import './AddConversation.scss';
 import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import { fetchCustomerLists } from '../../API/CustomerLists/CustomerLists';
@@ -67,6 +69,9 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
             if (moreAvailable) setCurrentPage(page);
         } catch (error) {
             console.error('Error loading members:', error);
+            if (error?.message) {
+                toast.error(error.message);
+            }
         } finally {
             setLoading(false);
         }
@@ -125,7 +130,8 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
         return () => container.removeEventListener('scroll', handleScroll);
     }, [handleScroll]);
 
-    const handleTabChange = (e, newValue) => {
+    const handleTabChange = (newValue) => {
+        if (newValue === null || newValue === undefined) return;
         setTabValue(newValue);
     };
 
@@ -196,19 +202,61 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
             </div>
 
             {/* Filters */}
-            <div className="customer_lists_filters">
-                <Tabs
-                    value={tabValue}
-                    onChange={handleTabChange}
-                    variant="fullWidth"
-                    textColor="primary"
-                    indicatorColor="primary"
+            <Box
+                className="customer_lists_filters"
+                sx={{
+                    borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                    px: '10px',
+                    py: '8px',
+                }}
+            >
+                <Box
+                    sx={{
+                        width: '100%',
+                        display: 'flex',
+                        gap: '6px',
+                        padding: '6px',
+                    }}
                 >
-                    <Tab label="All" />
-                    <Tab label="Escalated" />
-                    <Tab label="Favorite" />
-                </Tabs>
-            </div>
+                    {[{ label: 'All', value: 0 }, { label: 'Escalated', value: 1 }, { label: 'Favorite', value: 2 }].map((item) => {
+                        const isActive = tabValue === item.value;
+
+                        return (
+                            <Button
+                                key={item.value}
+                                type="button"
+                                disableElevation
+                                variant="text"
+                                aria-pressed={isActive}
+                                onClick={() => handleTabChange(item.value)}
+                                sx={(theme) => ({
+                                    flex: 1,
+                                    borderRadius: 2,
+                                    textTransform: 'none',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    lineHeight: 1,
+                                    border: '1px solid',
+                                    borderColor: isActive ? alpha(theme.palette.borderColor.extraLight, 0.2) : theme.palette.borderColor.extraLight,
+                                    color: isActive ? alpha(theme.palette.primary.main, 1) : theme.palette.text.secondary,
+                                    backgroundColor: isActive ? alpha(theme.palette.primary.main, 0.14) : 'transparent',
+                                    transition: 'background-color 200ms ease, color 200ms ease, transform 200ms ease',
+                                    '&:hover': {
+                                        backgroundColor: isActive
+                                            ? alpha(theme.palette.primary.main, 0.18)
+                                            : alpha(theme.palette.primary.main, 0.08),
+                                    },
+                                    '&:active': {
+                                        transform: 'scale(0.98)',
+                                    },
+                                })}
+                            >
+                                {item.label}
+                            </Button>
+                        );
+                    })}
+                </Box>
+            </Box>
 
             <div className="customer_lists_main">
                 <ul ref={containerRef}>

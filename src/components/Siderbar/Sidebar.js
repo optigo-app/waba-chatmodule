@@ -6,6 +6,7 @@ import { useTagsContext } from '../../contexts/TagsContexts'
 import { fetchAllTagsApi } from '../../API/FetchTags/FetchAllTagsApi'
 import { LoginContext } from '../../context/LoginData'
 import CryptoJS from "crypto-js";
+import toast from 'react-hot-toast';
 
 const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) => {
 
@@ -83,6 +84,9 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag }) =
             }
         } catch (error) {
             console.error('Error fetching all tags:', error);
+            if (error?.message) {
+                toast.error(error.message);
+            }
         }
     };
 

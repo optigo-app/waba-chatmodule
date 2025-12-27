@@ -56,7 +56,6 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     const pageSize = 100;
     const searchTimeoutRef = useRef(null);
     const { auth, PERMISSION_SET, isSyncing } = useContext(LoginContext);
-    console.log("auth", auth)
 
     const can = (perm) => PERMISSION_SET?.has(perm);
 
@@ -616,7 +615,6 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                     member.unreadCount > 0 && !isSelectedAndReading;
 
                                                 const lastMessageData = member.LastMessage ? JSON.parse(member.LastMessage) : [];
-                                                console.log("member", member)
                                                 return (
                                                     <li
                                                         key={member.Id}
@@ -717,7 +715,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                                                     </IconButton>
                                                                                 </Tooltip>
                                                                             }
-                                                                              {member?.IsStar === 1 &&
+                                                                            {member?.IsStar === 1 &&
                                                                                 <Tooltip title={member?.IsStar === 1 ? "Unfavorite" : "favorite"} arrow>
                                                                                     <IconButton
                                                                                         size="small"

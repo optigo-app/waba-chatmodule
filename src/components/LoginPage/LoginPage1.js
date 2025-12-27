@@ -145,7 +145,19 @@ const LoginPage1 = () => {
             socket.on("connect", async () => {
                 console.log("✅ Socket connected with ID:", socket.id);
 
-                await savePlayerId(socket.id, userData.userId, userData?.id);
+                try {
+                    await savePlayerId(socket.id, userData.userId, userData?.id);
+                } catch (err) {
+                    console.error("savePlayerId error:", err);
+                    if (err?.message) {
+                        // Show backend stat_msg like "Contact your Admin"
+                        toast.error(err.message);
+                    } else {
+                        toast.error("Failed to register device token");
+                    }
+                    setIsLoading(false);
+                    return;
+                }
 
                 const updatedUserData = { ...userData, SocketId: socket.id };
                 sessionStorage.setItem("userData", JSON.stringify(updatedUserData));

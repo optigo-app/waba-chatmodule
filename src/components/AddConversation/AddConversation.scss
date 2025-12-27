@@ -5,7 +5,8 @@
     width: 100%;
     height: calc(100vh - #{$header-height});
     background-color: #ffffff;
-    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    border-right: 1px solid $sidebar-borderColor;
+
     display: flex;
     flex-direction: column;
     margin-top: $header-height;
@@ -13,7 +14,8 @@
 
     .customer_lists_header {
         padding: 14px 16px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        border-bottom: 1px solid $sidebar-borderColor;
+
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -29,7 +31,7 @@
 
     .customer_lists_search {
         padding: 10px 16px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        border-bottom: 1px solid $sidebar-borderColor;
 
         .MuiOutlinedInput-root {
             background-color: $sidebar-Bgcolor;
@@ -41,11 +43,11 @@
             }
 
             fieldset {
-                border-color: rgba(0, 0, 0, 0.12);
+                border-color: $sidebar-borderColor;
             }
 
             &:hover fieldset {
-                border-color: rgba(0, 0, 0, 0.2);
+                border-color: $sidebar-borderColor;
             }
 
             &.Mui-focused fieldset {
@@ -55,32 +57,9 @@
     }
 
     .customer_lists_filters {
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        padding: 0 10px;
+        border-bottom: 1px solid $sidebar-borderColor;
+        padding: 8px 10px;
 
-        .MuiTabs-root {
-            min-height: 36px;
-        }
-
-        .MuiTab-root {
-            min-height: 45px;
-            font-family: $font-family;
-            text-transform: none;
-            font-size: 13px;
-            padding: 0 2px;
-            color: #6b7280;
-
-            &.Mui-selected {
-                color: $primary-main;
-                font-weight: 600;
-            }
-        }
-
-        .MuiTabs-indicator {
-            height: 2px;
-            background-color: $primary-main;
-            border-radius: 2px;
-        }
     }
 
     .customer_lists_main {
@@ -88,7 +67,7 @@
         overflow: hidden;
 
         ul {
-            padding: 6px 8px;
+            padding: 6px; // match CustomerLists ul padding
             margin: 0;
             list-style: none;
             height: 100%;
