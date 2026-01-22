@@ -1,308 +1,184 @@
-.media-viewer-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
+@use "sass:color";
+@import '../../global.scss';
+
+// Override MUI Dialog Styles if needed
+.media-viewer-dialog {
+  .MuiDialog-paper {
+    background-color: rgba(18, 18, 18, 0.95);
+    backdrop-filter: blur(10px);
+  }
 }
 
-.media-viewer-container {
-  width: 90%;
-  height: 90%;
-  max-width: 1200px;
-  max-height: 800px;
-  background-color: #111;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-}
+.media-viewer-appbar {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%) !important;
+  box-shadow: none !important;
 
-.media-viewer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px;
-  background-color: rgba(30, 30, 30, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.media-viewer-close,
-.media-viewer-download {
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-// .media-viewer-close:hover,
-// .media-viewer-download:hover {
-//   background-color: rgba(255, 255, 255, 0.1);
-// }
-
-.media-viewer-title {
-  color: #fff;
-  font-size: 16px;
-  font-weight: 500;
-  flex: 1;
-  text-align: center;
-  margin: 0 16px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  .MuiToolbar-root {
+    min-height: 64px;
+  }
 }
 
 .media-viewer-content {
   flex: 1;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
   position: relative;
+  height: 100%;
+  width: 100%;
   overflow: hidden;
+  padding-top: 64px; // Appbar height
+  padding-bottom: 80px; // Thumbnails height approx
 }
 
-.media-viewer-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5);
-  border: none;
-  color: #fff;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-  z-index: 10;
+// Swiper Customization
+.main-swiper {
+  width: 100%;
+  height: 100%;
+
+  .swiper-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
 }
 
-.media-viewer-nav:hover {
-  background: rgba(0, 0, 0, 0.8);
-}
-
-.media-viewer-nav.prev {
-  left: 16px;
-}
-
-.media-viewer-nav.next {
-  right: 16px;
-}
-
-.media-viewer-display {
-  flex: 1;
+.media-slide-content {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+  }
+}
+
+.video-container {
   width: 100%;
   height: 100%;
-}
-
-.media-content {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  border-radius: 4px;
-}
-
-.media-content.loading {
-  display: none;
-}
-
-.media-content.loaded {
-  display: block;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-.media-loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
-}
 
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-top: 4px solid #fff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
+  video {
+    max-width: 100%;
+    max-height: 100%;
+    outline: none;
   }
 }
 
-.document-preview {
+.document-preview-card {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 32px;
-  background-color: #222;
-  border-radius: 12px;
-  max-width: 500px;
   text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  .doc-name {
+    margin-bottom: 8px;
+    word-break: break-word;
+    color: #333;
+  }
 }
 
-.document-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
-}
 
-.document-info {
-  margin-bottom: 24px;
-}
-
-.document-name {
-  color: #fff;
-  font-size: 18px;
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.document-size {
-  color: #aaa;
-  font-size: 14px;
-}
-
-.document-download-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background-color: #008cff;
-  color: #fff;
-  padding: 12px 24px;
-  border-radius: 24px;
-  text-decoration: none;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.document-download-btn:hover {
-  background-color: #0077e6;
-}
-
-.media-viewer-thumbnails {
-  display: flex;
-  gap: 8px;
-  padding: 16px;
-  overflow-x: auto;
-  background-color: rgba(30, 30, 30, 0.8);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.thumbnail {
-  flex-shrink: 0;
-  width: 60px;
-  height: 60px;
-  border-radius: 6px;
-  overflow: hidden;
+// Custom Navigation Buttons
+.swiper-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  color: white;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: border-color 0.2s;
-}
-
-.thumbnail.active {
-  border-color: #008cff;
-}
-
-.thumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.thumbnail-video,
-.thumbnail-document {
-  width: 100%;
-  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  padding: 8px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #333;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  &.custom-prev {
+    left: 20px;
+  }
+
+  &.custom-next {
+    right: 20px;
+  }
 }
 
-.thumbnail-icon {
-  font-size: 24px;
-}
+// Thumbnails
+.thumbnails-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 10px 0;
+  z-index: 20;
 
-/* Responsive styles */
-@media (max-width: 768px) {
-  .media-viewer-container {
-    width: 100%;
+  .thumbs-swiper {
     height: 100%;
-    border-radius: 0;
-  }
+    padding: 0 20px;
 
-  .media-viewer-header {
-    padding: 12px;
-  }
+    .swiper-slide {
+      width: 60px;
+      height: 60px;
+      opacity: 0.4;
+      cursor: pointer;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: all 0.3s;
 
-  .media-viewer-title {
-    font-size: 14px;
-  }
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
 
-  .media-viewer-nav {
-    width: 40px;
-    height: 40px;
-  }
+      .thumb-placeholder {
+        width: 100%;
+        height: 100%;
+        background: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
 
-  .media-viewer-nav.prev {
-    left: 8px;
-  }
+        &.video {
+          color: #E1306C;
+        }
 
-  .media-viewer-nav.next {
-    right: 8px;
-  }
+        // Instagram-ish color for video
+        &.document {
+          color: #4285F4;
+        }
 
-  .document-preview {
-    padding: 24px 16px;
-  }
+        // Google Blueish
+      }
 
-  .document-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-  }
-
-  .document-name {
-    font-size: 16px;
-  }
-
-  .thumbnail {
-    width: 50px;
-    height: 50px;
+      &.swiper-slide-thumb-active {
+        opacity: 1;
+        border-color: $primary-main;
+        transform: scale(1.05);
+      }
+    }
   }
 }

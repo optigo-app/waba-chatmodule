@@ -2,8 +2,8 @@ import { io } from 'socket.io-client';
 
 // Socket server configuration
 const SOCKET_URLS = {
-    production: 'https://nxtapi.optigoapps.com',
-    development: 'http://192.168.1.71:3001', // local server
+    production: 'https://nxt22.optigoapps.com',
+    development: 'http://192.168.1.71:5002', // local server
     // development: 'http://192.168.1.71:3001', // local server
     // development: 'https://apilx.optigoapps.com', // local server
 };

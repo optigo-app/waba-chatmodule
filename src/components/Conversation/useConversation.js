@@ -77,16 +77,9 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
         if (!selectedCustomer?.CustomerId) return;
         try {
             const response = await fetchTagsApi(selectedCustomer?.CustomerId, auth?.userId);
-            if (response?.rd?.stat === 0) {
-                setTagsList(response?.rd);
-            } else {
-                toast.error('Failed to fetch tags');
-            }
+            setTagsList(response?.rd);
         } catch (error) {
             console.error("TCL: handleFetchtags -> error", error);
-            if (error?.message) {
-                toast.error(error.message);
-            }
         }
     };
 
@@ -553,12 +546,15 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
 
     const loadConversation = useCallback(
         async (page = 1, reset = false) => {
-            if (loading || !selectedCustomer?.ConversationId) return;
+            // Allow fast switching between conversations:
+            // do not block new loads while a previous request is still in-flight.
+            // We abort the previous request below and only apply the latest response.
+            if (!selectedCustomer?.ConversationId) return;
 
             // Create a unique request token
             const requestId = ++latestRequestRef.current;
 
-            // 🛑 Abort any previous pending request
+            // Abort any previous pending request
             if (abortControllerRef.current) {
                 abortControllerRef.current.abort();
             }
@@ -579,7 +575,7 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
                     controller.signal
                 );
 
-                // 🔒 Only update state if this request is still the latest one
+                // Only update state if this request is still the latest one
                 if (requestId !== latestRequestRef.current) {
                     return;
                 }
@@ -650,7 +646,7 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
                     return { data: merged, total: response.total };
                 });
 
-                // ✅ Only set pagination info if this is still latest request
+                // Only set pagination info if this is still latest request
                 if (requestId === latestRequestRef.current) {
                     setHasMore(response.hasMore);
                     setCurrentPage(page);
@@ -667,7 +663,7 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
                 }
             }
         },
-        [loading, pageSize, selectedCustomer, auth?.userId]
+        [pageSize, selectedCustomer, auth?.userId]
     );
 
     const loadOlderMessages = useCallback(async (containerRef) => {

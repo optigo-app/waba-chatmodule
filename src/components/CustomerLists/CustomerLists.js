@@ -63,7 +63,6 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         setAnchorEl(null);
     };
 
-
     const loadMembers = useCallback(async (page = 1, reset = false, search = null) => {
         if (loading || (!reset && !hasMore)) return;
 

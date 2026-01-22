@@ -34,23 +34,24 @@ const ForwardDropdown = styled(Paper)(({ theme }) => ({
     backgroundColor: 'white',
     borderRadius: '12px',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-    border: '1px solid #e0e0e0',
+    border: '1px solid #5a5a5a0e',
     overflow: 'hidden',
     zIndex: 1300,
 }));
 
 const DropdownHeader = styled(Box)(({ theme }) => ({
-    background: theme.palette.importance?.high?.background,
-    color: theme.palette.importance?.high?.text,
-    padding: '12px 16px',
+    background: theme.palette.mode === 'dark' ? '#202124' : '#f9fafb',
+    color: theme.palette.text.primary,
+    padding: '10px 14px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderBottom: '1px solid #5a5a5a0e',
 }));
 
 const SearchContainer = styled(Box)(({ theme }) => ({
     padding: '12px 16px',
-    borderBottom: '1px solid #f0f0f0',
+    borderBottom: '1px solid #5a5a5a0e',
 }));
 
 const ContactsContainer = styled(Box)(({ theme }) => ({
@@ -80,7 +81,7 @@ const ContactItem = styled(MenuItem)(({ theme }) => ({
 
 const SelectedChipsContainer = styled(Box)(({ theme }) => ({
     padding: '8px 16px',
-    borderBottom: '1px solid #f0f0f0',
+    borderBottom: '1px solid #5a5a5a0e',
     display: 'flex',
     flexWrap: 'wrap',
     gap: '6px',
@@ -91,20 +92,26 @@ const SelectedChipsContainer = styled(Box)(({ theme }) => ({
 const StyledChip = styled(Chip)(({ theme }) => ({
     height: '24px',
     fontSize: '0.75rem',
-    backgroundColor: '#8e4ff3',
-    color: 'white',
+    borderRadius: '999px',
+    backgroundColor: '#f3ecff',
+    color: theme.palette.text.primary,
+    border: '1px solid #e0d7ff',
+    '& .MuiChip-label': {
+        paddingLeft: 8,
+        paddingRight: 6,
+    },
     '& .MuiChip-deleteIcon': {
-        color: 'white',
+        color: '#8e4ff3',
         fontSize: '16px',
         '&:hover': {
-            color: '#f0f0f0',
+            color: '#6c35d9',
         },
     },
 }));
 
 const ActionButtons = styled(Box)(({ theme }) => ({
     padding: '12px 16px',
-    borderTop: '1px solid #f0f0f0',
+    borderTop: '1px solid #5a5a5a0e',
     display: 'flex',
     gap: '8px',
     justifyContent: 'flex-end',
@@ -276,9 +283,9 @@ const ForwardMessage = ({ message, onSend, onClose, anchorEl, open }) => {
                 width: '320px',
                 maxHeight: '400px',
                 backgroundColor: 'white',
-                borderRadius: '12px',
+                borderRadius: '20px',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-                border: '1px solid #e0e0e0',
+                border: '1px solid #5a5a5a0e',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
@@ -289,15 +296,20 @@ const ForwardMessage = ({ message, onSend, onClose, anchorEl, open }) => {
                     {/* Header */}
                     <DropdownHeader>
                         <Box display="flex" alignItems="center" gap={1}>
-                            <ArrowForwardIcon fontSize="small" />
-                            <Typography variant="subtitle1" fontWeight={500}>
+                            <ArrowForwardIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                            <Typography variant="subtitle2" fontWeight={600} color="text.primary">
                                 Forward to
                             </Typography>
                         </Box>
                         <IconButton
                             size="small"
                             onClick={onClose}
-                            sx={{ color: 'white', '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}
+                            sx={{
+                                color: 'text.secondary',
+                                '&:hover': {
+                                    backgroundColor: theme => theme.palette.action.hover,
+                                },
+                            }}
                         >
                             <CloseIcon fontSize="small" />
                         </IconButton>
@@ -322,6 +334,10 @@ const ForwardMessage = ({ message, onSend, onClose, anchorEl, open }) => {
                                 '& .MuiOutlinedInput-root': {
                                     borderRadius: '20px',
                                     fontSize: '0.875rem',
+                                    borderColor: '#5a5a5a0e',
+                                    '& fieldset': {
+                                        borderColor: '#5a5a5a0e',
+                                    },
                                 },
                             }}
                         />
@@ -390,7 +406,7 @@ const ForwardMessage = ({ message, onSend, onClose, anchorEl, open }) => {
                         <Button
                             size="small"
                             onClick={onClose}
-                            sx={{ color: 'text.secondary', minWidth: 'auto' }}
+                            sx={{ color: 'text.secondary', minWidth: 'auto', borderRadius: 2, }}
                         >
                             Cancel
                         </Button>
@@ -401,12 +417,20 @@ const ForwardMessage = ({ message, onSend, onClose, anchorEl, open }) => {
                             variant="contained"
                             startIcon={<SendIcon fontSize="small" />}
                             sx={{
-                                backgroundColor: '#8e4ff3',
                                 fontSize: '0.75rem',
                                 minWidth: 'auto',
                                 px: 2,
-                                '&:hover': { backgroundColor: '#8e4ff3' },
-                                '&:disabled': { backgroundColor: '#cccccc' },
+                                borderRadius: 2,
+                                backgroundImage: (theme) => theme.palette.primary.gradient,
+                                color: (theme) => theme.palette.primary.contrastText,
+                                '&:hover': {
+                                    backgroundImage: (theme) => theme.palette.primary.gradient,
+                                    filter: 'brightness(0.95)',
+                                },
+                                '&:disabled': {
+                                    backgroundImage: 'none',
+                                    backgroundColor: '#cccccc',
+                                },
                             }}
                         >
                             Send

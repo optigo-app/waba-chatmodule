@@ -9,7 +9,6 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { Search, Clear, Person as PersonIcon, ChatBubbleOutline } from '@mui/icons-material';
-import toast from 'react-hot-toast';
 import './AddConversation.scss';
 import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import { fetchCustomerLists } from '../../API/CustomerLists/CustomerLists';
@@ -69,9 +68,6 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
             if (moreAvailable) setCurrentPage(page);
         } catch (error) {
             console.error('Error loading members:', error);
-            if (error?.message) {
-                toast.error(error.message);
-            }
         } finally {
             setLoading(false);
         }
