@@ -93,7 +93,7 @@ export const getCustomerListMenuItems = (member) => [
   {
     action: member?.IsStar === 1 ? 'UnStar' : 'Star',
     icon: member?.IsStar === 1 ? React.createElement(StarOff, { size: 18 }) : React.createElement(Star, { size: 18 }),
-    label: member?.IsStar === 1 ? 'Unfavorite' : 'Favorite',
+    label: member?.IsStar === 1 ? 'Unfavourite' : 'favourite',
   },
   {
     action: member?.IsArchived === 1 ? 'UnArchive' : 'Archive',

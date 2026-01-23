@@ -152,7 +152,7 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
                 if (!selectedStatus || selectedStatus === 'All') return true;
                 const statusKey = selectedStatus.toLowerCase();
                 const isFavorite = member.IsStar === 1;
-                return member.ticketStatus === statusKey || (isFavorite && statusKey === 'favorite');
+                return member.ticketStatus === statusKey || (isFavorite && statusKey === 'favourite');
             })
             ?.filter((member) => {
                 if (!selectedTag || selectedTag === 'All') return true;
@@ -214,7 +214,7 @@ const AddConversation = ({ onCustomerSelect = () => { }, selectedCustomer = null
                         padding: '6px',
                     }}
                 >
-                    {[{ label: 'All', value: 0 }, { label: 'Escalated', value: 1 }, { label: 'Favorite', value: 2 }].map((item) => {
+                    {[{ label: 'All', value: 0 }, { label: 'Escalated', value: 1 }, { label: 'favourite', value: 2 }].map((item) => {
                         const isActive = tabValue === item.value;
 
                         return (

@@ -62,6 +62,16 @@
     }
 }
 
+.layout--sidebar-collapsed {
+    @media (min-width: 769px) {
+        .customer_lists_mainDiv {
+            width: 500px;
+            min-width: 500px;
+            max-width: 500px;
+        }
+    }
+}
+
 
 .customer_lists_mainDiv {
     max-width: 440px;

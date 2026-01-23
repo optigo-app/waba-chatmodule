@@ -23,7 +23,11 @@ import {
     InputAdornment,
     IconButton,
     Tooltip,
-    CircularProgress
+    CircularProgress,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { Clear, KeyboardArrowDown, Search } from '@mui/icons-material';
@@ -49,6 +53,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     const [currentPage, setCurrentPage] = useState(1);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectMember, setSelectMember] = useState({});
+    const [rowContextMenu, setRowContextMenu] = useState(null);
     const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
     const [selectedMemberForDialog, setSelectedMemberForDialog] = useState(null);
     const [hoveredId, setHoveredId] = useState(null);
@@ -61,6 +66,10 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
 
     const handleCloseMenu = () => {
         setAnchorEl(null);
+    };
+
+    const handleCloseRowContextMenu = () => {
+        setRowContextMenu(null);
     };
 
     const loadMembers = useCallback(async (page = 1, reset = false, search = null) => {
@@ -211,7 +220,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                 if (!selectedStatus || selectedStatus === 'All') return true;
                 const statusKey = selectedStatus.toLowerCase();
                 const isFavorite = member.IsStar === 1;
-                return member.ticketStatus === statusKey || (isFavorite && statusKey === 'favorite');
+                return member.ticketStatus === statusKey || (isFavorite && statusKey === 'favourite');
             })
             ?.filter((member) => {
                 if (!selectedTag || selectedTag === 'All') return true;
@@ -287,18 +296,18 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         }
 
         try {
-            const response = shouldFavorite === "Favorite"
+            const response = shouldFavorite === "Favourite"
                 ? await favoriteApi(member.ConversationId, member.UserId, auth?.userId)
                 : await unFavoriteApi(member.ConversationId, member.UserId, auth?.userId);
 
             if (response?.Status === "200") {
-                toast.success(`Chat ${shouldFavorite === "Favorite" ? 'favorited' : 'unfavorited'} successfully`);
+                toast.success(`Chat ${shouldFavorite === "favourite" ? 'favourited' : 'unfavourited'} successfully`);
                 loadMembers(currentPage, true);
             } else {
-                toast.error(`Failed to ${shouldFavorite === "Favorite" ? 'favorite' : 'unfavorite'} chat`);
+                toast.error(`Failed to ${shouldFavorite === "favourite" ? 'favourite' : 'unfavourite'} chat`);
             }
         } catch (error) {
-            console.error("Error handling favorite chat", error);
+            console.error("Error handling favourite chat", error);
             toast.error("Something went wrong while favoriting/unfavoriting the chat.");
         }
     };
@@ -321,7 +330,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                 toast.error(`Failed to ${shouldArchieve === "Archive" ? 'archive' : 'unarchive'} chat`);
             }
         } catch (error) {
-            console.error("Error handling favorite chat", error);
+            console.error("Error handling favourite chat", error);
             toast.error("Something went wrong while archiving/unarchiving the chat.");
         }
     };
@@ -354,7 +363,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         }
 
         if (action === "Star" || action === "UnStar") {
-            handleFavoriteChat(member, action === "Star" ? "Favorite" : "UnFavorite");
+            handleFavoriteChat(member, action === "Star" ? "Favourite" : "UnFavourite");
         }
 
         if (action === "Archive" || action === "UnArchive") {
@@ -366,6 +375,27 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         }
 
         handleCloseMenu();
+    };
+
+    const handleOpenRowContextMenu = (e, member) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setAnchorEl(null);
+        setSelectMember(member);
+        onConversationList(member);
+        setRowContextMenu({
+            mouseX: e.clientX + 2,
+            mouseY: e.clientY + 2,
+            member,
+        });
+    };
+
+    const handleRowContextMenuAction = (action) => {
+        const member = rowContextMenu?.member;
+        if (member) {
+            handleMenuAction(action, member);
+        }
+        handleCloseRowContextMenu();
     };
 
     const handleSocketUpdate = (data, isStatusChange = false) => {
@@ -542,7 +572,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                         padding: '6px',
                     }}
                 >
-                    {[{ label: 'All', value: 0 }, { label: 'Escalated', value: 1 }, { label: 'Favorite', value: 2 }].map((item) => {
+                    {[{ label: 'All', value: 0 }, { label: 'Escalated', value: 1 }, { label: 'favourite', value: 2 }].map((item) => {
                         const isActive = tabValue === item.value;
 
                         return (
@@ -619,6 +649,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                         key={member.Id}
                                                         className={`member-item ${isSelected ? 'active' : ''} ${isSelectedAndReading ? 'reading' : ''} ${isMenuOpen ? 'menu-open' : ''}`}
                                                         onClick={() => onCustomerSelect(member)}
+                                                        onContextMenu={(e) => handleOpenRowContextMenu(e, member)}
                                                         onMouseEnter={() => setHoveredId(member.Id)}
                                                         onMouseLeave={() => setHoveredId(null)}
                                                     >
@@ -715,7 +746,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                                                 </Tooltip>
                                                                             }
                                                                             {member?.IsStar === 1 &&
-                                                                                <Tooltip title={member?.IsStar === 1 ? "Unfavorite" : "favorite"} arrow>
+                                                                                <Tooltip title={member?.IsStar === 1 ? "Unfavourite" : "favourite"} arrow>
                                                                                     <IconButton
                                                                                         size="small"
                                                                                         className={`action-btn ${member?.IsStar === 1 ? 'is-on' : ''}`}
@@ -786,6 +817,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                             key={`search-${member.Id}`}
                                                             className="member-item search-result"
                                                             onClick={() => onCustomerSelect(member)}
+                                                            onContextMenu={(e) => handleOpenRowContextMenu(e, member)}
                                                         >
                                                             <div className="member-avatar">
                                                                 {!hasCustomerName(member) ? (
@@ -877,6 +909,65 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                     onAction={handleMenuAction}
                     context={selectMember}
                 />
+
+                <Menu
+                    open={Boolean(rowContextMenu)}
+                    onClose={handleCloseRowContextMenu}
+                    anchorReference="anchorPosition"
+                    anchorPosition={
+                        rowContextMenu
+                            ? { top: rowContextMenu.mouseY, left: rowContextMenu.mouseX }
+                            : undefined
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                    PaperProps={{
+                        elevation: 0,
+                        sx: {
+                            minWidth: 180,
+                            borderRadius: 2,
+                            py: 0.5,
+                            boxShadow:
+                                '0px 6px 18px rgba(0,0,0,0.12), 0px 3px 6px rgba(0,0,0,0.08)',
+                            backgroundColor: 'background.paper',
+                        },
+                    }}
+                    transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+                >
+                    {getCustomerListMenuItems(rowContextMenu?.member || selectMember).map((item, index) => (
+                        <MenuItem
+                            key={item.action || index}
+                            onClick={() => handleRowContextMenuAction(item.action)}
+                            sx={{
+                                py: 1.1,
+                                px: 2,
+                                borderRadius: 1.5,
+                                transition: 'all 0.2s ease',
+                                color: item.danger ? 'error.main' : 'text.primary',
+                                '&:hover': {
+                                    backgroundColor: item.danger
+                                        ? 'rgba(255,0,0,0.08)'
+                                        : 'action.hover',
+                                    transform: 'translateX(3px)',
+                                },
+                            }}
+                        >
+                            {item.icon && (
+                                <ListItemIcon sx={{ minWidth: '30px' }}>{item.icon}</ListItemIcon>
+                            )}
+                            <ListItemText
+                                primary={item.label}
+                                sx={{
+                                    margin: 0,
+                                    '& .MuiTypography-root': {
+                                        fontSize: 14,
+                                        fontWeight: 500,
+                                        color: 'text.primary',
+                                    },
+                                }}
+                            />
+                        </MenuItem>
+                    ))}
+                </Menu>
 
                 {/* Add Customer Dialog */}
                 <AddCustomerDialog

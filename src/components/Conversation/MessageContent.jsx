@@ -136,8 +136,8 @@ const MessageContent = ({
                         borderRadius: (isOutgoing
                             ? '18px 18px 0px 18px'
                             : '18px 18px 18px 0px') + ' !important',
-                        backgroundColor: (isOutgoing
-                            ? alpha(theme.palette.primary.main, 0.15)
+                        background: (isOutgoing
+                            ? alpha(theme.palette.background.light, 1)
                             : theme.palette.background.paper) + ' !important',
                         color: theme.palette.text.primary + ' !important',
                         // border: (`1px solid ${isOutgoing

@@ -262,7 +262,7 @@ const MessageArea = ({
                             position: 'relative',
                             // backgroundImage: 'linear-gradient(rgba(247, 245, 243, 0.65), rgba(247, 245, 243, 0.65)), url(/bg-3.jpg)',
                             backgroundImage:
-                                'linear-gradient(rgba(249, 250, 251, 0.78), rgba(249, 250, 251, 0.78)), url(/bg-3.jpg)',
+                                'linear-gradient(rgba(249, 250, 251, 0.80), rgba(249, 250, 251, 0.80)), url(/bg-3.jpg)',
                             backgroundSize: 'auto, contain',
                             backgroundPosition: 'center, center',
                             backgroundRepeat: 'repeat, repeat',

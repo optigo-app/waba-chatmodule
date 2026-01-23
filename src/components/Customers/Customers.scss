@@ -23,6 +23,19 @@
     }
 }
 
+.layout--sidebar-collapsed {
+    @media (min-width: 769px) {
+        .customers-container {
+            .customers-layout {
+                .customer-lists-section {
+                    width: 500px;
+                    min-width: 500px;
+                }
+            }
+        }
+    }
+}
+
 // Responsive design
 @media (max-width: 1024px) {
     .customers-container {

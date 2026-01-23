@@ -1,15 +1,15 @@
-$button-Bgcolor: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%);
+$button-Bgcolor: #1daa61;
 $button-color: #fff;
-$button-color-hover: #685dd8;
-$button-Bordercolor: #685dd8;
+$button-color-hover: #1daa61;
+$button-Bordercolor: #1daa61;
 $button-DangerBgcolor: linear-gradient(270deg, rgba(255, 72, 66, 0.8) 0%, #d90429 100%);
 $button-DangerBgcolor-hover: #c20225;
 $button-Dangercolor: #ffffff;
 
-$sidebar-Activebg: linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%) !important;
+$sidebar-Activebg: #1daa61 !important;
 $sidebar-Bgcolor: #ffffff;
-$sidebar-borderColor:#5a5a5a0e;
-$side-bar-boxShadow:rgba(0, 0, 0, 0.1) 0px 4px 10px;
+$sidebar-borderColor: #5a5a5a0e;
+$side-bar-boxShadow: rgba(0, 0, 0, 0.1) 0px 4px 10px;
 $sidebar-padding: 16px;
 $sidebar-section-gap: 12px;
 $sidebar-item-gap: 10px;
@@ -32,17 +32,17 @@ $titleColor: #444050;
 $secondaryColor: #7D7f85;
 $text2ndColor: #6D6B77;
 $placeholderColor: #808080;
-$text-white:#fff;
-$text-light:#f1f1f1;
-$bg-light:#ebebeb;
+$text-white: #fff;
+$text-light: #f1f1f1;
+$bg-light: #ebebeb;
 
-$box-shadow-value: 0 4px 16px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.08);
+$box-shadow-value: 0 4px 16px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.08);
 $paper-shadow-value: 0px 5px 5px -3px rgba(0, 0, 0, 0.2), 0px 8px 10px 1px rgba(0, 0, 0, 0.14), 0px 3px 14px 2px rgba(0, 0, 0, 0.12);
 $transition-duration: 200ms;
 
 // Primary Colors
-$primary-main: #7367f0;
-$primary-light: rgba(115, 103, 240, 0.16);
+$primary-main: #1daa61;
+$primary-light: rgba(37, 211, 102, 0.16);
 $primary-light-bg: rgba($primary-main, 0.16);
 
 $success-main: #28C76F;

@@ -1,5 +1,5 @@
 import './App.css';
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useRef } from 'react';
 import { useNavigate, Routes, Route, useLocation, matchPath } from 'react-router-dom';
 import { Box } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
@@ -18,7 +18,6 @@ import { registerSocketId } from './utils/socketHelper';
 import LoginExists from './components/LoginExists/LoginExists';
 import Lottie from 'lottie-react';
 import loader from './assets/lotties/loader.json';
-import ChatHeader from './TestPage/ChatHeader';
 
 const PagenotFound = () => <div>404 - Page Not Found</div>;
 
@@ -27,8 +26,27 @@ function Layout({ children, onStatusSelect, selectedStatus, onTagSelect, selecte
   const match = matchPath('/conversation/:conversationId', location.pathname);
   const showCustomerDetails = Boolean(match);
 
+  const SIDEBAR_COLLAPSED_STORAGE_KEY = 'optigo_sidebar_collapsed';
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      const stored = localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
+      if (stored == null) return false;
+      return stored === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(isSidebarCollapsed));
+    } catch (e) {
+    }
+  }, [isSidebarCollapsed]);
+  const sidebarWidth = isSidebarCollapsed ? '76px' : '260px';
+
   return (
-    <Box>
+    <Box className={isSidebarCollapsed ? 'layout--sidebar-collapsed' : 'layout'}>
       <TagsProvider>
         <ArchieveProvider>
           <Header />
@@ -37,16 +55,18 @@ function Layout({ children, onStatusSelect, selectedStatus, onTagSelect, selecte
             selectedStatus={selectedStatus}
             onTagSelect={onTagSelect}
             selectedTag={selectedTag}
+            isCollapsed={isSidebarCollapsed}
+            onCollapsedChange={setIsSidebarCollapsed}
           />
 
           {/* Global CustomerDetails view */}
           {showCustomerDetails && (
-            <Box sx={{ marginLeft: '300px', padding: '16px', borderBottom: '1px solid #ccc' }}>
+            <Box sx={{ marginLeft: sidebarWidth, padding: '16px', borderBottom: '1px solid #ccc' }}>
               <CustomerDetails />
             </Box>
           )}
 
-          <Box sx={{ marginLeft: '260px' }}>
+          <Box sx={{ marginLeft: sidebarWidth }}>
             {children}
           </Box>
         </ArchieveProvider>
@@ -57,17 +77,21 @@ function Layout({ children, onStatusSelect, selectedStatus, onTagSelect, selecte
 
 function App() {
   const navigate = useNavigate();
-  const { auth, setAuth, token, setToken, isSyncing } = useContext(LoginContext);
+  const { auth, isSyncing } = useContext(LoginContext);
 
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedTag, setSelectedTag] = useState('All');
   const [isConnected, setIsConnected] = useState(false);
   const [socketStatus, setSocketStatus] = useState('disconnected');
 
-  const [credentials, setCredentials] = useState(null);
+  const [isPublicRoute] = useState(() => {
+    const path = window.location.pathname;
+    return path === '/login' || path === '/session-check' || path === '/test';
+  });
 
-  // useEffect(() => {
-  //   const creds = GetCredentialsFromCookie();
+  const [isAuthChecking, setIsAuthChecking] = useState(!isPublicRoute);
+  const hasRunAuthCheckRef = useRef(false);
+
   //   setCredentials(creds);
   // }, []);
 
@@ -196,6 +220,15 @@ function App() {
    * Redirect to login if not logged in
    * ------------------------------ */
   useEffect(() => {
+    if (hasRunAuthCheckRef.current) return;
+    hasRunAuthCheckRef.current = true;
+
+    if (isPublicRoute) {
+      setIsAuthChecking(false);
+      return;
+    }
+
+    setIsAuthChecking(true);
     const timeout = setTimeout(() => {
       const isLoggedIn = sessionStorage.getItem('isLoggedIn');
       const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
@@ -214,6 +247,8 @@ function App() {
           navigate('/login');
         }
       }
+
+      setIsAuthChecking(false);
     }, 500); // wait 500ms (adjust if needed)
 
     return () => clearTimeout(timeout);
@@ -223,6 +258,35 @@ function App() {
   return (
     <>
       <Toaster position="top-right" toastOptions={toastConfig} />
+
+      {isAuthChecking && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+            backdropFilter: 'blur(3px)',
+          }}
+        >
+          <Box sx={{ width: 200, height: 200 }}>
+            <Lottie
+              animationData={loader}
+              loop={true}
+              style={{ width: '100%', height: '80%' }}
+            />
+            <Box sx={{ textAlign: 'center', mt: 2, color: '#333', fontWeight: 500 }}>
+              Checking session...
+            </Box>
+          </Box>
+        </Box>
+      )}
 
       {/* Global Sync Loader Overlay */}
       {isSyncing && (
@@ -274,35 +338,36 @@ function App() {
       </div> */}
 
 
-      <div className="app_mainDiv">
-        <Routes>
-          <Route path="/login" element={<LoginPage1 />} />
-          <Route path="/session-check" element={<LoginExists />} />
-            <Route path="/test" element={<ChatHeader chatId="123" />} />
-          <Route
-            path="*"
-            element={
-              <Layout
-                onStatusSelect={setSelectedStatus}
-                selectedStatus={selectedStatus}
-                onTagSelect={setSelectedTag}
-                selectedTag={selectedTag}
-              >
-                <Routes>
-                  <Route
-                    path="/"
-                    element={<Home selectedStatus={selectedStatus} selectedTag={selectedTag} isConnected={isConnected} socketStatus={socketStatus} />}
-                  />
-                  <Route path="/add-conversation" element={<Customers />} />
-                  <Route path="/notification" element={<Customers />} />
-                  <Route path="/archieve" element={<Customers />} />
-                  <Route path="*" element={<PagenotFound />} />
-                </Routes>
-              </Layout>
-            } 
-          />
-        </Routes>
-      </div>
+      {!isAuthChecking && (
+        <div className="app_mainDiv">
+          <Routes>
+            <Route path="/login" element={<LoginPage1 />} />
+            <Route path="/session-check" element={<LoginExists />} />
+            <Route
+              path="*"
+              element={
+                <Layout
+                  onStatusSelect={setSelectedStatus}
+                  selectedStatus={selectedStatus}
+                  onTagSelect={setSelectedTag}
+                  selectedTag={selectedTag}
+                >
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={<Home selectedStatus={selectedStatus} selectedTag={selectedTag} isConnected={isConnected} socketStatus={socketStatus} />}
+                    />
+                    <Route path="/add-conversation" element={<Customers />} />
+                    <Route path="/notification" element={<Customers />} />
+                    <Route path="/archieve" element={<Customers />} />
+                    <Route path="*" element={<PagenotFound />} />
+                  </Routes>
+                </Layout>
+              }
+            />
+          </Routes>
+        </div>
+      )}
     </>
   );
 }

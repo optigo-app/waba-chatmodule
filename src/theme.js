@@ -6,22 +6,22 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#7367f0',
-      light: '#7367f0',
-      dark: '#7367f0',
-      gradient: 'linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%)',
+      main: '#1daa61',
+      light: '#1daa61',
+      dark: '#1daa61',
+      gradient: 'linear-gradient(270deg, rgba(37, 211, 102, 0.85) 0%, #1daa61 100%)',
       blue: '#007bfc',
       secondary: '#7D7f85',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#7367f0',
-      light: '#7367f0',
-      dark: '#7367f0',
+      main: '#128C7E',
+      light: '#1daa61',
+      dark: '#075E54',
       contrastText: '#ffffff',
     },
     success: {
-      main: '#1d9051ff',
+      main: '#1daa61',
       light: '#c8e6c9',
       lightBg: 'rgba(40, 199, 111, 0.16)',
     },
@@ -32,12 +32,6 @@ const theme = createTheme({
       lightBg: 'rgba(211, 47, 47, 0.16)',
     },
 
-    warning: {
-      main: '#f57c00',
-      light: '#ffe0b2',
-      lightBg: 'rgba(245, 124, 0, 0.16)',
-    },
-
     info: {
       main: '#00CFE8',
       light: '#b3e5fc',
@@ -46,8 +40,10 @@ const theme = createTheme({
     background: {
       default: '#f5f5f5',
       paper: '#ffffff',
-      hightlight: '#7367f0'
+      hightlight: '#1daa61',
+      light: '#dcf8e6',
     },
+
     text: {
       primary: '#444050',
       secondary: '#7D7f85',
@@ -57,26 +53,26 @@ const theme = createTheme({
       extraLight: '#f1f1f1',
     },
     borderColor: {
-      main: '#7367f0',
-      light: '#7367f0',
-      dark: '#7367f0',
+      main: '#1daa61',
+      light: '#1daa61',
+      dark: '#1DA851',
       secondary: '#7D7f85',
       extraLight: '#5a5a5a0e',
       contrastText: '#ffffff',
     },
     button: {
-      background: 'linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%);',
+      background: 'linear-gradient(270deg, rgba(37, 211, 102, 0.85) 0%, #1daa61 100%);',
       color: '#ffffff',
-      hilightColor: '#7367f0',
-      hoverColor: '#7367f0',
-      activeColor: '#7367f0',
-      disabledColor: '#7367f0',
-      focusColor: '#7367f0',
-      selectedColor: '#7367f0',
+      hilightColor: '#1daa61',
+      hoverColor: '#1DA851',
+      activeColor: '#1DA851',
+      disabledColor: '#1daa61',
+      focusColor: '#1daa61',
+      selectedColor: '#1daa61',
     },
     importance: {
       high: {
-        background: 'linear-gradient(270deg, rgba(115, 103, 240, 0.7) 0%, #7367f0 100%);',
+        background: 'linear-gradient(270deg, rgba(37, 211, 102, 0.85) 0%, #1daa61 100%);',
         text: '#444050',
       },
       low: {
