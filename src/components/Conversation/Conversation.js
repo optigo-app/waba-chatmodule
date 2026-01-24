@@ -334,9 +334,6 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
         const prevLen = prevMediaFilesLenRef.current;
 
         if (prevLen === 0 && mediaFilesLength > 0) {
-            // The message list may already be unmounted at this point.
-            // We prefer capturing scroll state in openFilePicker (before opening preview).
-            // Only capture here if we still have access to the container and no state exists.
             const el = containerRef.current;
             if (el && !mediaPreviewScrollStateRef.current) {
                 mediaPreviewScrollStateRef.current = {
@@ -407,44 +404,48 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
         }
     }, []);
 
-    // 🚀 Handle initial scroll on conversation switch (Synchronous)
+    // 🚀 Handle initial scroll on conversation switch
     useLayoutEffect(() => {
         const currentConvId = selectedCustomer?.ConversationId;
         if (!currentConvId) return;
 
-        // 1. Detect conversation switch
+        // 1. Detect conversation switch - immediately fade out
         if (currentConvId !== lastConversationIdRef.current) {
             setIsSwitchingConversation(true);
             lastConversationIdRef.current = currentConvId;
         }
+    }, [selectedCustomer?.ConversationId]);
 
-        // 2. Perform scroll once loading is finished and messages are available
-        if (!loading && isSwitchingConversation) {
-            const messageList = Array.isArray(messages?.data) ? messages.data : [];
+    // 2. Separate effect for scrolling after data loads
+    useLayoutEffect(() => {
+        if (!isSwitchingConversation || loading || !containerRef.current) return;
 
+        const messageList = Array.isArray(messages?.data) ? messages.data : [];
+        if (messageList.length === 0) return;
+
+        // Wait for fade-out animation to complete (200ms for safety)
+        const fadeOutTimer = setTimeout(() => {
             if (containerRef.current) {
-                // Instant jump
-                containerRef.current.scrollTo({
-                    top: containerRef.current.scrollHeight,
-                    behavior: 'auto'
-                });
+                // Instant scroll to bottom while invisible
+                containerRef.current.scrollTop = containerRef.current.scrollHeight;
 
-                // Update last message ID to keep auto-scroll in sync
-                if (messageList.length > 0) {
-                    const lastMessage = messageList[messageList.length - 1];
-                    lastMessageIdRef.current = lastMessage?.Id || lastMessage?.MessageId || lastMessage?.id;
-                }
+                // Update last message ID
+                const lastMessage = messageList[messageList.length - 1];
+                lastMessageIdRef.current = lastMessage?.Id || lastMessage?.MessageId || lastMessage?.id;
 
-                // Tiny delay to mask any DOM settling
-                const timer = setTimeout(() => {
+                // Wait a moment then fade back in
+                const fadeInTimer = setTimeout(() => {
                     setIsSwitchingConversation(false);
                 }, 100);
-                return () => clearTimeout(timer);
-            }
-        }
-    }, [selectedCustomer?.ConversationId, loading, messages, isSwitchingConversation]);
 
-    // 🌊 Handle auto-scrolling for NEW messages in the same conversation
+                return () => clearTimeout(fadeInTimer);
+            }
+        }, 200);
+
+        return () => clearTimeout(fadeOutTimer);
+    }, [isSwitchingConversation, loading, messages]);
+
+    // Handle auto-scrolling for NEW messages in the same conversation
     useEffect(() => {
         if (currentPage > 1) return;
 

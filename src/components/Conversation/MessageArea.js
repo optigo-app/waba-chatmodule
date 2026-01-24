@@ -270,7 +270,7 @@ const MessageArea = ({
                             pointerEvents: isMediaPreviewOpen ? 'none' : 'auto',
                             filter: isMediaPreviewOpen ? 'blur(2px)' : 'none',
                             opacity: isSwitchingConversation ? 0 : 1,
-                            transition: 'opacity 0.1s ease-in-out',
+                            transition: 'opacity 0.2s ease-in-out',
                         }}
                     >
                         {/* Scroll to Bottom Button */}

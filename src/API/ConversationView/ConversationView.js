@@ -9,7 +9,7 @@ export const conversationView = async (ConversationId, Page = 1, PageSize = 10, 
         }
 
         // Fix: properly pass the signal parameter to CommonAPI
-        const response = await CommonAPI(body, pageName, signal);
+        const response = await CommonAPI(body, undefined, pageName, signal);
         if (response?.Data) {
             return {
                 data: response?.Data || [],

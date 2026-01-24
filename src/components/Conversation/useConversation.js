@@ -54,17 +54,19 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
     const { auth, PERMISSION_SET } = useContext(LoginContext);
     const selectedCustomerRef = useRef(selectedCustomer);
     const latestRequestRef = useRef(0);
+    const switchAbortControllerRef = useRef(null);
     const abortControllerRef = useRef(null);
+    const debounceTimerRef = useRef(null);
 
     const can = (perm) => PERMISSION_SET.has(perm);
 
     // Update the ref when selectedCustomer changes
     useEffect(() => {
         selectedCustomerRef.current = selectedCustomer;
-        // Clear media files when customer changes
+        // Clear media files when conversation changes
         setMediaFiles([]);
         setShowMedia(false);
-    }, [selectedCustomer]);
+    }, [selectedCustomer?.ConversationId]);
 
     const markLoaded = useCallback((key) => {
         setLoadedMedia(prev => ({ ...prev, [key]: true }));
@@ -73,31 +75,37 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
     const getMediaKey = (msg, index) =>
         msg?.Id ?? msg?.id ?? msg?.mediaId ?? msg?.MediaUrl ?? msg?.fileName ?? `m-${index}`;
 
-    const handleFetchtags = async () => {
+    const handleFetchtags = async (signal) => {
         if (!selectedCustomer?.CustomerId) return;
         try {
-            const response = await fetchTagsApi(selectedCustomer?.CustomerId, auth?.userId);
+            const response = await fetchTagsApi(selectedCustomer?.CustomerId, auth?.userId, signal);
             setTagsList(response?.rd);
         } catch (error) {
-            console.error("TCL: handleFetchtags -> error", error);
+            if (error.message !== 'AbortError') {
+                console.error("TCL: handleFetchtags -> error", error);
+            }
         }
     };
 
-    const fetchAssigneeList = async () => {
+    const fetchAssigneeList = async (signal) => {
         try {
-            const response = await fetchAssignLists(auth?.userId);
-            setAssigneeList(response?.rd);
+            const response = await fetchAssignLists(auth?.userId, signal);
+            setAssigneeList(response?.rd || []);
         } catch (error) {
-            console.error("TCL: handleFetchtags -> error", error);
+            if (error.message !== 'AbortError') {
+                console.error("TCL: fetchAssigneeList -> error", error);
+            }
         }
     };
 
-    const fetchEscalatedList = async () => {
+    const fetchEscalatedList = async (signal) => {
         try {
-            const response = await fetchEscalatedLists(auth?.userId);
-            setEscalatedLists(response?.rd1);
+            const response = await fetchEscalatedLists(auth?.userId, signal);
+            setEscalatedLists(response?.rd1 || []);
         } catch (error) {
-            console.error("TCL: handleFetchtags -> error", error);
+            if (error.message !== 'AbortError') {
+                console.error("TCL: fetchEscalatedList -> error", error);
+            }
         }
     };
 
@@ -107,24 +115,68 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
             const response = await deleteAssignedTags(selectedCustomer?.CustomerId, id, auth?.userId);
             if (response?.rd?.[0]?.stat === 1) {
                 // Tag deleted successfully
+                setTagsList((prev) => {
+                    if (!Array.isArray(prev)) return prev;
+                    return prev.filter((t) => String(t?.Id) !== String(id));
+                });
             } else {
                 // Tag deletion failed
+                toast.error(response?.rd?.[0]?.stat_msg || 'Failed to delete tag');
             }
         } catch (error) {
             console.error("TCL: handleDeletetags -> error", error);
+            toast.error('Failed to delete tag');
         }
     };
 
+    // Use a unified effect for conversation switching with debouncing
     useEffect(() => {
-        if (!selectedCustomer?.CustomerId) return;
-        fetchAssigneeList();
-        fetchEscalatedList();
-    }, [selectedCustomer?.CustomerId]);
+        // Clear any pending debounce
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
 
-    useEffect(() => {
-        if (!selectedCustomer?.CustomerId) return;
-        handleFetchtags();
-    }, [selectedCustomer?.CustomerId]);
+        // Cancel any pending requests
+        if (switchAbortControllerRef.current) {
+            switchAbortControllerRef.current.abort();
+        }
+
+        if (!selectedCustomer || !selectedCustomer?.ConversationId) {
+            setMessages({ data: [], total: 0 });
+            setTagsList([]);
+            setCurrentPage(1);
+            setHasMore(true);
+            setTempConversationId(null);
+            return;
+        }
+
+        // Set a debounce timer to wait for rapid clicks to settle
+        debounceTimerRef.current = setTimeout(() => {
+            const controller = new AbortController();
+            switchAbortControllerRef.current = controller;
+            const { signal } = controller;
+
+            const isPageSame = selectedCustomer?.ConversationId == tempConversationId;
+            const targetPage = isPageSame ? currentPage : 1;
+
+            if (!isPageSame) {
+                setTempConversationId(selectedCustomer.ConversationId);
+                setCurrentPage(1);
+            }
+
+            // Fire all necessary APIs with the same signal
+            loadConversation(targetPage, true, signal);
+            handleFetchtags(signal);
+            fetchAssigneeList(signal);
+            fetchEscalatedList(signal);
+        }, 200); // 200ms debounce
+
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+        };
+    }, [selectedCustomer?.ConversationId, selectedCustomer?.CustomerId]);
 
     const processedMessageIds = useRef(new Set());
 
@@ -545,24 +597,10 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
     };
 
     const loadConversation = useCallback(
-        async (page = 1, reset = false) => {
-            // Allow fast switching between conversations:
-            // do not block new loads while a previous request is still in-flight.
-            // We abort the previous request below and only apply the latest response.
+        async (page = 1, reset = false, signal) => {
             if (!selectedCustomer?.ConversationId) return;
 
-            // Create a unique request token
             const requestId = ++latestRequestRef.current;
-
-            // Abort any previous pending request
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-            }
-
-            // Create new AbortController for this request
-            const controller = new AbortController();
-            abortControllerRef.current = controller;
-
             setLoading(true);
 
             try {
@@ -572,13 +610,11 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
                     pageSize,
                     auth?.userId,
                     "ConvView",
-                    controller.signal
+                    signal
                 );
 
-                // Only update state if this request is still the latest one
-                if (requestId !== latestRequestRef.current) {
-                    return;
-                }
+                // Check if signal was aborted before processing
+                if (signal?.aborted) return;
 
                 const serverMessages = Array.isArray(response.data?.rd)
                     ? response.data.rd
@@ -755,8 +791,8 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
         }
     }, [loadingOlder, hasMore, selectedCustomer?.ConversationId, currentPage, pageSize, auth?.userId]);
 
+    // Optimized effect that only handles simple state resets
     useEffect(() => {
-        // If no selectedCustomer or no ConversationId, clear the conversation view
         if (!selectedCustomer || !selectedCustomer?.ConversationId) {
             setMessages({ data: [], total: 0 });
             setCurrentPage(1);
@@ -764,15 +800,7 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
             setTempConversationId(null);
             return;
         }
-
-        if (selectedCustomer?.ConversationId == tempConversationId) {
-            loadConversation(currentPage, true);
-            setCurrentPage(currentPage);
-        } else {
-            loadConversation(1, true);
-            setCurrentPage(1);
-        }
-    }, [selectedCustomer]);
+    }, [selectedCustomer?.ConversationId]);
 
     // Prefetch media Blobs for messages that have MediaUrl and are not yet cached
     useEffect(() => {
@@ -815,7 +843,7 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
                 onViewConversationRead(false);
             }
         };
-    }, [selectedCustomer, onConversationRead, onViewConversationRead]);
+    }, [selectedCustomer?.ConversationId, onConversationRead, onViewConversationRead]);
 
     const parseTemplateData = useCallback((message) => {
         if (!message || message.MessageType !== 'template' || !message.MessageBody) {

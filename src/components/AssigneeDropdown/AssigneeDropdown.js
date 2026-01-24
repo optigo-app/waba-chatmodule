@@ -257,7 +257,7 @@ const AssigneeDropdown = ({ options, label, assignedList = [], selectedCustomer,
                         },
                     }}
                 >
-                    {options.map((option) => {
+                    {(options || []).map((option) => {
                         const isAssigned = isUserAssignedToConversation(option);
 
                         return (
@@ -283,22 +283,22 @@ const AssigneeDropdown = ({ options, label, assignedList = [], selectedCustomer,
                                     {(() => {
                                         const avatarCfg = getUserAvatar(option, 32);
                                         return (
-                                    <Tooltip
-                                        title={option?.FullName || option?.FirstName || 'User'}
-                                        arrow
-                                        placement="left"
-                                    >
-                                        <Avatar
-                                            {...avatarCfg}
-                                            sx={{
-                                                ...avatarCfg.sx,
-                                                mr: 1.5,
-                                                fontSize:'13px'
-                                            }}
-                                        >
-                                            {avatarCfg.children}
-                                        </Avatar>
-                                    </Tooltip>
+                                            <Tooltip
+                                                title={option?.FullName || option?.FirstName || 'User'}
+                                                arrow
+                                                placement="left"
+                                            >
+                                                <Avatar
+                                                    {...avatarCfg}
+                                                    sx={{
+                                                        ...avatarCfg.sx,
+                                                        mr: 1.5,
+                                                        fontSize: '13px'
+                                                    }}
+                                                >
+                                                    {avatarCfg.children}
+                                                </Avatar>
+                                            </Tooltip>
                                         );
                                     })()}
                                     <ListItemText primary={option.FullName} />

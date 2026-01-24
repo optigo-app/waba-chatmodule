@@ -20,6 +20,11 @@ const TagSearchInput = ({ value, onChange, onKeyDownCapture, onKeyDown, ICON_PRO
         autoFocus
         onKeyDownCapture={onKeyDownCapture}
         onKeyDown={onKeyDown}
+        sx={{
+            '& .MuiInputBase-root': {
+                backgroundColor: '#fff',
+            },
+        }}
         InputProps={{
             startAdornment: (
                 <InputAdornment position="start">
@@ -204,7 +209,7 @@ export default function TagSidebar({
                         cursor: 'default',
                         position: 'sticky',
                         top: 0,
-                        zIndex: 1,
+                        zIndex: 2,
                         backgroundColor: 'background.paper',
                         borderBottom: '1px solid rgba(0,0,0,0.06)',
                         '&:hover': { backgroundColor: 'background.paper' },

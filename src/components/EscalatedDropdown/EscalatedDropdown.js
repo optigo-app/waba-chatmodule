@@ -121,7 +121,7 @@ const EscalatedDropdown = ({ options, label, assignedList = [], selectedCustomer
                         },
                     }}
                 >
-                    {options.map((option) => {
+                    {(options || []).map((option) => {
                         const conversationIds = option?.ConversationIds ? JSON.parse(option.ConversationIds) : [];
 
                         const isAssigned = conversationIds.some(item =>
@@ -162,7 +162,7 @@ const EscalatedDropdown = ({ options, label, assignedList = [], selectedCustomer
                                                     sx={{
                                                         ...avatarCfg.sx,
                                                         mr: 1.5,
-                                                        fontSize:'13px'
+                                                        fontSize: '13px'
                                                     }}
                                                 >
                                                     {avatarCfg.children}

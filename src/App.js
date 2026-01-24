@@ -18,6 +18,7 @@ import { registerSocketId } from './utils/socketHelper';
 import LoginExists from './components/LoginExists/LoginExists';
 import Lottie from 'lottie-react';
 import loader from './assets/lotties/loader.json';
+import VersionDisplay from './components/VersionDisplay/VersionDisplay';
 
 const PagenotFound = () => <div>404 - Page Not Found</div>;
 
@@ -360,6 +361,7 @@ function App() {
                     <Route path="/add-conversation" element={<Customers />} />
                     <Route path="/notification" element={<Customers />} />
                     <Route path="/archieve" element={<Customers />} />
+                    <Route path="/app_v" element={<VersionDisplay variant="footer" />} />
                     <Route path="*" element={<PagenotFound />} />
                   </Routes>
                 </Layout>

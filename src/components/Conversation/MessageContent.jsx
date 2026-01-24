@@ -21,6 +21,46 @@ const charToUnified = (char) => {
         .join('-');
 };
 
+/**
+ * Detects URLs in text and wraps them in styled anchor tags.
+ */
+const renderMessageWithLinks = (text, theme) => {
+    if (!text) return text;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, index) => {
+        if (part.match(urlRegex)) {
+            return (
+                <a
+                    key={index}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        color: theme.palette.primary.main,
+                        textDecoration: 'none',
+                        fontWeight: 500,
+                        wordBreak: 'break-all',
+                        transition: 'opacity 0.2s',
+                    }}
+                    onMouseOver={(e) => {
+                        e.target.style.opacity = 0.8;
+                        e.target.style.textDecoration = 'underline';
+                    }}
+                    onMouseOut={(e) => {
+                        e.target.style.opacity = 1;
+                        e.target.style.textDecoration = 'none';
+                    }}
+                >
+                    {part}
+                </a>
+            );
+        }
+        return part;
+    });
+};
+
 const MessageContent = ({
     msg,
     isOutgoing,
@@ -132,26 +172,26 @@ const MessageContent = ({
                         zIndex: 1,
                         overflow: 'visible !important',
                         maxWidth: { xs: '90%', sm: 420 },
-                        padding: (msg?.MessageType === 'text' ? '10px 12px 8px 12px' : '8px') + ' !important',
+                        padding: '4px !important',
                         borderRadius: (isOutgoing
-                            ? '18px 18px 0px 18px'
-                            : '18px 18px 18px 0px') + ' !important',
+                            ? '16px 16px 4px 16px'
+                            : '16px 16px 16px 4px') + ' !important',
                         background: (isOutgoing
-                            ? alpha(theme.palette.background.light, 1)
-                            : theme.palette.background.paper) + ' !important',
+                            ? alpha(theme.palette.background.light, 0.85)
+                            : alpha(theme.palette.background.paper, 0.85)) + ' !important',
+                        backdropFilter: 'blur(12px) saturate(180%)',
                         color: theme.palette.text.primary + ' !important',
-                        // border: (`1px solid ${isOutgoing
-                        //     ? alpha(theme.palette.primary.main, 0.22)
-                        //     : (theme.palette.borderColor?.extraLight || theme.palette.divider)
-                        //     }`) + ' !important',
-                        boxShadow: (`0 2px 10px ${alpha('#000', 0.08)}`) + ' !important',
+                        border: `1px solid ${alpha(isOutgoing ? theme.palette.primary.main : theme.palette.divider, 0.12)} !important`,
+                        boxShadow: `0 4px 24px ${alpha('#000', 0.08)}` + ' !important',
                     },
 
                     '&& .message-text': {
                         color: theme.palette.text.primary + ' !important',
-                        fontWeight: 500,
+                        fontWeight: 450,
+                        letterSpacing: '0.01em',
                         marginRight: '0px !important',
-                        ...(msg?.MessageType !== 'template' ? { paddingRight: '28px' } : {}),
+                        padding: '8px 12px 4px 12px !important',
+                        ...(msg?.MessageType !== 'template' ? { paddingRight: '36px !important' } : {}),
                     },
                     '&& .message-time': {
                         color: alpha(theme.palette.text.primary, 0.65) + ' !important',
@@ -241,13 +281,17 @@ const MessageContent = ({
                             display: 'flex',
                             flexDirection: "column",
                             gap: '8px',
-                            padding: '8px',
-                            backgroundColor: alpha(theme.palette.primary.main, isOutgoing ? 0.12 : 0.08),
-                            borderRadius: '8px',
-                            marginBottom: '8px',
-                            borderLeft: `3px solid ${theme.palette.primary.main}`,
+                            padding: '6px 8px',
+                            backgroundColor: alpha(theme.palette.text.primary, 0.04),
+                            borderRadius: '6px',
+                            marginBottom: '4px',
+                            borderLeft: `4px solid ${theme.palette.primary.main}`,
                             cursor: msg.ContextId ? 'pointer' : 'default',
-                            opacity: msg.ContextId ? 1 : 0.7
+                            opacity: msg.ContextId ? 1 : 0.7,
+                            transition: 'background-color 0.2s',
+                            '&:hover': {
+                                backgroundColor: msg.ContextId ? alpha(theme.palette.text.primary, 0.08) : alpha(theme.palette.text.primary, 0.04),
+                            }
                         }}
                             onClick={() => msg.ContextId && scrollToMessage(msg.ContextId, containerRef)}  // Jump to original message
                         >
@@ -278,49 +322,49 @@ const MessageContent = ({
                                 )}
                             </div>
                         </div>
-                        {msg?.MessageType === "text" && (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem' }}>
-                                <Typography variant="body2" className="message-text" style={{ flex: 1, marginRight: 0 }}>
-                                    {msg?.MessageType === 'template' ? "" : msg.Message}
-                                </Typography>
-                                {/* Message status inline for reply messages */}
-                                <Box
-                                    className="message-status"
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', width: '100%' }}>
+                            <Typography variant="body2" className="message-text" style={{ flex: 1, marginRight: 0 }}>
+                                {msg?.MessageType === 'template' ? "" : renderMessageWithLinks(msg.Message, theme)}
+                            </Typography>
+                            {/* Message status inline for reply messages */}
+                            <Box
+                                className="message-status"
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'flex-end',
+                                    gap: 0.5,
+                                    flexShrink: 0,
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                <Typography
+                                    variant="caption"
+                                    className="message-time"
                                     sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'flex-end',
-                                        gap: 0.5,
-                                        flexShrink: 0,
-                                        whiteSpace: 'nowrap',
+                                        '&&': {
+                                            display: 'inline-flex !important',
+                                            alignItems: 'center',
+                                            marginTop: '0px !important',
+                                            lineHeight: 1,
+                                            color: alpha(theme.palette.text.primary, 0.45) + ' !important',
+                                        },
+                                        fontSize: 10,
+                                        fontWeight: 500,
+                                        letterSpacing: '0.02em',
                                     }}
                                 >
-                                    <Typography
-                                        variant="caption"
-                                        className="message-time"
-                                        sx={{
-                                            '&&': {
-                                                display: 'inline-flex !important',
-                                                alignItems: 'center',
-                                                marginTop: '0px !important',
-                                                lineHeight: 1,
-                                                color: alpha(theme.palette.text.primary, 0.65) + ' !important',
-                                            },
-                                            fontSize: 11,
-                                        }}
-                                    >
-                                        {msg.dateTime
-                                            ? msg.dateTime
-                                            : msg.DateTime && FormatDateIST(msg.DateTime, "dd-mm-yyyy").time}
-                                    </Typography>
-                                    {msg.Direction == 1 && !msg.isUploading && (
-                                        <Box sx={{ display: "flex", alignItems: "center", lineHeight: 1 }}>
-                                            {getMessageStatusIcon(msg)}
-                                        </Box>
-                                    )}
-                                </Box>
-                            </div>
-                        )}
+                                    {msg.dateTime
+                                        ? msg.dateTime
+                                        : msg.DateTime && FormatDateIST(msg.DateTime, "dd-mm-yyyy").time}
+                                </Typography>
+                                {msg.Direction == 1 && !msg.isUploading && (
+                                    <Box sx={{ display: "flex", alignItems: "center", lineHeight: 1 }}>
+                                        {getMessageStatusIcon(msg)}
+                                    </Box>
+                                )}
+                            </Box>
+                        </div>
                     </div>
                 )}
 
@@ -332,13 +376,15 @@ const MessageContent = ({
                         sx={{
                             '&&': {
                                 color: theme.palette.text.primary + ' !important',
+                                padding: '8px 12px 6px 12px',
                             },
-                            fontSize: 14,
-                            lineHeight: 1.45,
-                            pr: 1,
+                            fontSize: '0.925rem',
+                            fontWeight: 450,
+                            lineHeight: 1.6,
+                            letterSpacing: '0.01em',
                         }}
                     >
-                        {msg?.MessageType === 'template' ? "" : msg.Message}
+                        {msg?.MessageType === 'template' ? "" : renderMessageWithLinks(msg.Message, theme)}
                     </Typography>
                 )}
 
@@ -374,7 +420,7 @@ const MessageContent = ({
                                 position: 'relative',
                                 width: mediaWidth,
                                 height: computedHeight,
-                                borderRadius: 12,
+                                borderRadius: '8px',
                                 overflow: 'hidden',
                             }}
                         >
@@ -514,8 +560,11 @@ const MessageContent = ({
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: 1,
-                                    width: '100%'
+                                    gap: 1.5,
+                                    width: 300,
+                                    padding: '8px',
+                                    backgroundColor: alpha(theme.palette.text.primary, 0.03),
+                                    borderRadius: '8px',
                                 }}
                             >
                                 <Box
@@ -597,13 +646,16 @@ const MessageContent = ({
                         variant="body2"
                         className="message-text"
                         sx={{
-                            mt: 0.5,
+                            mt: 1,
                             '&&': {
                                 color: theme.palette.text.primary + ' !important',
+                                padding: '0 8px 4px 8px !important',
                             },
+                            lineHeight: 1.5,
+                            fontWeight: 450,
                         }}
                     >
-                        {msg?.MessageType === 'template' ? "" : msg.Message}
+                        {msg?.MessageType === 'template' ? "" : renderMessageWithLinks(msg.Message, theme)}
                     </Typography>
                 )}
 
@@ -616,8 +668,11 @@ const MessageContent = ({
                             alignItems: 'center',
                             justifyContent: 'flex-end',
                             gap: 0.5,
-                            mt: '4px !important',
+                            mt: '2px !important',
+                            mr: '2px !important',
+                            mb: '2px !important',
                             whiteSpace: 'nowrap',
+                            alignSelf: 'flex-end',
                         }}
                     >
                         <Typography

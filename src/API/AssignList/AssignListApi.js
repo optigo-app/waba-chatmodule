@@ -1,13 +1,13 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
-export const fetchAssignLists = async (userId) => {
+export const fetchAssignLists = async (userId, signal) => {
     try {
         const body = {
             "con": `{\"id\":\"\",\"mode\":\"wa_chat_agent_list\",\"appuserid\":\"${userId}\"}`,
             "p": "",
             "f": "Whatsapp Agent List ( List )"
         }
-        const response = await CommonAPI(body);
+        const response = await CommonAPI(body, undefined, undefined, signal);
         if (response?.Data) {
             return response?.Data;
         } else {
