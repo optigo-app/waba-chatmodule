@@ -72,6 +72,41 @@
     }
 }
 
+.layout--sidebar-collapsed {
+    @media (max-width: 1440px) {
+        .customer_lists_mainDiv {
+            width: 450px;
+            min-width: 450px;
+            max-width: 450px;
+        }
+    }
+}
+
+@media (max-width: 1440px) {
+    .customer_lists_mainDiv {
+        width: 450px;
+        min-width: 450px;
+        max-width: 450px;
+    }
+}
+
+.layout--sidebar-collapsed {
+    @media (max-width: 1000px) {
+        .customer_lists_mainDiv {
+            width: 350px;
+            min-width: 350px;
+            max-width: 350px;
+        }
+    }
+}
+
+@media (max-width: 1000px) {
+    .customer_lists_mainDiv {
+        width: 350px;
+        min-width: 350px;
+        max-width: 350px;
+    }
+}
 
 .customer_lists_mainDiv {
     max-width: 440px;
@@ -308,6 +343,39 @@
                                 align-items: center;
                                 gap: 8px;
                                 flex: 0 0 auto;
+                            }
+
+                            .last-message,
+                            .last-message-unread {
+                                .last-message-content {
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 6px;
+                                    min-width: 0;
+                                    width: 100%;
+                                }
+
+                                .last-message-icon {
+                                    flex: 0 0 auto;
+                                    display: inline-flex;
+                                    align-items: center;
+                                }
+
+                                .last-message-text {
+                                    flex: 1 1 auto;
+                                    min-width: 0;
+                                    padding-right: 10px;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    white-space: nowrap;
+                                }
+
+                                .last-message-attachment {
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 4px;
+                                    min-width: 0;
+                                }
                             }
 
                             .last-message {

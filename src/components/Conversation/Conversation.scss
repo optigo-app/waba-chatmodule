@@ -24,6 +24,23 @@
         min-height: 0;
     }
 
+    .conversation-details-full {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .conversation-top-panel {
+        flex: 0 0 auto;
+        width: 100%;
+        background: #fff;
+        border-bottom: 1px solid $sidebar-borderColor;
+        overflow: hidden;
+        height: 45vh;
+        max-height: 45vh;
+    }
+
     .conversation-right-panel {
         width: 420px;
         flex: 0 0 420px;

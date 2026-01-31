@@ -686,38 +686,35 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                                     <Typography
                                                                         variant="body2"
                                                                         className={shouldShowUnreadBadge ? 'last-message-unread' : 'last-message'}
-                                                                        style={{ display: 'flex', alignItems: 'center' }}
                                                                     >
-                                                                        <span style={{ display: 'flex', alignItems: 'center' }}>
-                                                                            {getMessageStatusIcon(member)}
-                                                                            {member.lastMessageText !== 'No message' ? (
-                                                                                member.lastMessage
-                                                                            ) : (
-                                                                                <span
-                                                                                    style={{
-                                                                                        display: 'inline-flex',
-                                                                                        alignItems: 'center',
-                                                                                        gap: '4px'
-                                                                                    }}
-                                                                                >
-                                                                                    {lastMessageData?.[0]?.MessageType === 'image' && (
-                                                                                        <>
-                                                                                            <Image size={12} /> Image
-                                                                                        </>
-                                                                                    )}
-                                                                                    {lastMessageData?.[0]?.MessageType === 'video' && (
-                                                                                        <>
-                                                                                            <Video size={14} /> Video
-                                                                                        </>
-                                                                                    )}
-                                                                                    {lastMessageData?.[0]?.MessageType === 'document' && (
-                                                                                        <>
-                                                                                            <FileText size={12} /> Document
-                                                                                        </>
-                                                                                    )}
-                                                                                    {!lastMessageData?.[0]?.MessageType && 'Text'}
-                                                                                </span>
-                                                                            )}
+                                                                        <span className="last-message-content">
+                                                                            <span className="last-message-icon">
+                                                                                {getMessageStatusIcon(member)}
+                                                                            </span>
+                                                                            <span className="last-message-text">
+                                                                                {member.lastMessageText !== 'No message' ? (
+                                                                                    member.lastMessage
+                                                                                ) : (
+                                                                                    <span className="last-message-attachment">
+                                                                                        {lastMessageData?.[0]?.MessageType === 'image' && (
+                                                                                            <>
+                                                                                                <Image size={12} /> Image
+                                                                                            </>
+                                                                                        )}
+                                                                                        {lastMessageData?.[0]?.MessageType === 'video' && (
+                                                                                            <>
+                                                                                                <Video size={14} /> Video
+                                                                                            </>
+                                                                                        )}
+                                                                                        {lastMessageData?.[0]?.MessageType === 'document' && (
+                                                                                            <>
+                                                                                                <FileText size={12} /> Document
+                                                                                            </>
+                                                                                        )}
+                                                                                        {!lastMessageData?.[0]?.MessageType && 'Text'}
+                                                                                    </span>
+                                                                                )}
+                                                                            </span>
                                                                         </span>
                                                                     </Typography>
 

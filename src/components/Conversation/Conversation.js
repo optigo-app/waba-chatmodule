@@ -50,12 +50,15 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
     const { auth } = useContext(LoginContext);
     const [getLength, setLength] = useState("");
     const [isSwitchingConversation, setIsSwitchingConversation] = useState(false);
-    const isNarrowScreen = useMediaQuery('(max-width: 992px)');
+    const isNarrowScreen = useMediaQuery('(max-width: 600px)');
+    const isTopPanelScreen = useMediaQuery('(max-width: 1620px)');
     const isCompactDockedPanel = useMediaQuery('(max-width: 1200px)');
     const [tagsMenuAnchorEl, setTagsMenuAnchorEl] = useState(null);
-    const isDetailsPanelDocked = drawerOpen === true && !isNarrowScreen;
+    const isDetailsPanelDocked = drawerOpen === true && !isNarrowScreen && !isTopPanelScreen;
     const dockedPanelWidth = isCompactDockedPanel ? 380 : 420;
     const scrollToBottomRightOffset = isDetailsPanelDocked ? dockedPanelWidth + 30 : 30;
+
+    const showFullDetails = drawerOpen === true && !isNarrowScreen && isTopPanelScreen;
 
     // Use the conversation hook
     const {
@@ -133,6 +136,18 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
         formatDateHeader: formatDateHeaderHook,
         can
     } = useConversation(selectedCustomer, onConversationRead, onViewConversationRead);
+
+    const hasAssigneeOptions = Array.isArray(assigneeList)
+        ? assigneeList.length > 0
+        : Array.isArray(assigneeList?.data)
+            ? assigneeList.data.length > 0
+            : false;
+
+    const hasEscalatedOptions = Array.isArray(escalatedLists)
+        ? escalatedLists.length > 0
+        : Array.isArray(escalatedLists?.data)
+            ? escalatedLists.data.length > 0
+            : false;
 
     const tagsScrollRef = useRef(null);
     const [tagsOverflow, setTagsOverflow] = useState(false);
@@ -648,247 +663,263 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
             <div className="conversation-layout">
                 <div className="conversation-main">
                     {/* Header */}
-                    <div className="conversation-header">
-                        <div className="header-left">
-                            <div style={{ width: 40, height: 40, marginRight: 10, cursor: "pointer" }}>
-                                {!hasCustomerName(selectedCustomer) ? (
-                                    <Avatar
-                                        {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40)}
-                                        onClick={() => setDrawerOpen(true)}
-                                    >
-                                        <PersonIcon fontSize="small" />
-                                    </Avatar>
-                                ) : (
-                                    <Avatar
-                                        {...(selectedCustomer?.avatarConfig || getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40))}
-                                        onClick={() => setDrawerOpen(true)}
-                                    />
-                                )}
-                            </div>
-                            <div className="customer-info">
-                                <Typography variant="subtitle1" className="customer-name">
-                                    {getCustomerDisplayName(selectedCustomer)}
-                                </Typography>
-                            </div>
-                            {selectedCustomer?.CustomerId ? (
-                                isDetailsPanelDocked ? (
-                                    <IconButton
-                                        size="small"
-                                        onClick={handleOpenTagsMenu}
-                                        sx={{
-                                            ml: 1,
-                                            width: 34,
-                                            height: 34,
-                                            borderRadius: '10px',
-                                            border: '1px solid rgba(0,0,0,0.08)',
-                                            background: 'rgba(255,255,255,0.9)',
-                                        }}
-                                    >
-                                        <Tag size={16} />
-                                    </IconButton>
-                                ) : (
-                                    <Box
-                                        className="customer-tags"
-                                        onClick={() => setOpenTagModal(true)}
-                                    >
-                                        <Plus size={12} style={{ marginRight: 4 }} />
-                                        <Typography variant="caption">Add tag</Typography>
-                                    </Box>
-                                )
-                            ) : null}
-                            {selectedCustomer?.CustomerId && !isDetailsPanelDocked && tagsList?.length > 0 ? (
-                                <div className="customer-tags-wrapper">
-                                    {tagsOverflow && canScrollTagsLeft ? (
-                                        <button
-                                            type="button"
-                                            className="tag-scroll-btn left"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                scrollTagsBy(-300);
-                                            }}
+                    {!showFullDetails && (
+                        <div className="conversation-header">
+                            <div className="header-left">
+                                <div style={{ width: 40, height: 40, marginRight: 10, cursor: "pointer" }}>
+                                    {!hasCustomerName(selectedCustomer) ? (
+                                        <Avatar
+                                            {...getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40)}
+                                            onClick={() => setDrawerOpen(true)}
                                         >
-                                            <ChevronLeftIcon fontSize="small" />
-                                        </button>
-                                    ) : null}
-
-                                    <div className="customer-tags-scroll" ref={tagsScrollRef}>
-                                        {tagsList.map((tag, index) => (
-                                            <Box
-                                                className="customer-tags-chip"
-                                                key={index}
-                                            >
-                                                {tag?.TagName}
-                                                <CloseIcon
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleDeletetags(tag?.Id)
-                                                    }}
-                                                />
-                                            </Box>
-                                        ))}
-                                    </div>
-
-                                    {tagsOverflow && canScrollTagsRight ? (
-                                        <button
-                                            type="button"
-                                            className="tag-scroll-btn right"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                scrollTagsBy(300);
-                                            }}
-                                        >
-                                            <ChevronRightIcon fontSize="small" />
-                                        </button>
-                                    ) : null}
+                                            <PersonIcon fontSize="small" />
+                                        </Avatar>
+                                    ) : (
+                                        <Avatar
+                                            {...(selectedCustomer?.avatarConfig || getWhatsAppAvatarConfig(getCustomerAvatarSeed(selectedCustomer), 40))}
+                                            onClick={() => setDrawerOpen(true)}
+                                        />
+                                    )}
                                 </div>
-                            ) : null}
-                        </div>
-                        <div className="header-right">
-                            {can(5) &&
-                                <AssigneeDropdown
-                                    options={assigneeList}
-                                    onChange={handleAssigneeChange}
-                                    value={selectedAssignees}
-                                    selectedCustomer={selectedCustomer}
-                                    fetchAssigneeList={fetchAssigneeList}
-                                />
-                            }
-                            {can(5) &&
-                                <EscalatedDropdown
-                                    options={escalatedLists}
-                                    onChange={handleEscalateChange}
-                                    value={selectedEscalated}
-                                    selectedCustomer={selectedCustomer}
-                                    fetchEscalatedList={fetchEscalatedList}
-                                />
-                            }
-                        </div>
-                    </div>
+                                <div className="customer-info">
+                                    <Typography variant="subtitle1" className="customer-name">
+                                        {getCustomerDisplayName(selectedCustomer)}
+                                    </Typography>
+                                </div>
+                                {selectedCustomer?.CustomerId ? (
+                                    isDetailsPanelDocked ? (
+                                        <IconButton
+                                            size="small"
+                                            onClick={handleOpenTagsMenu}
+                                            sx={{
+                                                ml: 1,
+                                                width: 34,
+                                                height: 34,
+                                                borderRadius: '10px',
+                                                border: '1px solid rgba(0,0,0,0.08)',
+                                                background: 'rgba(255,255,255,0.9)',
+                                            }}
+                                        >
+                                            <Tag size={16} />
+                                        </IconButton>
+                                    ) : (
+                                        <Box
+                                            className="customer-tags"
+                                            onClick={() => setOpenTagModal(true)}
+                                        >
+                                            <Plus size={12} style={{ marginRight: 4 }} />
+                                            <Typography variant="caption">Add tag</Typography>
+                                        </Box>
+                                    )
+                                ) : null}
+                                {selectedCustomer?.CustomerId && !isDetailsPanelDocked && tagsList?.length > 0 ? (
+                                    <div className="customer-tags-wrapper">
+                                        {tagsOverflow && canScrollTagsLeft ? (
+                                            <button
+                                                type="button"
+                                                className="tag-scroll-btn left"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    scrollTagsBy(-300);
+                                                }}
+                                            >
+                                                <ChevronLeftIcon fontSize="small" />
+                                            </button>
+                                        ) : null}
 
-                    <Menu
-                        anchorEl={tagsMenuAnchorEl}
-                        open={tagsMenuOpen}
-                        onClose={handleCloseTagsMenu}
-                        PaperProps={{
-                            sx: {
-                                borderRadius: 2,
-                                border: '1px solid rgba(0,0,0,0.08)',
-                                minWidth: 220,
-                            }
-                        }}
-                    >
-                        <MenuItem
-                            onClick={() => {
-                                handleCloseTagsMenu();
-                                setOpenTagModal(true);
-                            }}
-                            dense
-                        >
-                            <Plus size={14} style={{ marginRight: 8 }} />
-                            Add tag
-                        </MenuItem>
-                        <Divider />
-                        {(tagsList || []).length > 0 ? (
-                            tagsList.map((tag) => (
+                                        <div className="customer-tags-scroll" ref={tagsScrollRef}>
+                                            {tagsList.map((tag, index) => (
+                                                <Box
+                                                    className="customer-tags-chip"
+                                                    key={index}
+                                                >
+                                                    {tag?.TagName}
+                                                    <CloseIcon
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeletetags(tag?.Id)
+                                                        }}
+                                                    />
+                                                </Box>
+                                            ))}
+                                        </div>
+
+                                        {tagsOverflow && canScrollTagsRight ? (
+                                            <button
+                                                type="button"
+                                                className="tag-scroll-btn right"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    scrollTagsBy(300);
+                                                }}
+                                            >
+                                                <ChevronRightIcon fontSize="small" />
+                                            </button>
+                                        ) : null}
+                                    </div>
+                                ) : null}
+                            </div>
+                            <div className="header-right">
+                                {can(5) && hasAssigneeOptions &&
+                                    <AssigneeDropdown
+                                        options={assigneeList}
+                                        onChange={handleAssigneeChange}
+                                        value={selectedAssignees}
+                                        selectedCustomer={selectedCustomer}
+                                        fetchAssigneeList={fetchAssigneeList}
+                                    />
+                                }
+                                {can(5) && hasEscalatedOptions &&
+                                    <EscalatedDropdown
+                                        options={escalatedLists}
+                                        onChange={handleEscalateChange}
+                                        value={selectedEscalated}
+                                        selectedCustomer={selectedCustomer}
+                                        fetchEscalatedList={fetchEscalatedList}
+                                    />
+                                }
+                            </div>
+                        </div>
+                    )}
+
+                    {showFullDetails ? (
+                        <div className="conversation-details-full">
+                            <CustomerDetails
+                                customer={selectedCustomer}
+                                onClose={() => setDrawerOpen(false)}
+                                open={drawerOpen}
+                                variant="panel"
+                            />
+                        </div>
+                    ) : (
+                        <>
+
+                            <Menu
+                                anchorEl={tagsMenuAnchorEl}
+                                open={tagsMenuOpen}
+                                onClose={handleCloseTagsMenu}
+                                PaperProps={{
+                                    sx: {
+                                        borderRadius: 2,
+                                        border: '1px solid rgba(0,0,0,0.08)',
+                                        minWidth: 220,
+                                    }
+                                }}
+                            >
                                 <MenuItem
-                                    key={tag?.Id ?? tag?.TagName}
-                                    dense
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'space-between',
-                                        gap: 1,
+                                    onClick={() => {
+                                        handleCloseTagsMenu();
+                                        setOpenTagModal(true);
                                     }}
+                                    dense
                                 >
-                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {tag?.TagName}
-                                    </span>
-                                    <IconButton
-                                        size="small"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeletetags(tag?.Id);
-                                        }}
-                                        sx={{
-                                            width: 28,
-                                            height: 28,
-                                            borderRadius: 2,
-                                        }}
-                                    >
-                                        <CloseIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
+                                    <Plus size={14} style={{ marginRight: 8 }} />
+                                    Add tag
                                 </MenuItem>
-                            ))
-                        ) : (
-                            <MenuItem dense disabled>
-                                No tags
-                            </MenuItem>
-                        )}
-                    </Menu>
+                                <Divider />
+                                {(tagsList || []).length > 0 ? (
+                                    tagsList.map((tag) => (
+                                        <MenuItem
+                                            key={tag?.Id ?? tag?.TagName}
+                                            dense
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {tag?.TagName}
+                                            </span>
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeletetags(tag?.Id);
+                                                }}
+                                                sx={{
+                                                    width: 28,
+                                                    height: 28,
+                                                    borderRadius: 2,
+                                                }}
+                                            >
+                                                <CloseIcon sx={{ fontSize: 16 }} />
+                                            </IconButton>
+                                        </MenuItem>
+                                    ))
+                                ) : (
+                                    <MenuItem dense disabled>
+                                        No tags
+                                    </MenuItem>
+                                )}
+                            </Menu>
 
-                    {/* Messages Area - Using the MessageArea component */}
-                    <MessageArea
-                        showMedia={showMedia}
-                        setShowMedia={setShowMedia}
-                        loading={loading}
-                        mediaFiles={mediaFiles}
-                        setMediaFiles={setMediaFiles}
-                        handleClosePreview={handleClosePreview}
-                        containerRef={containerRef}
-                        showScrollToBottom={showScrollToBottom}
-                        scrollToBottomRightOffset={scrollToBottomRightOffset}
-                        setContextMenu={setContextMenu}
-                        selectedCustomer={selectedCustomer}
-                        scrollToBottom={scrollToBottom}
-                        groupMessagesByDate={groupMessagesByDate}
-                        formatDateHeader={formatDateHeader}
-                        getMessageStatusIcon={getMessageStatusIconCallback}
-                        parseTemplateData={parseTemplateData}
-                        getMediaSrcForMessage={getMediaSrcForMessage}
-                        handleMediaClick={handleMediaClick}
-                        handleMessageEmojiClick={handleMessageEmojiClick}
-                        handleMenuClick={handleMenuClick}
-                        handleContextMenu={handleContextMenu}
-                        scrollToMessage={scrollToMessage}
-                        handleReply={handleReply}
-                        handleForward={handleForward}
-                        blinkMessageId={blinkMessageId}
-                        setBlinkMessageId={setBlinkMessageId}
-                        loadedMedia={loadedMedia}
-                        setLoadedMedia={setLoadedMedia}
-                        getMediaKey={getMediaKeyCallback}
-                        markLoaded={markLoadedCallback}
-                        uploadProgress={uploadProgress}
-                        replyToMessage={replyToMessage}
-                        isSwitchingConversation={isSwitchingConversation}
-                    />
+                            {/* Messages Area - Using the MessageArea component */}
+                            <MessageArea
+                                showMedia={showMedia}
+                                setShowMedia={setShowMedia}
+                                loading={loading}
+                                mediaFiles={mediaFiles}
+                                setMediaFiles={setMediaFiles}
+                                handleClosePreview={handleClosePreview}
+                                containerRef={containerRef}
+                                showScrollToBottom={showScrollToBottom}
+                                scrollToBottomRightOffset={scrollToBottomRightOffset}
+                                setContextMenu={setContextMenu}
+                                selectedCustomer={selectedCustomer}
+                                scrollToBottom={scrollToBottom}
+                                groupMessagesByDate={groupMessagesByDate}
+                                formatDateHeader={formatDateHeader}
+                                getMessageStatusIcon={getMessageStatusIconCallback}
+                                parseTemplateData={parseTemplateData}
+                                getMediaSrcForMessage={getMediaSrcForMessage}
+                                handleMediaClick={handleMediaClick}
+                                handleMessageEmojiClick={handleMessageEmojiClick}
+                                handleMenuClick={handleMenuClick}
+                                handleContextMenu={handleContextMenu}
+                                scrollToMessage={scrollToMessage}
+                                handleReply={handleReply}
+                                handleForward={handleForward}
+                                blinkMessageId={blinkMessageId}
+                                setBlinkMessageId={setBlinkMessageId}
+                                loadedMedia={loadedMedia}
+                                setLoadedMedia={setLoadedMedia}
+                                getMediaKey={getMediaKeyCallback}
+                                markLoaded={markLoadedCallback}
+                                uploadProgress={uploadProgress}
+                                replyToMessage={replyToMessage}
+                                isSwitchingConversation={isSwitchingConversation}
+                            />
 
-                    {can(6) ? (
-                        <ChatBox
-                            replyToMessage={replyToMessage}
-                            handleCancelReply={handleCancelReply}
-                            handleAttachClick={handleAttachClick}
-                            toggleEmojiPicker={toggleEmojiPicker}
-                            showPicker={showPicker}
-                            emojiPickerRef={emojiPickerRef}
-                            showMedia={showMedia}
-                            fileInputRef={fileInputRef}
-                            openFilePicker={openFilePicker}
-                            imageParams={imageParams}
-                            videoParams={videoParams}
-                            docsParams={docsParams}
-                            handleFileChange={(e) => handleFileChange(e, toast)}
-                            inputValue={inputValue}
-                            setInputValue={setInputValue}
-                            handleKeyPress={handleKeyPress}
-                            handleSendMessage={() => handleSendMessage(containerRef, scrollToBottom, toast)}
-                            mediaFiles={mediaFiles}
-                        />
-                    ) :
-                        <div className="message-input-area no-permission">
-                            <p className="no-permission-text">🚫 You don’t have permission to send or reply to messages.</p>
-                        </div>
-                    }
+                            {can(6) ? (
+                                <ChatBox
+                                    replyToMessage={replyToMessage}
+                                    handleCancelReply={handleCancelReply}
+                                    handleAttachClick={handleAttachClick}
+                                    toggleEmojiPicker={toggleEmojiPicker}
+                                    showPicker={showPicker}
+                                    emojiPickerRef={emojiPickerRef}
+                                    showMedia={showMedia}
+                                    fileInputRef={fileInputRef}
+                                    openFilePicker={openFilePicker}
+                                    imageParams={imageParams}
+                                    videoParams={videoParams}
+                                    docsParams={docsParams}
+                                    handleFileChange={(e) => handleFileChange(e, toast)}
+                                    inputValue={inputValue}
+                                    setInputValue={setInputValue}
+                                    handleKeyPress={handleKeyPress}
+                                    handleSendMessage={() => handleSendMessage(containerRef, scrollToBottom, toast)}
+                                    mediaFiles={mediaFiles}
+                                />
+                            ) :
+                                <div className="message-input-area no-permission">
+                                    <p className="no-permission-text">🚫 You don’t have permission to send or reply to messages.</p>
+                                </div>
+                            }
+                        </>
+                    )}
                 </div>
 
                 {drawerOpen === true && (
@@ -900,14 +931,16 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                             variant="drawer"
                         />
                     ) : (
-                        <div className="conversation-right-panel">
-                            <CustomerDetails
-                                customer={selectedCustomer}
-                                onClose={() => setDrawerOpen(false)}
-                                open={drawerOpen}
-                                variant="panel"
-                            />
-                        </div>
+                        !isTopPanelScreen ? (
+                            <div className="conversation-right-panel">
+                                <CustomerDetails
+                                    customer={selectedCustomer}
+                                    onClose={() => setDrawerOpen(false)}
+                                    open={drawerOpen}
+                                    variant="panel"
+                                />
+                            </div>
+                        ) : null
                     )
                 )}
             </div>

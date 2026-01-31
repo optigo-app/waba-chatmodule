@@ -21,7 +21,7 @@ import LinksSection from './LinksSection';
 import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import { FileText, Image, Link } from 'lucide-react';
 
-const CustomerDetails = ({ customer, onClose, open, variant = 'drawer' }) => {
+const CustomerDetails = ({ customer, onClose, open, variant = 'panel' }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('media');

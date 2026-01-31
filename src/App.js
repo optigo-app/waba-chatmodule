@@ -27,6 +27,14 @@ function Layout({ children, onStatusSelect, selectedStatus, onTagSelect, selecte
   const match = matchPath('/conversation/:conversationId', location.pathname);
   const showCustomerDetails = Boolean(match);
 
+  const [isBreakpointSidebarCollapsed, setIsBreakpointSidebarCollapsed] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && window.innerWidth <= 1440;
+    } catch (e) {
+      return false;
+    }
+  });
+
   const SIDEBAR_COLLAPSED_STORAGE_KEY = 'optigo_sidebar_collapsed';
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
@@ -39,15 +47,27 @@ function Layout({ children, onStatusSelect, selectedStatus, onTagSelect, selecte
   });
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsBreakpointSidebarCollapsed(window.innerWidth <= 1440);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     try {
       localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(isSidebarCollapsed));
     } catch (e) {
     }
   }, [isSidebarCollapsed]);
-  const sidebarWidth = isSidebarCollapsed ? '76px' : '260px';
+
+  const isSidebarCollapsedEffective = isSidebarCollapsed || isBreakpointSidebarCollapsed;
+  const sidebarWidth = isSidebarCollapsedEffective ? '76px' : '260px';
 
   return (
-    <Box className={isSidebarCollapsed ? 'layout--sidebar-collapsed' : 'layout'}>
+    <Box className={isSidebarCollapsedEffective ? 'layout--sidebar-collapsed' : 'layout'}>
       <TagsProvider>
         <ArchieveProvider>
           <Header />
@@ -56,7 +76,7 @@ function Layout({ children, onStatusSelect, selectedStatus, onTagSelect, selecte
             selectedStatus={selectedStatus}
             onTagSelect={onTagSelect}
             selectedTag={selectedTag}
-            isCollapsed={isSidebarCollapsed}
+            isCollapsed={isSidebarCollapsedEffective}
             onCollapsedChange={setIsSidebarCollapsed}
           />
 

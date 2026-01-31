@@ -270,7 +270,8 @@
                 margin-bottom: 0;
                 list-style: none;
 
-                a {
+                a,
+                div {
                     display: flex;
                     align-items: center;
                     justify-content: flex-start;

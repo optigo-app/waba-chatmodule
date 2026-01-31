@@ -8,6 +8,7 @@ import { LoginContext } from '../../context/LoginData'
 import CryptoJS from "crypto-js";
 import { IconButton, Tooltip } from '@mui/material'
 import TagSidebar from './TagSidebar';
+import RedirectionModal from '../RedirectionModal/RedirectionModal';
 
 const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isCollapsed = false, onCollapsedChange = () => { } }) => {
 
@@ -20,6 +21,7 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
     const [tagsMenuAnchorEl, setTagsMenuAnchorEl] = useState(null);
     const [tagSearchTerm, setTagSearchTerm] = useState('');
     const tagsMenuListRef = useRef(null);
+    const [redirectionModal, setRedirectionModal] = useState({ isOpen: false, item: null });
     const token = JSON.parse(sessionStorage.getItem("token"));
     const Token = {
         ...token, userId: auth?.userId, id: auth?.id, username: auth?.username
@@ -152,6 +154,19 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
         navigate("/");
     };
 
+    const handleExternalClick = (item) => {
+        setRedirectionModal({ isOpen: true, item });
+    };
+
+    const handleConfirmRedirect = () => {
+        const { item } = redirectionModal;
+        if (!item) return;
+
+        const url = `${appURLs[item.app]}?token=${encryptToken(Token, item.app)}`;
+        window.open(url, "_blank", "noopener,noreferrer");
+        setRedirectionModal({ isOpen: false, item: null });
+    };
+
     return (
         <div
             className={`sidebar_mainDiv ${isCollapsed ? 'collapsed' : ''}`}
@@ -204,13 +219,13 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
                                             disableTouchListener={!isCollapsed}
                                         >
                                             {isExternal ? (
-                                                <a
-                                                    href={`${appURLs[item.app]}?token=${encryptToken(Token, item.app)}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                <div
+                                                    className={`sidebar_main_link ${isActive ? "active" : ""}`}
+                                                    onClick={() => handleExternalClick(item)}
+                                                    style={{ cursor: 'pointer' }}
                                                 >
                                                     {content}
-                                                </a>
+                                                </div>
                                             ) : (
                                                 <Link
                                                     to={item.path}
@@ -285,7 +300,17 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
                     </div>
                 </div>
             </div>
-        </div>
+
+
+            <RedirectionModal
+                isOpen={redirectionModal.isOpen}
+                onClose={() => setRedirectionModal({ isOpen: false, item: null })}
+                onConfirm={handleConfirmRedirect}
+                title={`Open ${redirectionModal.item?.label}?`}
+                description="You are about to be redirected to an external application."
+                icon={redirectionModal.item?.icon}
+            />
+        </div >
     );
 };
 
