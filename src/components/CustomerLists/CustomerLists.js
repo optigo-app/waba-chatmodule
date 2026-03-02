@@ -61,6 +61,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     const pageSize = 100;
     const searchTimeoutRef = useRef(null);
     const { auth, PERMISSION_SET, isSyncing } = useContext(LoginContext);
+    console.log("kjdskj", auth)
 
     const can = (perm) => PERMISSION_SET?.has(perm);
 
@@ -260,10 +261,11 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     }, [chatMembers]);
 
     const handlePinChat = async (member, shouldPin) => {
-        if (!member?.ConversationId || !member?.UserId) {
-            toast.error("Missing Conversation ID or User ID. Cannot pin/unpin this chat.");
+        if (!member?.ConversationId) {
+            toast.error("Missing Conversation ID. Cannot pin/unpin this chat.");
             return;
         }
+        const userId = member?.UserId ?? auth?.id;
         try {
             if (shouldPin === "Pin") {
                 const pinnedCount = chatMembers.data?.filter(m => m.IsPin === 1).length || 0;
@@ -274,8 +276,8 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
             }
 
             const response = shouldPin === "Pin"
-                ? await pinConversationApi(member.ConversationId, member.UserId, auth?.userId)
-                : await unPinConversationApi(member.ConversationId, member.UserId, auth?.userId);
+                ? await pinConversationApi(member.ConversationId, userId, auth?.userId)
+                : await unPinConversationApi(member.ConversationId, userId, auth?.userId);
 
             if (response?.Status === "200") {
                 toast.success(`Chat ${shouldPin === "Pin" ? 'pinned' : 'unpinned'} successfully`);
@@ -290,21 +292,22 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     };
 
     const handleFavoriteChat = async (member, shouldFavorite) => {
-        if (!member?.ConversationId || !member?.UserId) {
-            toast.error("Missing Conversation ID or User ID. Cannot pin/unpin this chat.");
+        if (!member?.ConversationId) {
+            toast.error("Missing Conversation ID. Cannot favourite/unfavourite this chat.");
             return;
         }
+        const userId = member?.UserId ?? auth?.id;
 
         try {
             const response = shouldFavorite === "Favourite"
-                ? await favoriteApi(member.ConversationId, member.UserId, auth?.userId)
-                : await unFavoriteApi(member.ConversationId, member.UserId, auth?.userId);
+                ? await favoriteApi(member.ConversationId, userId, auth?.userId)
+                : await unFavoriteApi(member.ConversationId, userId, auth?.userId);
 
             if (response?.Status === "200") {
-                toast.success(`Chat ${shouldFavorite === "favourite" ? 'favourited' : 'unfavourited'} successfully`);
+                toast.success(`Chat ${shouldFavorite === "Favourite" ? 'favourited' : 'unfavourited'} successfully`);
                 loadMembers(currentPage, true);
             } else {
-                toast.error(`Failed to ${shouldFavorite === "favourite" ? 'favourite' : 'unfavourite'} chat`);
+                toast.error(`Failed to ${shouldFavorite === "Favourite" ? 'favourite' : 'unfavourite'} chat`);
             }
         } catch (error) {
             console.error("Error handling favourite chat", error);
@@ -313,15 +316,16 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     };
 
     const handleArchieveChat = async (member, shouldArchieve) => {
-        if (!member?.ConversationId || !member?.UserId) {
-            toast.error("Missing Conversation ID or User ID. Cannot archive/unarchive this chat.");
+        if (!member?.ConversationId) {
+            toast.error("Missing Conversation ID. Cannot archive/unarchive this chat.");
             return;
         }
+        const userId = member?.UserId ?? auth?.id;
 
         try {
             const response = shouldArchieve === "Archive"
-                ? await archieveApi(member.ConversationId, member.UserId, auth?.userId)
-                : await unArchieveApi(member.ConversationId, member.UserId, auth?.userId);
+                ? await archieveApi(member.ConversationId, userId, auth?.userId)
+                : await unArchieveApi(member.ConversationId, userId, auth?.userId);
 
             if (response?.Status === "200") {
                 toast.success(`Chat ${shouldArchieve === "Archive" ? 'archived' : 'unarchived'} successfully`);
@@ -330,7 +334,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                 toast.error(`Failed to ${shouldArchieve === "Archive" ? 'archive' : 'unarchive'} chat`);
             }
         } catch (error) {
-            console.error("Error handling favourite chat", error);
+            console.error("Error handling archive chat", error);
             toast.error("Something went wrong while archiving/unarchiving the chat.");
         }
     };
@@ -756,7 +760,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                                                                                     </IconButton>
                                                                                 </Tooltip>
                                                                             }
-                                                                            {member?.CustomerId == 0 && member?.CustomerName == "" &&
+                                                                            {member?.CustomerName == "" &&
                                                                                 < Tooltip title="Add to Customer" arrow>
                                                                                     <IconButton
                                                                                         size="small"

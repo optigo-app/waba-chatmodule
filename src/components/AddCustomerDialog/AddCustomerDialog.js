@@ -14,17 +14,20 @@ const AddCustomerDialog = ({
     selectedMember,
     onSuccess
 }) => {
-    const [customerName, setCustomerName] = useState('');
-    const [debouncedCustomerName, setDebouncedCustomerName] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [debouncedFirstName, setDebouncedFirstName] = useState('');
+    const [debouncedLastName, setDebouncedLastName] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            setDebouncedCustomerName(customerName);
+            setDebouncedFirstName(firstName);
+            setDebouncedLastName(lastName);
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [customerName]);
+    }, [firstName, lastName]);
 
     const handleSaveCustomer = useCallback(async () => {
         if (!selectedMember?.CustomerPhone) {
@@ -32,8 +35,13 @@ const AddCustomerDialog = ({
             return;
         }
 
-        if (!debouncedCustomerName.trim()) {
-            toast.error("Please enter a customer name.");
+        if (!debouncedFirstName.trim()) {
+            toast.error("Please enter a first name.");
+            return;
+        }
+
+        if (!debouncedLastName.trim()) {
+            toast.error("Please enter a last name.");
             return;
         }
 
@@ -42,7 +50,9 @@ const AddCustomerDialog = ({
             const response = await addCustomer(
                 selectedMember.CustomerPhone,
                 selectedMember?.userId || 1,
-                debouncedCustomerName.trim()
+                debouncedFirstName.trim(),
+                debouncedLastName.trim(),
+                selectedMember.ConversationId
             );
 
             if (response) {
@@ -58,25 +68,31 @@ const AddCustomerDialog = ({
         } finally {
             setLoading(false);
         }
-    }, [selectedMember, debouncedCustomerName, onSuccess]);
+    }, [selectedMember, debouncedFirstName, debouncedLastName, onSuccess]);
 
     const handleClose = useCallback(() => {
-        setCustomerName('');
-        setDebouncedCustomerName('');
+        setFirstName('');
+        setLastName('');
+        setDebouncedFirstName('');
+        setDebouncedLastName('');
         setLoading(false);
         onClose();
     }, [onClose]);
 
-    const handleCustomerNameChange = useCallback((e) => {
-        setCustomerName(e.target.value);
+    const handleFirstNameChange = useCallback((e) => {
+        setFirstName(e.target.value);
+    }, []);
+
+    const handleLastNameChange = useCallback((e) => {
+        setLastName(e.target.value);
     }, []);
 
     const handleKeyDown = useCallback((e) => {
-        if (e.key === 'Enter' && !loading && debouncedCustomerName.trim()) {
+        if (e.key === 'Enter' && !loading && debouncedFirstName.trim() && debouncedLastName.trim()) {
             e.preventDefault();
             handleSaveCustomer();
         }
-    }, [handleSaveCustomer, loading, debouncedCustomerName]);
+    }, [handleSaveCustomer, loading, debouncedFirstName, debouncedLastName]);
 
     return (
         <CustomerModal
@@ -98,7 +114,7 @@ const AddCustomerDialog = ({
                         onClick={handleSaveCustomer}
                         variant="contained"
                         disableElevation
-                        disabled={!debouncedCustomerName.trim() || loading}
+                        disabled={!debouncedFirstName.trim() || !debouncedLastName.trim() || loading}
                         className='primaryBtnClassname'
                     >
                         {loading ? 'Saving...' : 'Save'}
@@ -121,13 +137,23 @@ const AddCustomerDialog = ({
                 />
 
                 <CustomTextField
-                    label="Customer Name"
-                    value={customerName}
-                    onChange={handleCustomerNameChange}
+                    label="First Name"
+                    value={firstName}
+                    onChange={handleFirstNameChange}
                     onKeyDown={handleKeyDown}
-                    placeholder="Enter customer name"
+                    placeholder="Enter first name"
                     disabled={loading}
                     autoFocus
+                    margin="normal"
+                />
+
+                <CustomTextField
+                    label="Last Name"
+                    value={lastName}
+                    onChange={handleLastNameChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Enter last name"
+                    disabled={loading}
                     margin="normal"
                 />
             </Box>

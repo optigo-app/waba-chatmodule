@@ -370,6 +370,9 @@ const CustomerDetails = ({ customer, onClose, open, variant = 'panel' }) => {
                             </div>
 
                             <Typography className="customer-name">{displayName}</Typography>
+                            {customer?.CustomerPhone && (
+                                <Typography className="customer-phone">{customer.CustomerPhone}</Typography>
+                            )}
                         </div>
 
                         {/* Media Tabs */}

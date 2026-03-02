@@ -10,7 +10,8 @@ import {
     ListItemIcon,
     Typography,
     Box,
-    Avatar
+    Avatar,
+    CircularProgress
 } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SyncIcon from '@mui/icons-material/Sync';
@@ -23,6 +24,8 @@ import { getWhatsAppAvatarConfig } from '../../utils/globalFunc';
 
 const ProfileAvatar = () => {
     const [anchorEl, setAnchorEl] = useState(null);
+    const [logoutLoading, setLogoutLoading] = useState(false);
+    const [syncLoading, setSyncLoading] = useState(false);
     const open = Boolean(anchorEl);
     const navigate = useNavigate();
     const { auth, setAuth, token, setToken, startSync } = useContext(LoginContext);
@@ -41,6 +44,7 @@ const ProfileAvatar = () => {
     const handleDataSync = async () => {
         if (!startSync) return;
 
+        setSyncLoading(true);
         try {
             const syncSuccess = await startSync(async () => {
                 // This callback will be executed by startSync
@@ -62,10 +66,13 @@ const ProfileAvatar = () => {
         } catch (error) {
             // This catch block is a fallback in case something unexpected happens
             console.error('Unexpected error during sync:', error);
+        } finally {
+            setSyncLoading(false);
         }
     };
 
     const handleLogout = async () => {
+        setLogoutLoading(true);
         try {
             await LogoutApi(auth?.id || getId?.id);
 
@@ -85,6 +92,8 @@ const ProfileAvatar = () => {
             console.error('Error during logout:', error);
             navigate('/login');
             handleClose();
+        } finally {
+            setLogoutLoading(false);
         }
     };
 
@@ -118,6 +127,12 @@ const ProfileAvatar = () => {
                 }}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                TransitionProps={{
+                    timeout: 250,
+                    style: {
+                        transitionDelay: open ? '0ms' : '50ms'
+                    }
+                }}
             >
                 <Box className="menu-header" sx={{ paddingLeft: "10px", paddingTop: "10px" }}>
                     <Typography className="menu-section-title">My Account</Typography>
@@ -135,26 +150,38 @@ const ProfileAvatar = () => {
 
                 <MenuItem
                     onClick={handleDataSync}
-                    className="menu-item"
-                    disabled={!startSync}
+                    className={`menu-item ${syncLoading ? 'loading' : ''}`}
+                    disabled={syncLoading || !startSync}
                 >
                     <ListItemIcon className="menu-icon" sx={{ minWidth: "30px !important" }}>
-                        <SyncIcon fontSize="small" />
+                        {syncLoading ? (
+                            <CircularProgress size={20} color="inherit" />
+                        ) : (
+                            <SyncIcon fontSize="small" />
+                        )}
                     </ListItemIcon>
                     <ListItemText
-                        primary="Data Sync"
+                        primary={syncLoading ? "Syncing..." : "Data Sync"}
                         primaryTypographyProps={{ className: 'menu-text' }}
                     />
                 </MenuItem>
 
                 <Divider className="menu-divider" />
 
-                <MenuItem onClick={handleLogout} className="menu-item logout">
+                <MenuItem
+                    onClick={handleLogout}
+                    className={`menu-item logout ${logoutLoading ? 'loading' : ''}`}
+                    disabled={logoutLoading}
+                >
                     <ListItemIcon className="menu-icon" sx={{ minWidth: "30px !important" }}>
-                        <LogoutIcon fontSize="small" />
+                        {logoutLoading ? (
+                            <CircularProgress size={20} color="inherit" />
+                        ) : (
+                            <LogoutIcon fontSize="small" />
+                        )}
                     </ListItemIcon>
                     <ListItemText
-                        primary="Log out"
+                        primary={logoutLoading ? "Logging out..." : "Log out"}
                         primaryTypographyProps={{ className: 'menu-text' }}
                     />
                 </MenuItem>

@@ -85,6 +85,9 @@ const MessageContent = ({
     handleMediaClick,
     getMessageStatusIcon,
 }) => {
+
+    console.log(msg);
+
     const theme = useTheme();
 
     const [imageDims, setImageDims] = useState(null);
@@ -171,7 +174,8 @@ const MessageContent = ({
                         position: 'relative',
                         zIndex: 1,
                         overflow: 'visible !important',
-                        maxWidth: { xs: '90%', sm: 420 },
+                        maxWidth: { xs: '90%', sm: ['image', 'video', 'document'].includes(msg?.MessageType) ? 350 : 420 },
+                        ...(['image', 'video', 'document'].includes(msg?.MessageType) && { width: 'min(350px, 85vw)' }),
                         padding: '4px !important',
                         borderRadius: (isOutgoing
                             ? '16px 16px 4px 16px'
@@ -408,17 +412,18 @@ const MessageContent = ({
                     const cachedDims = src ? imageDimsCache.get(src) : null;
                     const dimsForCalc = imageDims || cachedDims;
 
-                    const mediaWidth = 220;
+                    // Bubble inner width ≈ 268px (280px − 4px padding×2 − 4px border×2)
+                    const mediaWidth = 268;
                     const computedHeight = dimsForCalc?.w && dimsForCalc?.h
-                        ? Math.max(140, Math.min(220, Math.round(mediaWidth * (dimsForCalc.h / dimsForCalc.w))))
-                        : 220;
+                        ? Math.max(160, Math.min(268, Math.round(mediaWidth * (dimsForCalc.h / dimsForCalc.w))))
+                        : 240;
 
                     return (
                         <div
                             className="message-image"
                             style={{
                                 position: 'relative',
-                                width: mediaWidth,
+                                width: '100%',
                                 height: computedHeight,
                                 borderRadius: '8px',
                                 overflow: 'hidden',
@@ -449,7 +454,7 @@ const MessageContent = ({
                                         filename: 'image'
                                     }]
                                 }, 0);
-                            }} style={{ cursor: 'pointer' }}>
+                            }} style={{ cursor: 'pointer', width: '100%', height: '100%' }}>
                                 {src &&
                                     <img
                                         src={src}
@@ -494,9 +499,9 @@ const MessageContent = ({
                             className="message-video"
                             style={{
                                 position: 'relative',
-                                width: 220,
-                                height: 220,
-                                borderRadius: 12,
+                                width: '100%',
+                                height: 240,
+                                borderRadius: 8,
                                 overflow: 'hidden',
                             }}
                         >
@@ -552,8 +557,8 @@ const MessageContent = ({
                 {/* Document */}
                 {msg?.MessageType === "document" && ((_, index) => {
                     const href = getMediaSrcForMessage(msg);
+                    const ext = (msg.fileName || '').split('.').pop()?.toUpperCase() || 'FILE';
 
-                    // For docs we can still show a brief skeleton bar for polish
                     return (
                         <div className="message-document" style={{ position: 'relative' }}>
                             <Box
@@ -561,38 +566,41 @@ const MessageContent = ({
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: 1.5,
-                                    width: 300,
-                                    padding: '8px',
-                                    backgroundColor: alpha(theme.palette.text.primary, 0.03),
+                                    width: '100%',
+                                    padding: '10px 10px',
+                                    backgroundColor: alpha(theme.palette.text.primary, 0.05),
                                     borderRadius: '8px',
                                 }}
                             >
+                                {/* File icon */}
                                 <Box
                                     sx={{
-                                        width: 34,
-                                        height: 34,
+                                        width: 40,
+                                        height: 40,
                                         borderRadius: 2,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.15),
                                         color: theme.palette.primary.main,
-                                        flex: '0 0 auto'
+                                        flex: '0 0 auto',
                                     }}
                                 >
-                                    <FileText size={18} />
+                                    <FileText size={20} />
                                 </Box>
 
-                                <Box sx={{ minWidth: 0, flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+                                {/* File name + type */}
+                                <Box sx={{ minWidth: 0, flex: '1 1 auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                     <Typography
                                         variant="body2"
                                         sx={{
                                             fontWeight: 600,
+                                            fontSize: '0.82rem',
                                             color: theme.palette.text.primary,
-                                            lineHeight: 1.2,
+                                            lineHeight: 1.3,
                                             whiteSpace: 'nowrap',
                                             overflow: 'hidden',
-                                            textOverflow: 'ellipsis'
+                                            textOverflow: 'ellipsis',
                                         }}
                                         title={msg.fileName || 'Document'}
                                     >
@@ -601,18 +609,18 @@ const MessageContent = ({
                                     <Typography
                                         variant="caption"
                                         sx={{
-                                            color: alpha(theme.palette.text.primary, 0.7),
+                                            color: alpha(theme.palette.text.primary, 0.55),
+                                            fontSize: '0.72rem',
                                             lineHeight: 1.2,
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis'
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.04em',
                                         }}
-                                        title={msg.fileType || 'Unknown type'}
                                     >
-                                        {msg.fileType || 'Unknown type'}
+                                        {ext}
                                     </Typography>
                                 </Box>
 
+                                {/* Download button */}
                                 <IconButton
                                     component="a"
                                     href={href}
@@ -620,11 +628,11 @@ const MessageContent = ({
                                     size="small"
                                     className="doc-download"
                                     sx={{
-                                        color: alpha(theme.palette.text.primary, 0.75),
+                                        color: alpha(theme.palette.text.primary, 0.65),
                                         flex: '0 0 auto',
                                         '&:hover': {
-                                            color: theme.palette.text.primary,
-                                            backgroundColor: alpha(theme.palette.text.primary, 0.06),
+                                            color: theme.palette.primary.main,
+                                            backgroundColor: alpha(theme.palette.primary.main, 0.08),
                                         }
                                     }}
                                     title="Download"
@@ -641,21 +649,23 @@ const MessageContent = ({
                 })()}
 
                 {/* Optional caption under media */}
-                {msg?.MessageType !== 'text' && msg?.Message && (
+                {msg?.MessageType !== 'text' && msg?.MessageType !== 'template' && msg?.Message && (
                     <Typography
                         variant="body2"
                         className="message-text"
                         sx={{
-                            mt: 1,
+                            mt: 0.5,
                             '&&': {
                                 color: theme.palette.text.primary + ' !important',
-                                padding: '0 8px 4px 8px !important',
+                                padding: '2px 10px 4px 10px !important',
                             },
+                            fontSize: '0.9rem',
                             lineHeight: 1.5,
                             fontWeight: 450,
+                            wordBreak: 'break-word',
                         }}
                     >
-                        {msg?.MessageType === 'template' ? "" : renderMessageWithLinks(msg.Message, theme)}
+                        {renderMessageWithLinks(msg.Message, theme)}
                     </Typography>
                 )}
 

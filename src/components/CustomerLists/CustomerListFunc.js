@@ -7,17 +7,17 @@ export const getMessagePreview = (msg) => {
   const type = msg?.MessageType;
   const text = type === 'text' ? (msg?.Message || '')
     : type === 'image' ? 'Photo'
-    : type === 'video' ? 'Video'
-    : type === 'document' ? 'Document'
-    : type === 'file' ? 'File'
-    : 'New message';
+      : type === 'video' ? 'Video'
+        : type === 'document' ? 'Document'
+          : type === 'file' ? 'File'
+            : 'New message';
 
   const showIcon = type === 'image' || type === 'video' || type === 'document' || type === 'file';
   const Icon = type === 'image' ? Image
     : type === 'video' ? Video
-    : type === 'document' ? FileText
-    : type === 'file' ? File
-    : null;
+      : type === 'document' ? FileText
+        : type === 'file' ? File
+          : null;
 
   if (!text) {
     return { text: '', node: '' };
@@ -102,9 +102,11 @@ export const getCustomerListMenuItems = (member) => [
       : React.createElement(Archive, { size: 18 }),
     label: member?.IsArchived === 1 ? 'Unarchive' : 'Archive',
   },
-  {
-    action: 'AddCustomer',
-    icon: React.createElement(UserPlus, { size: 18 }),
-    label: 'Add to Customer',
-  },
+  ...(member?.CustomerName === '' ? [
+    {
+      action: 'AddCustomer',
+      icon: React.createElement(UserPlus, { size: 18 }),
+      label: 'Add to Customer',
+    },
+  ] : []),
 ];

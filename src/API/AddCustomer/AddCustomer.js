@@ -1,10 +1,10 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
 
-export const addCustomer = async (userPhone, userId = 1, userName = "") => {
+export const addCustomer = async (userPhone, userId = 1, firstName = "", lastName = "", conversationId = "") => {
     try {
         const body = {
             "con": "{\"id\":\"\",\"mode\":\"wa_add_customer\",\"appuserid\":\"admin@hs.com\"}",
-            "p": `{\"UserPhone\": \"${userPhone}\",\"UserId\": \"${userId}\",\"Name\": \"${userName}\"}`,
+            "p": `{"UserPhone": "${userPhone}","FirstName": "${firstName}","LastName": "${lastName}","ConversationId": "${conversationId}"}`,
             "f": "Chat ( Add Customer )"
         };
 

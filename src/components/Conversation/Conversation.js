@@ -50,14 +50,13 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
     const { auth } = useContext(LoginContext);
     const [getLength, setLength] = useState("");
     const [isSwitchingConversation, setIsSwitchingConversation] = useState(false);
-    const isNarrowScreen = useMediaQuery('(max-width: 600px)');
+    const isNarrowScreen = useMediaQuery('(max-width: 992px)');
     const isTopPanelScreen = useMediaQuery('(max-width: 1620px)');
     const isCompactDockedPanel = useMediaQuery('(max-width: 1200px)');
     const [tagsMenuAnchorEl, setTagsMenuAnchorEl] = useState(null);
-    const isDetailsPanelDocked = drawerOpen === true && !isNarrowScreen && !isTopPanelScreen;
+    const isDetailsPanelDocked = drawerOpen === true && !isNarrowScreen;
     const dockedPanelWidth = isCompactDockedPanel ? 380 : 420;
     const scrollToBottomRightOffset = isDetailsPanelDocked ? dockedPanelWidth + 30 : 30;
-
     const showFullDetails = drawerOpen === true && !isNarrowScreen && isTopPanelScreen;
 
     // Use the conversation hook
@@ -793,7 +792,6 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
                         </div>
                     ) : (
                         <>
-
                             <Menu
                                 anchorEl={tagsMenuAnchorEl}
                                 open={tagsMenuOpen}
