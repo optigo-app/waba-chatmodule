@@ -1,18 +1,10 @@
 import { io } from 'socket.io-client';
 
-// Socket server configuration
-const SOCKET_URLS = {
-    production: 'https://nxt22.optigoapps.com',
-    // development: 'http://192.168.1.71:5002', // local server
-    development: 'http://192.168.1.71:3001', // local server
-    // development: 'https://apilx.optigoapps.com', // local server
-};
-
 // Pick correct URL
 const getSocketURL = () => {
     const url = process.env.NODE_ENV == 'production'
-        ? SOCKET_URLS.production
-        : SOCKET_URLS.development;
+        ? process.env.REACT_APP_SOCKET_PRODUCTION_URL
+        : process.env.REACT_APP_SOCKET_DEVELOPMENT_URL;
     // console.log("🔗 getSocketURL ->", url);
     return url;
 };

@@ -2,8 +2,8 @@ import { GetCredentialsFromCookie } from "../../utils/FetchToken";
 
 const isLocal = ["localhost", "nzen", '9511a53f910a.ngrok-free.app'].includes(window.location.hostname);
 
-const BASE_URL = isLocal ? "http://192.168.1.71:3001/api" : "https://nxt22.optigoapps.com/api";
-const MEDIA_BASE_URL = "https://crmapp.mpillarapi.com/api/meta/v19.0/622385334300738/Media/";
+const BASE_URL = isLocal ? process.env.REACT_APP_API_DEVELOPMENT_URL : process.env.REACT_APP_API_PRODUCTION_URL;
+const MEDIA_BASE_URL = process.env.REACT_APP_MEDIA_BASE_URL;
 
 export const APIURL = `${BASE_URL}/report`;
 export const MEDIAAPIURL = MEDIA_BASE_URL;

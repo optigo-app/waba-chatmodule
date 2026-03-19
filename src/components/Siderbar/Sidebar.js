@@ -27,26 +27,30 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
         ...token, userId: auth?.userId, id: auth?.id, username: auth?.username
     }
 
-    const urls = {
-        broadcast: {
-            local: "http://localhost:3000",
-            live: "https://nxtwababroadcast.optigoapps.com",
-            SECRET_KEY: "chat-broadcast-config"
-        },
-        automation: {
-            local: "http://localhost:3000",
-            live: "https://zen1.optigoapps.com",
-            SECRET_KEY: "chat-automation-config"
-        },
+    const getBaseURL = (app) => {
+        const host = window.location.hostname;
+        const isLocal = host === 'localhost'
+        const isNxt = host.includes('nxt');
+
+        if (app === 'broadcast') {
+            if (isLocal) return process.env.REACT_APP_BROADCAST_URL_LOCAL;
+            if (isNxt) return process.env.REACT_APP_BROADCAST_URL_NXT;
+            return process.env.REACT_APP_BROADCAST_URL_PROD;
+        }
+
+        if (app === 'automation') {
+            if (isLocal) return process.env.REACT_APP_AUTOMATION_URL_LOCAL;
+            if (isNxt) return process.env.REACT_APP_AUTOMATION_URL_NXT;
+            return process.env.REACT_APP_AUTOMATION_URL_PROD;
+        }
+        return '';
     };
 
-    const isLocal = process.env.NODE_ENV === "development";
+    const broadcastURL = getBaseURL('broadcast');
+    const automationURL = getBaseURL('automation');
 
-    const broadcastURL = urls.broadcast[isLocal ? "local" : "live"];
-    const automationURL = urls.automation[isLocal ? "local" : "live"];
-
-    const broadcast_SECRET_KEY = urls.broadcast.SECRET_KEY;
-    const automation_SECRET_KEY = urls.automation.SECRET_KEY;
+    const broadcast_SECRET_KEY = "chat-broadcast-config";
+    const automation_SECRET_KEY = "chat-automation-config";
 
     const encryptToken = (token, page) => {
         if (!token) return "";
@@ -71,7 +75,7 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
         { type: "internal", path: "/add-conversation", icon: <Users {...ICON_PROPS} />, label: "Add Conversation" },
 
         { type: "external", app: "broadcast", icon: <Megaphone {...ICON_PROPS} />, label: "CRM Broadcast" },
-        { type: "external", app: "automation", icon: <Workflow {...ICON_PROPS} />, label: "Automation Workflow" }
+        // { type: "external", app: "automation", icon: <Workflow {...ICON_PROPS} />, label: "Automation Workflow" }
     ];
 
     const getTagId = useCallbackSafe((tag) => tag?.TagId ?? tag?.Id ?? tag?.id);
