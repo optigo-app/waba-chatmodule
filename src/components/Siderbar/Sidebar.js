@@ -31,10 +31,12 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
         const host = window.location.hostname;
         const isLocal = host === 'localhost'
         const isNxt = host.includes('nxt');
+        const isLocalWeb = host.includes('wabachat.web');
 
         if (app === 'broadcast') {
             if (isLocal) return process.env.REACT_APP_BROADCAST_URL_LOCAL;
             if (isNxt) return process.env.REACT_APP_BROADCAST_URL_NXT;
+            if (isLocalWeb) return process.env.REACT_APP_BROADCAST_URL_WEB;
             return process.env.REACT_APP_BROADCAST_URL_PROD;
         }
 
@@ -56,6 +58,7 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
         if (!token) return "";
         try {
             const ciphertext = CryptoJS.AES.encrypt(JSON.stringify(token), page === "broadcast" ? broadcast_SECRET_KEY : automation_SECRET_KEY).toString();
+            
             return encodeURIComponent(ciphertext); // safe for URL
         } catch (error) {
             console.error('Error encrypting token:', error);
@@ -167,6 +170,7 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
         if (!item) return;
 
         const url = `${appURLs[item.app]}?token=${encryptToken(Token, item.app)}`;
+        console.log(url);
         window.open(url, "_blank", "noopener,noreferrer");
         setRedirectionModal({ isOpen: false, item: null });
     };

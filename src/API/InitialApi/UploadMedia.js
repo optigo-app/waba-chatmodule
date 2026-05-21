@@ -1,19 +1,30 @@
 import axios from "axios";
-import { UPLOADMEDIA, getHeaders } from "./Config";
+import { getHeaders } from "./Config";
 
 export const UploadMedia = async (file, whatsappNumber, whatsappKey, onProgress) => {
   try {
+    const token = JSON.parse(sessionStorage.getItem("userData"));
     const formData = new FormData();
     formData.append("messaging_product", "whatsapp");
     formData.append("file", file);
+    if (file?.type) formData.append("type", file.type);
 
-    const headers = {
-      ...getHeaders(whatsappNumber),
-      Authorization: `Bearer ${whatsappKey}`,
-      "Content-Type": "multipart/form-data",
-    };
+    const baseURL = token?.isMeta === 1
+      ? `https://graph.facebook.com/v19.0/${whatsappNumber}/media`
+      : `https://crmapp.mpillarapi.com/api/meta/v19.0/${whatsappNumber}/media`;
 
-    const { data } = await axios.post(`https://crmapp.mpillarapi.com/api/meta/v19.0/${whatsappNumber}/media`, formData, {
+    const headers = token?.isMeta === 1
+      ? {
+          Authorization: `Bearer ${whatsappKey}`,
+          "Content-Type": "multipart/form-data",
+        }
+      : {
+          ...getHeaders(whatsappNumber),
+          Authorization: `Bearer ${whatsappKey}`,
+          "Content-Type": "multipart/form-data",
+        };
+
+    const { data } = await axios.post(baseURL, formData, {
       headers,
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
@@ -22,9 +33,8 @@ export const UploadMedia = async (file, whatsappNumber, whatsappKey, onProgress)
           const loaded = progressEvent?.loaded ?? 0;
           const total = progressEvent?.total ?? file?.size ?? 1;
           let percent = Math.round((loaded * 100) / total);
-          // If total is unknown, avoid jumping to 100% before completion
+
           if (!progressEvent?.total && file?.size) {
-            // allow up to 100 if loaded matches size, else cap to avoid premature 100
             const approxTotal = file.size;
             percent = loaded >= approxTotal ? 100 : Math.min(percent, 99);
           }
@@ -33,12 +43,11 @@ export const UploadMedia = async (file, whatsappNumber, whatsappKey, onProgress)
       },
     });
 
-    // Ensure final 100% is emitted after successful upload
     if (onProgress) onProgress(100);
 
     return data;
   } catch (error) {
-    console.error("API Upload Error:", error);
+    console.error("Upload Error:", error);
     throw error;
   }
 };

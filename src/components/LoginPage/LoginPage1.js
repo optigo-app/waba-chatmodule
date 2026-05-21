@@ -53,7 +53,7 @@ const LoginPage1 = () => {
         if (credentials.companycode.trim()) {
             try {
                 const token = await getToken(credentials.companycode.trim());
-                if (token?.rd?.[0]?.stat === 0) {
+                if (token?.rd?.[0]?.stat == 0) {
                     setErrors(newErrors => ({ ...newErrors, companycode: "Invalid company code" }));
                     setToken({
                         sv: "", // Convert to string if needed
@@ -62,7 +62,7 @@ const LoginPage1 = () => {
                     sessionStorage.setItem("token", JSON.stringify(token));
                     return;
                 }
-                else if (token?.rd?.[0]?.stat === 1) {
+                else if (token?.rd?.[0]?.stat == 1) {
                     setIsBtnShow(true)
 
                     // Fix: Set the token with the correct structure
@@ -96,82 +96,84 @@ const LoginPage1 = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isLoading) return;
         setIsLoading(true);
-
-        if (!validateCredentials()) {
-            setIsLoading(false);
-            return;
-        }
-
         try {
+            if (!validateCredentials()) return;
             const loginData = await fetchLoginApi(credentials);
-            console.log("TCL: handleSubmit -> loginData", loginData)
-
+            console.log("Login Response:", loginData);
             const userInfo = loginData?.rd?.[0];
             if (userInfo?.stat !== 1) {
                 toast.error("Invalid credentials");
-                return setIsLoading(false);
-            }
-
-            const socket = initializeSocket(userInfo.token)
-
-            const userData = {
-                userId: userInfo.userid,
-                username: userInfo.customercode,
-                ukey: userInfo.ukey,
-                token: userInfo.token,
-                id: userInfo.id,
-                whatsappKey: userInfo.whatsappKey,
-                whatsappNumber: userInfo.whatsappNumber,
-                SocketId: userInfo.SocketId || ""
-            };
-
-            if (userInfo?.SocketId) {
-                const sessionData = {
-                    data: true,
-                    socketId: socket?.id || userInfo.SocketId,
-                    ...userData,
-                };
-
-                sessionStorage.setItem("hasSocketId", JSON.stringify(sessionData));
-                console.log("⚠️ Redirecting to session check page...");
-                setPermissions(loginData?.rd1);
-                navigate("/session-check");
-                setIsLoading(false);
                 return;
             }
-
-            // ✅ Wait for socket to actually connect
-            socket.on("connect", async () => {
-                console.log("✅ Socket connected with ID:", socket.id);
-
-                await savePlayerId(socket.id, userData.userId, userData?.id);
-
-                const updatedUserData = { ...userData, SocketId: socket.id };
-                sessionStorage.setItem("userData", JSON.stringify(updatedUserData));
-                sessionStorage.setItem("isLoggedIn", true);
-                setAuth(updatedUserData);
+            const userData = {
+                ...userInfo,
+                userId: userInfo.userid,
+                username: userInfo.customercode,
+                SocketId: userInfo.SocketId || "",
+            };
+            sessionStorage.setItem("token", JSON.stringify(userData));
+            if (userInfo?.SocketId) {
+                sessionStorage.setItem(
+                    "hasSocketId",
+                    JSON.stringify({
+                        data: true,
+                        socketId: userInfo.SocketId,
+                        ...userData,
+                    })
+                );
+    
                 setPermissions(loginData?.rd1);
-
-                console.log("goes here");
-                toast.success("Login successful! Welcome back!", { icon: "🎉" });
-                navigate("/");
-                setIsLoading(false);
-            });
-
-            // ❌ Handle connection failure
-            socket.on("connect_error", (err) => {
+                console.log("⚠️ Redirecting to session check page...");
+                navigate("/session-check");
+                return;
+            }
+            const socket = initializeSocket(userInfo.token);
+            const handleConnect = async () => {
+                try {
+                    console.log("✅ Socket connected:", socket.id);
+                    await savePlayerId(
+                        socket.id,
+                        userData.userId,
+                        userData.id
+                    );
+                    const updatedUserData = {
+                        ...userData,
+                        SocketId: socket.id,
+                    };
+                    sessionStorage.setItem(
+                        "userData",
+                        JSON.stringify(updatedUserData)
+                    );
+                    sessionStorage.setItem("isLoggedIn", "true");
+                    setAuth(updatedUserData);
+                    setPermissions(loginData?.rd1);
+                    toast.success("Login successful! Welcome back!", {
+                        icon: "🎉",
+                    });
+                    navigate("/");
+                } catch (error) {
+                    console.error("Socket setup error:", error);
+                    toast.error("Failed to initialize session");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+    
+            // ✅ Socket connection error
+            const handleError = (err) => {
                 console.error("❌ Socket connect error:", err.message);
                 toast.error("Socket connection failed");
                 setIsLoading(false);
-            });
-
+            };
+    
+            socket.once("connect", handleConnect);
+            socket.once("connect_error", handleError);
+    
         } catch (err) {
             console.error("Login error:", err);
             toast.error("Login failed. Please try again.");
-            setIsLoading(false);
-        }
-        finally {
             setIsLoading(false);
         }
     };
@@ -334,11 +336,6 @@ const LoginPage1 = () => {
                     {!isMobile && (
                         <div className="login-image-section">
                             <div className="image-container">
-                                {/* <img
-                                    src={"./loginImage.webp"}
-                                    alt="Login Visual"
-                                    className="login-image"
-                                /> */}
                                 <Lottie
                                     animationData={loginPageLottie}
                                     loop={true}

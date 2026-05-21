@@ -1,11 +1,19 @@
 import { io } from 'socket.io-client';
 
+
+const isLocal = ["localhost", '5dmjw0dg-2000.inc1.devtunnels.ms'].includes(window.location.hostname);
+const isNxt = ['nxtwabachat.optigoapps.com'].includes(window.location.hostname);
+const isLocalWeb = ["wabachat.web"].includes(window.location.hostname);
+
+const SOCKET_BASE_URL = isLocal ?
+    process.env.REACT_APP_SOCKET_DEVELOPMENT_URL :
+    isLocalWeb ? process.env.REACT_APP_SOCKET_WEB_DEVELOPMENT_URL :
+        isNxt ? process.env.REACT_APP_SOCKET_NXT_PRODUCTION_URL :
+            process.env.REACT_APP_SOCKET_PRODUCTION_URL;
+
 // Pick correct URL
 const getSocketURL = () => {
-    const url = process.env.NODE_ENV == 'production'
-        ? process.env.REACT_APP_SOCKET_PRODUCTION_URL
-        : process.env.REACT_APP_SOCKET_DEVELOPMENT_URL;
-    // console.log("🔗 getSocketURL ->", url);
+    const url = SOCKET_BASE_URL
     return url;
 };
 
