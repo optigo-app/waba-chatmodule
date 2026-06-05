@@ -170,7 +170,6 @@ const Sidebar = ({ onStatusSelect, selectedStatus, onTagSelect, selectedTag, isC
         if (!item) return;
 
         const url = `${appURLs[item.app]}?token=${encryptToken(Token, item.app)}`;
-        console.log(url);
         window.open(url, "_blank", "noopener,noreferrer");
         setRedirectionModal({ isOpen: false, item: null });
     };

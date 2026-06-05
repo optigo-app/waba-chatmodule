@@ -3,17 +3,17 @@ import { getHeaders } from "./Config";
 
 export const UploadMedia = async (file, whatsappNumber, whatsappKey, onProgress) => {
   try {
-    const token = JSON.parse(sessionStorage.getItem("userData"));
+    const token = JSON.parse(sessionStorage.getItem("token"));
     const formData = new FormData();
     formData.append("messaging_product", "whatsapp");
     formData.append("file", file);
     if (file?.type) formData.append("type", file.type);
 
-    const baseURL = token?.isMeta === 1
+    const baseURL = token?.isMeta == 1
       ? `https://graph.facebook.com/v19.0/${whatsappNumber}/media`
       : `https://crmapp.mpillarapi.com/api/meta/v19.0/${whatsappNumber}/media`;
 
-    const headers = token?.isMeta === 1
+    const headers = token?.isMeta == 1
       ? {
           Authorization: `Bearer ${whatsappKey}`,
           "Content-Type": "multipart/form-data",

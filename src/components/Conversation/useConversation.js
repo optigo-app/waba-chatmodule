@@ -181,7 +181,6 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
     const processedMessageIds = useRef(new Set());
 
     const addUniqueMessage = (data) => {
-        console.log("TCL: addUniqueMessage -> data", data)
         const incomingId = data?.Id || data?.id || data?.MessageId;
         if (!incomingId) return;
 
@@ -323,7 +322,6 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
     };
 
     const handleReactionMessage = (data) => {
-        console.log("TCL: handleReactionMessage -> data", data)
         // Skip if this is the current user's own reaction (handled by handleMessageEmojiClick)
         if (data._isFromCurrentUser) {
             return;
@@ -457,7 +455,6 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
 
         // Handler for status changes - only update when backend sends status changes
         const handleChangeStatus = (data) => {
-            console.log("TCL: handleChangeStatus -> data", data)
             if (!data || typeof data !== "object") return;
             setMessId(data?.MessageId);
 
@@ -1187,7 +1184,6 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
         scrollToBottom();
 
         if (replyToMessage) {
-            console.log("TCL: handleSendMessage -> storeMessData?.messageId", storeMessData?.messageId)
             try {
                 const api = await replyTo(auth?.userId, selectedCustomer?.CustomerId, selectedCustomer?.CustomerPhone, "text", 2, (storeMessData?.messageId || messId), false, caption);
 
@@ -1277,7 +1273,6 @@ export const useConversation = (selectedCustomer, onConversationRead, onViewConv
             );
 
             if (response?.success === true) {
-                console.log("Success")
                 toast.success("Message forwarded successfully");
             } else {
                 const errorMessage = response?.error || "Failed to forward message";

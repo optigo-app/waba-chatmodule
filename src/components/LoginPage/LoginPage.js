@@ -1,234 +1,365 @@
-import React, { useState, useContext } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
-import './LoginPage.scss';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { toastConfig } from '../../toastConfig';
-import { useNavigate } from 'react-router-dom';
-import { initializeSocket, disconnectSocket } from '../../socket';
-import { savePlayerId } from '../../API/SavePlayerId/SavePlayerId';
-import OneSignal from 'react-onesignal';
-import { LoginContext } from '../../context/LoginData';
+import React, { useContext, useState } from "react";
+import "./LoginPage.scss";
+import {
+    TextField,
+    Button,
+    Typography,
+    Paper,
+    useMediaQuery,
+    InputAdornment,
+    IconButton,
+    Box
+} from "@mui/material";
+import { fetchLoginApi } from "../../API/LoginAPI/LoginAPI";
+import { Eye, EyeOff } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import loginPageLottie from "../../assets/lotties/loginPage.json";
+import { initializeSocket } from "../../socket";
+import { LoginContext } from "../../context/LoginData";
+import { savePlayerId } from "../../API/SavePlayerId/SavePlayerId";
+import { getToken } from "../../API/GetToken/GetToken";
+import Lottie from "lottie-react";
+import { getVersionString } from "../../utils/globalFunc";
 
-const OptigoLogin = () => {
-    const [email, setEmail] = useState('subrata@eg.com');
-    const [password, setPassword] = useState('pasta');
-    const [showPassword, setShowPassword] = useState(false);
-    const [rememberMe, setRememberMe] = useState(false);
+export const commonTextFieldProps = {
+    fullWidth: true,
+    size: "small",
+    className: "textfieldsClass",
+};
+
+const LoginPage1 = () => {
+    const isMobile = useMediaQuery("(max-width:600px)");
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const { setAuth } = useContext(LoginContext);
+    const [isBtnShow, setIsBtnShow] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [credentials, setCredentials] = useState({ companycode: "", userId: "", password: "" });
+    const [errors, setErrors] = useState({});
+    const { setAuth, setPermissions, auth, token, setToken } = useContext(LoginContext);
 
-    const connectSocket = async (token = 'dummy-token') => {
-        try {
-            console.log('Starting socket initialization during login...');
-            
-            // Initialize new socket with auth token
-            const socket = initializeSocket(token);
-            console.log('Socket initialized successfully with token:', token);
-            
-            // Wait a moment to see if connection succeeds
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Check if connection was successful
-            const { getSocketStatus, tryAlternativeServers } = await import('../../socket');
-            const status = getSocketStatus();
-            
-            if (!status.connected && process.env.NODE_ENV !== 'production') {
-                console.log('Primary server connection failed, trying alternatives...');
-                toast.loading('Primary server unavailable, trying backup servers...', { duration: 3000 });
-                
-                try {
-                    await tryAlternativeServers(token);
-                    toast.success('Connected to backup server!', { duration: 2000 });
-                } catch (altError) {
-                    console.error('All servers failed:', altError);
-                    toast.error('Unable to connect to any server. The app will work in offline mode.', { duration: 4000 });
+    const versionString = getVersionString();
+
+    function connect(token) {
+        initializeSocket(token);
+    }
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setCredentials({ ...credentials, [name]: value });
+        setErrors(prev => ({ ...prev, [name]: "" }));
+    };
+
+    // Add this function inside your component
+    const handleCompanyCodeBlur = async () => {
+        if (credentials.companycode.trim()) {
+            try {
+                const token = await getToken(credentials.companycode.trim());
+                if (token?.rd?.[0]?.stat == 0) {
+                    setErrors(newErrors => ({ ...newErrors, companycode: "Invalid company code" }));
+                    setToken({
+                        sv: "",
+                        yc: "",
+                    });
+                    sessionStorage.setItem("token", JSON.stringify(token));
+                    return;
                 }
+                else if (token?.rd?.[0]?.stat == 1) {
+                    setIsBtnShow(true)
+                    const tokenData = token.rd[0];
+                    setToken({
+                        sv: tokenData.sv.toString(),
+                        yc: tokenData.yc || "",
+                    });
+                    sessionStorage.setItem("token", JSON.stringify(tokenData));
+                }
+            } catch (error) {
+                console.error("Error in handleCompanyCodeBlur:", error);
+                setErrors(prev => ({ ...prev, companycode: "Error validating company code" }));
+            } finally {
+                setIsBtnShow(false);
             }
-            
-            return socket;
-        } catch (error) {
-            console.error('Error initializing socket during login:', error);
-            toast.error('Socket connection failed, but login will continue', { duration: 3000 });
-            // Don't throw the error - let login continue even if socket fails
-            return null;
         }
+    };
+
+    // Simple validation function
+    const validateCredentials = () => {
+        const newErrors = {};
+        if (!credentials.companycode) newErrors.companycode = "Project code is required";
+        if (!credentials.userId) newErrors.userId = "User ID is required";
+        if (!credentials.password) newErrors.password = "Password is required";
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!email || !password) {
-            toast.error('Please fill in all fields');
-            return;
-        }
-
-        if (!email.includes('@')) {
-            toast.error('Please enter a valid email address');
-            return;
-        }
-
+        if (isLoading) return;
         setIsLoading(true);
-
-        const loadingToast = toast.loading('Signing in...', {
-            duration: 2000,
-        });
-
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            if (email === 'subrata@eg.com' && password === 'pasta') {
-                toast.dismiss(loadingToast);
-                
-                // Create dummy user data for demo login
-                const userData = {
-                    userId: 'demo-user-123',
-                    username: 'subrata',
-                    ukey: 'demo-ukey',
-                    token: 'dummy-demo-token',
-                };
-                
-                // Initialize socket with auth token  
-                await connectSocket(userData.token);
-                
-                // Set auth context and session storage
-                setAuth(userData);
-                sessionStorage.setItem('userData', JSON.stringify(userData));
-                sessionStorage.setItem('isLoggedIn', true);
-                
-                // Show success message
-                toast.success('Login successful! Welcome back!', {
-                    duration: 4000,
-                    icon: '🎉',
-                });
-                
-                // Optional: OneSignal integration
-                // try {
-                //     await OneSignal.User.PushSubscription.optIn();
-                //     const playerId = await OneSignal.User.PushSubscription?.id;
-                //     if (playerId && socket?.id) {
-                //         await savePlayerId(socket.id, playerId, userData.userId);
-                //     }
-                // } catch (err) {
-                //     console.error("Error with OneSignal subscription or saving player ID:", err);
-                // }
-                
-                console.log('Demo login completed successfully');
-                navigate('/');
-            } else {
-                toast.dismiss(loadingToast);
-                toast.error('Invalid email or password. Please try again.', {
-                    duration: 4000,
-                });
+            if (!validateCredentials()) {
+                setIsLoading(false);
+                return;
             }
-        } catch (error) {
-            toast.dismiss(loadingToast);
-            console.error('Login error:', error);
-            
-            toast.error('Something went wrong. Please try again.', {
-                duration: 4000,
-            });
-        } finally {
+            const loginData = await fetchLoginApi(credentials);
+            const userInfo = loginData?.rd?.[0];
+            if (userInfo?.stat != 1) {
+                toast.error("Invalid credentials");
+                setIsLoading(false);
+                return;
+            }
+
+            const userData = {
+                ...userInfo,
+                userId: userInfo.userid,
+                username: userInfo.customercode,
+                SocketId: userInfo.SocketId || "",
+            };
+
+            sessionStorage.setItem("token", JSON.stringify(userData));
+
+            if (userInfo?.SocketId) {
+                sessionStorage.setItem(
+                    "hasSocketId",
+                    JSON.stringify({
+                        data: true,
+                        socketId: userInfo.SocketId,
+                        ...userData,
+                    })
+                );
+                setPermissions(loginData?.rd1);
+                console.log("⚠️ Redirecting to session check page...");
+                navigate("/session-check");
+                return;
+            }
+
+            const socket = initializeSocket(userInfo.token);
+
+            const handleConnect = async () => {
+                try {
+                    console.log("✅ Socket connected:", socket.id);
+                    await savePlayerId(
+                        socket.id,
+                        userData.userId,
+                        userData.id
+                    );
+                    const updatedUserData = {
+                        ...userData,
+                        SocketId: socket.id,
+                    };
+                    sessionStorage.setItem(
+                        "userData",
+                        JSON.stringify(updatedUserData)
+                    );
+                    sessionStorage.setItem("isLoggedIn", "true");
+                    setAuth(updatedUserData);
+                    setPermissions(loginData?.rd1);
+                    toast.success("Login successful! Welcome back!", {
+                        icon: "🎉",
+                    });
+                    navigate("/");
+                } catch (error) {
+                    console.error("Socket setup error:", error);
+                    toast.error("Failed to initialize session");
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            // ✅ Socket connection error
+            const handleError = (err) => {
+                console.error("❌ Socket connect error:", err.message);
+                toast.error("Socket connection failed");
+                setIsLoading(false);
+            };
+
+            socket.once("connect", handleConnect);
+            socket.once("connect_error", handleError);
+
+        } catch (err) {
+            console.error("Login error:", err);
+            toast.error("Login failed. Please try again.");
             setIsLoading(false);
-        }
-    };
-
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
-    };
-
-    const handleEmailChange = (e) => {
-        setEmail(e.target.value);
-        if (e.target.value && e.target.value.includes('@')) {
-            toast.dismiss();
-        }
-    };
-
-    const handlePasswordChange = (e) => {
-        setPassword(e.target.value);
-        if (e.target.value && e.target.value.length >= 6) {
-            toast.dismiss();
         }
     };
 
     return (
         <div className="login-container">
-            <Toaster {...toastConfig} />
-            <div className="login-card">
-                <div className="login-content">
-                    <div className="logo-section">
-                        <div className="loginPage_logoDiv">
-                            <img src="./logo.png" alt="logo" className='loginPage_logo' />
+            <div className="login-wrapper">
+                <div className="decorative-circle decorative-circle--top-left"></div>
+
+                <Paper className="login-paper">
+                    {/* Left Side: Login Form */}
+                    <div className="login-form-section">
+                        <div className="login-form-content">
+                            <Typography variant="h5" className="login-title">CHAT LOGIN</Typography>
+                            <Typography variant="body2" className="login-subtitle">
+                                Welcome back! Let’s get you connected.
+                            </Typography>
+
+                            {/* Project Code */}
+                            <div className="form-group">
+                                <Typography variant="subtitle1" className="field-label">
+                                    Company Code
+                                </Typography>
+                                <Box
+                                    sx={{
+                                        position: "relative",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        width: "100%",
+                                    }}
+                                >
+                                    <TextField
+                                        name="companycode"
+                                        fullWidth
+                                        placeholder="Enter project code"
+                                        value={credentials.companycode}
+                                        onChange={handleChange}
+                                        onBlur={handleCompanyCodeBlur}
+                                        error={!!errors.companycode}
+                                        helperText={errors.companycode}
+                                        {...commonTextFieldProps}
+                                    />
+
+                                    {((token?.sv && token?.yc) && credentials.companycode.trim() !== "") && (
+                                        <Box
+                                            sx={{
+                                                position: "absolute",
+                                                right: "-30px",
+                                                top: "50%",
+                                                transform: "translateY(-50%)",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                pointerEvents: "none",
+                                            }}
+                                        >
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 512 512"
+                                                width="22"
+                                                height="22"
+                                                fill="#1b9a58"
+                                            >
+                                                <path d="M437.016 74.984c-99.979-99.979-262.075-99.979-362.033 0s-99.978 262.073.004 362.031 262.05 99.978 362.029-0.002 99.979-262.075 0-362.029zm-30.168 331.86c-83.318 83.318-218.396 83.318-301.691.004s-83.318-218.377-0.002-301.693 218.375-83.317 301.691 0 83.314 218.372.002 301.689z" />
+                                                <path d="M368.911 155.586 234.663 289.834l-70.248-70.248c-8.331-8.331-21.839-8.331-30.17 0s-8.331 21.839 0 30.17l85.333 85.333c8.331 8.331 21.839 8.331 30.17 0l149.333-149.333c8.331-8.331 8.331-21.839 0-30.17s-21.839-8.331-30.17 0z" />
+                                            </svg>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </div>
+
+                            {/* User ID */}
+                            <div className="form-group">
+                                <Typography variant="subtitle1" className="field-label">
+                                    User Id
+                                </Typography>
+                                <TextField
+                                    name="userId"
+                                    fullWidth
+                                    placeholder="Enter username"
+                                    value={credentials.userId}
+                                    onChange={handleChange}
+                                    error={!!errors.userId}
+                                    helperText={errors.userId}
+                                    {...commonTextFieldProps}
+                                />
+                            </div>
+
+                            {/* Password */}
+                            <div className="form-group">
+                                <Typography variant="subtitle1" className="field-label">
+                                    Password
+                                </Typography>
+                                <TextField
+                                    name="password"
+                                    fullWidth
+                                    placeholder="Enter password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={credentials.password}
+                                    onChange={handleChange}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            const isDisabled =
+                                                !token ||
+                                                credentials.companycode.trim() === "" ||
+                                                errors.companycode === "Invalid company code" ||
+                                                (credentials.companycode.trim() !== "" && !token?.sv && !token?.yc);
+
+                                            if (!isDisabled) {
+                                                handleSubmit(e);
+                                            }
+                                        }
+                                    }}
+                                    error={!!errors.password}
+                                    helperText={errors.password}
+                                    {...commonTextFieldProps}
+                                    InputProps={{
+                                        endAdornment: (
+                                            <InputAdornment position="end">
+                                                <IconButton
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Enter" || e.key === " ") {
+                                                            e.preventDefault();
+                                                            setShowPassword((prev) => !prev);
+                                                        }
+                                                    }}
+                                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                                    tabIndex={0}
+                                                    className="password-toggle"
+                                                >
+                                                    {showPassword ? <EyeOff width={20} height={20} /> : <Eye width={20} height={20} />}
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    }}
+                                />
+                            </div>
+
+
+                            <div className="login-button-container">
+                                <Button
+                                    variant="contained"
+                                    className="buttonClassname login-button"
+                                    onClick={handleSubmit}
+                                    disabled={
+                                        !token ||
+                                        credentials.companycode.trim() === "" ||
+                                        errors.companycode === "Invalid company code" ||
+                                        (credentials.companycode.trim() !== "" && !token?.sv && !token?.yc)
+                                    }
+                                >
+                                    {isLoading ? 'Logging...' : 'Login Now'}
+                                </Button>
+                            </div>
+
                         </div>
-                        <div className="logo-underline"></div>
-                        <p className="logo-subtitle">Sign in to your account to continue</p>
                     </div>
 
-                    <form className="login-form" onSubmit={handleSubmit}>
-                        <div className="input-group">
-                            <div className="input-wrapper">
-                                <Mail className="input-icon" size={20} />
-                                <input
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    value={email}
-                                    onChange={handleEmailChange}
-                                    className="form-input"
-                                    required
-                                    disabled={isLoading}
+                    {/* Right Side: Image */}
+                    {!isMobile && (
+                        <div className="login-image-section">
+                            <div className="image-container">
+                                <Lottie
+                                    animationData={loginPageLottie}
+                                    loop={true}
+                                    className="login-image"
                                 />
                             </div>
                         </div>
+                    )}
+                </Paper>
 
-                        <div className="input-group">
-                            <div className="input-wrapper">
-                                <Lock className="input-icon" size={20} />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    placeholder="Password"
-                                    value={password}
-                                    onChange={handlePasswordChange}
-                                    className="form-input"
-                                    required
-                                    disabled={isLoading}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={togglePasswordVisibility}
-                                    className="password-toggle"
-                                    disabled={isLoading}
-                                >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                </button>
-                            </div>
-                        </div>
+                <div className="decorative-circle decorative-circle--bottom-right"></div>
 
-                        <div className="checkbox-group">
-                            <label className="checkbox-label">
-                                <input
-                                    type="checkbox"
-                                    checked={rememberMe}
-                                    onChange={(e) => setRememberMe(e.target.checked)}
-                                    className="checkbox-input"
-                                    disabled={isLoading}
-                                />
-                                <span className="checkbox-custom"></span>
-                                Remember me
-                            </label>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="sign-in-button"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? 'Signing in...' : 'Sign In'}
-                        </button>
-                    </form>
-                </div>
+                {/* Version Display */}
+            </div>
+            <div className="version-display">
+                {versionString}
             </div>
         </div>
     );
 };
 
-export default OptigoLogin;
+export default LoginPage1;

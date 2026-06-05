@@ -1,19 +1,12 @@
 import axios from "axios";
-import { APIURL, getHeaders, getLoginHeaders } from "./Config";
+import { APIURL, getHeaders } from "./Config";
 
-export const CommonAPI = async (body, version, pageName, signal) => {
+export const CommonAPI = async (body) => {
     try {
         const headers = getHeaders();
-        const loginHeader = getLoginHeaders();
-
-        // Fix the axios call to properly pass the signal
-        const { data } = await axios.post(APIURL, body, { 
-            headers: version === "login" ? loginHeader : headers,
-            ...(signal && { signal }) // Only add signal if it exists
-        });
+        const { data } = await axios.post(APIURL, body, { headers: headers });
         return data;
     } catch (error) {
-        // Check if it's an abort error
         if (axios.isCancel(error)) {
             console.log('Request canceled:', error.message);
             throw new Error('AbortError');

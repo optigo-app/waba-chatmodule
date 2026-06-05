@@ -46,6 +46,14 @@ export const getCustomerDisplayName = (customer) => {
     const phone = String(customer?.CustomerPhone ?? '').trim();
     if (phone) return phone;
 
+    const sender = String(customer?.Sender ?? '').trim();
+    if (sender) {
+        if (customer?.Direction === 0 || customer?.Direction === '0' || 
+            (customer?.Direction === undefined && /^\+?\d{5,}$/.test(sender))) {
+            return sender;
+        }
+    }
+
     const fallback = String(customer?.name ?? '').trim();
     if (fallback) return fallback;
 
@@ -58,6 +66,14 @@ export const getCustomerAvatarSeed = (customer) => {
 
     const phone = String(customer?.CustomerPhone ?? '').trim();
     if (phone) return phone;
+
+    const sender = String(customer?.Sender ?? '').trim();
+    if (sender) {
+        if (customer?.Direction === 0 || customer?.Direction === '0' || 
+            (customer?.Direction === undefined && /^\+?\d{5,}$/.test(sender))) {
+            return sender;
+        }
+    }
 
     return String(customer?.name ?? '').trim();
 };
@@ -77,4 +93,9 @@ export const getWhatsAppAvatarConfig = (name, size = 40) => {
         },
         children: getInitials(cleaned),
     };
+};
+
+export const getVersionString = () => {
+    const spVersion = process.env.REACT_APP_SP_VERSION || 'V2';
+    return `${spVersion}_1.0.0_25052026130916`;
 };

@@ -40,6 +40,99 @@
             }
         }
 
+        &.video {
+            margin-bottom: 8px;
+            overflow: hidden;
+            border-radius: 4px;
+            position: relative;
+
+            .video-wrapper {
+                position: relative;
+                width: 100%;
+                max-height: 200px;
+                background: #000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                .header-video {
+                    width: 100%;
+                    height: auto;
+                    max-height: 200px;
+                    object-fit: cover;
+                    display: block;
+                }
+            }
+
+            .video-overlay {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0, 0, 0, 0.3);
+                pointer-events: none;
+                transition: background 0.2s ease;
+
+                .play-icon {
+                    color: #fff;
+                    opacity: 0.9;
+                    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+                }
+            }
+
+            &:hover .video-overlay {
+                background: rgba(0, 0, 0, 0.45);
+            }
+        }
+
+        &.document {
+            margin-bottom: 8px;
+            padding: 16px;
+            background: #fff;
+            border: 1px solid #e9edef;
+            border-radius: 8px;
+
+            .document-link {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-decoration: none;
+                color: #008069;
+                font-weight: 600;
+                transition: color 0.2s ease;
+
+                &:hover {
+                    color: #00a884;
+                }
+
+                .document-icon {
+                    color: #667781;
+                    flex-shrink: 0;
+                }
+
+                .document-label {
+                    font-size: 0.9rem;
+                }
+            }
+        }
+
+        &.location {
+            margin-bottom: 8px;
+            padding: 12px 16px;
+            background: #e7f3ef;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .location-label {
+                font-weight: 600;
+                font-size: 0.9rem;
+                color: #008069;
+            }
+        }
+
         &.text {
             font-weight: 600;
             font-size: 1rem;
@@ -175,19 +268,26 @@
             }
 
             .card-component-wrapper {
-                &:first-child .template-header.image .header-image {
+                &:first-child .template-header.image .header-image,
+                &:first-child .template-header.video .video-wrapper {
                     border-radius: 12px 12px 0 0;
                 }
             }
 
-            .template-header.image {
+            .template-header.image,
+            .template-header.video {
                 margin-bottom: 0;
                 border-radius: 0;
 
-                .header-image {
+                .header-image,
+                .header-video {
                     max-height: 140px;
                     width: 100%;
                     object-fit: cover;
+                }
+
+                .video-wrapper {
+                    max-height: 140px;
                 }
             }
 

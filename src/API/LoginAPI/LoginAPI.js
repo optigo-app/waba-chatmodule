@@ -1,5 +1,4 @@
 import { CommonAPI } from "../InitialApi/CommonApi";
-import { CommonAPI1 } from "../InitialApi/CommonApi1";
 
 export const fetchLoginApi = async (data) => {
     try {

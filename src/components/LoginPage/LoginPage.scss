@@ -1,257 +1,326 @@
-.login-container {
-    height: 100%;
+@use "../../global.scss" as *;
+
+$background-light: rgba($primary-main, 0.08);
+$white: #ffffff;
+$gray: $text2ndColor;
+$text-muted: rgba($placeholderColor, 0.6);
+
+// Mixins
+@mixin flex-center {
     display: flex;
     align-items: center;
     justify-content: center;
-    // background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    font-family: 'Poppins', sans-serif;
 }
 
-.login-card {
+@mixin circle($size: 80px, $color: $primary-main) {
+    width: $size;
+    height: $size;
+    background-color: $color;
+    border-radius: 50%;
+}
+
+// Main container
+.login-container {
+    position: relative;
+    @include flex-center;
+    height: 100vh;
+    padding: 0 8px;
+    background: $sidebar-Bgcolor;
+
+    @media (min-width: 600px) {
+        padding: 0 16px;
+    }
+
+    @media (min-width: 900px) {
+        padding: 0 16px;
+    }
+}
+
+// Login wrapper
+.login-wrapper {
     width: 100%;
-    max-width: 500px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.1), 0 16px 32px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    border-radius: 20px;
+    background: $background-light;
+    padding: 0;
+    position: relative;
+
+    @media (min-width: 600px) {
+        max-width: 600px;
+        padding: 16px;
+    }
+
+    @media (min-width: 900px) {
+        max-width: 900px;
+        padding: 64px;
+    }
+
+    @media (min-width: 1200px) {
+        max-width: 1000px;
+    }
+}
+
+// Decorative circles
+.decorative-circle {
+    position: absolute;
+    @include circle();
+    z-index: 0;
+
+    &--top-left {
+        top: 35px;
+        left: 35px;
+        background: $button-Bgcolor;
+    }
+
+    &--bottom-right {
+        bottom: 35px;
+        right: 35px;
+        background-color: $sidebar-Bgcolor;
+    }
+}
+
+// Main paper container
+.login-paper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 600px;
+    border-radius: 20px !important;
+    box-shadow: none !important;
     overflow: hidden;
-    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+
+    @media (min-width: 600px) {
+        flex-direction: row;
+    }
 }
 
-.login-content {
-    padding: 48px 40px;
+// Login form section
+.login-form-section {
+    flex: 1;
+    background: $white;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+
+    @media (min-width: 600px) {
+        padding: 40px;
+    }
 }
 
-.logo-section {
-    text-align: center;
-    margin-bottom: 35px;
+.login-form-content {
+    width: 100%;
+    max-width: 350px;
     display: flex;
     flex-direction: column;
     align-items: center;
+}
 
-    .loginPage_logoDiv {
-        width: 150px; // Or adjust as needed
-        height: 50px;
-        margin-bottom: 8px;
+// Typography styles
+.login-title {
+    font-weight: bold !important;
+    margin-bottom: 8px;
+    color: $titleColor;
+    font-family: $font-family;
+}
 
-        .loginPage_logo {
+.login-subtitle {
+    color: $text2ndColor;
+    margin-bottom: 26px !important;
+    font-family: $font-family;
+}
+
+// Form styles
+.form-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+    gap: 1px;
+    width: 100%;
+    margin-bottom: 20px;
+
+    .field-label {
+        margin-bottom: 4px;
+        display: block;
+    }
+}
+
+// Password toggle button
+.password-toggle {
+    color: $text-muted;
+}
+
+// Login button
+.login-button-container {
+    margin-top: 16px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+
+    button {
+        background: $button-Bgcolor;
+        color: $button-color !important;
+        border-radius: 16px !important;
+        font-family: $font-family !important;
+        text-transform: capitalize !important;
+    }
+}
+
+// Image section
+.login-image-section {
+    flex: 1;
+    background: $button-Bgcolor;
+    @include flex-center;
+
+    .image-container {
+        width: 100%;
+        height: 100%;
+        border-radius: 20px;
+        @include flex-center;
+
+        .login-image {
             width: 100%;
-            height: auto;
-            object-fit: contain;
+            border-radius: 15px;
         }
     }
+}
 
-    .logo-underline {
-        width: 60px;
-        height: 3px;
-        background-color: #667eea; // MUI indigo
-        border-radius: 2px;
-        margin-bottom: 12px;
-    }
-
-    .logo-subtitle {
-        font-size: 16px;
-        color: #555;
+// tab specific adjustments
+@media (max-width: 768px) {
+    .login-wrapper {
+        max-width: 700px;
     }
 }
 
-.login-form {
-    margin-bottom: 32px;
+// Mobile specific adjustments
+@media (max-width: 599px) {
+    .login-image-section {
+        display: none;
+    }
+
+    .login-form-section {
+        justify-content: center;
+    }
 }
 
-.input-group {
-    margin-bottom: 24px;
-}
-
-.input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.input-icon {
+// Version display
+.version-display {
     position: absolute;
-    left: 16px;
-    color: #9ca3af;
+    bottom: 16px;
+    right: 16px;
+    font-size: 12px;
+    color: #fff;
+    font-family: $font-family;
     z-index: 2;
 }
 
-.form-input {
-    width: 100%;
-    padding: 16px 16px 16px 50px;
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
-    font-size: 1rem;
-    background: #ffffff;
-    transition: all 0.3s ease;
-    outline: none;
+.textfieldsClass {
+    font-size: 14px;
+    color: $text2ndColor;
 
-    &:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-        transform: translateY(-1px);
+    .MuiTypography-root {
+        color: $text2ndColor;
+        font-size: 14px;
     }
 
-    &::placeholder {
-        color: #9ca3af;
-        font-weight: 400;
+    .MuiOutlinedInput-root {
+        color: $text2ndColor;
+        border-radius: 12px !important;
+        padding: 0px 5px !important;
+        font-size: 14px;
     }
 
-    &:disabled {
-        background-color: #f9fafb;
-        color: #6b7280;
-        cursor: not-allowed;
-        opacity: 0.6;
+    .MuiPickersDay-root {
+        background: $button-Bgcolor;
+        color: $text-white;
+    }
 
-        &::placeholder {
-            color: #9ca3af;
+    .MuiOutlinedInput-root fieldset {
+        border-color: rgba(0, 0, 0, 0.18);
+    }
+
+    .MuiOutlinedInput-root:hover fieldset {
+        border-color: $button-Bordercolor;
+    }
+
+    .MuiOutlinedInput-root.Mui-focused fieldset {
+        border-color: $button-Bordercolor;
+    }
+
+    .MuiInputBase-input {
+        color: $titleColor !important;
+        padding: 7px 5px !important;
+
+        &:not(textarea) {
+            padding: 7px 5px !important;
+        }
+
+        &.MuiInputBase-inputSizeSmall {
+            padding: 7px 5px !important;
+        }
+
+        &.MuiInputBase-inputAdornedStart:not(.MuiAutocomplete-input) {
+            padding-left: 0 !important;
+        }
+
+        &.MuiInputBase-inputAdornedEnd:not(.MuiAutocomplete-input) {
+            padding-right: 0 !important;
+        }
+
+        &:not(.MuiInputBase-readOnly):not([readonly])::placeholder {
+            transition: 200ms !important;
+            color: $placeholderColor;
         }
     }
-}
 
-.password-toggle {
-    position: absolute;
-    right: 16px;
-    background: none;
-    border: none;
-    color: #9ca3af;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
+    .MuiOutlinedInput-root.Mui-focused {
+        box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px, rgba(0, 0, 0, 0.03) 0px 0px 0px 1px !important;
 
-    &:hover:not(:disabled) {
-        color: #667eea;
-        background: rgba(102, 126, 234, 0.1);
+        .MuiInputBase-input:not(.MuiInputBase-readOnly):not([readonly])::placeholder {
+            transform: translateX(4px);
+        }
     }
 
-    &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-}
+    .MuiInputAdornment-root {
+        .MuiButtonBase-root {
+            padding: 0px 2px !important;
+            margin-right: 0px;
 
-.checkbox-group {
-    margin-bottom: 32px;
-}
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    font-size: 0.95rem;
-    color: #6b7280;
-    font-weight: 400;
-
-    &:has(.checkbox-input:disabled) {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-}
-
-.checkbox-input {
-    display: none;
-
-    &:disabled + .checkbox-custom {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-}
-
-.checkbox-custom {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #d1d5db;
-    border-radius: 6px;
-    margin-right: 12px;
-    position: relative;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-}
-
-.checkbox-input:checked + .checkbox-custom {
-    background: #667eea;
-    border-color: #667eea;
-}
-
-.checkbox-input:checked + .checkbox-custom::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.sign-in-button {
-    width: 100%;
-    padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-
-    &:hover:not(:disabled) {
-        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+            .MuiSvgIcon-root {
+                width: 22px;
+                height: 22px;
+                color: $placeholderColor;
+            }
+        }
     }
 
-    &:active:not(:disabled) {
-        transform: translateY(0);
+    // Apply to Chips
+    .MuiChip-root {
+        color: $titleColor;
+        cursor: pointer;
+
+        &:hover {
+            background: $button-Bgcolor !important;
+            color: $text-white;
+        }
+
+        .MuiChip-deleteIcon {
+            &:hover {
+                color: $text-white;
+            }
+        }
+
+        .MuiChip-label {
+            font-size: 12px !important;
+        }
     }
 
-    &:disabled {
-        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
-        cursor: not-allowed;
-        opacity: 0.6;
-        transform: none;
-        box-shadow: 0 4px 16px rgba(156, 163, 175, 0.3);
-    }
-}
-
-.additional-links {
-    text-align: center;
-    margin-top: 24px;
-}
-
-.link-text {
-    font-size: 0.9rem;
-    color: #6b7280;
-    margin-bottom: 12px;
-}
-
-.link {
-    color: #667eea;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &:hover {
-        text-decoration: underline;
-        color: #5a6fd8;
-    }
-}
-
-@media (max-width: 480px) {
-    .login-content {
-        padding: 32px 24px;
-    }
-
-    .logo-title {
-        font-size: 2.5rem;
-    }
-
-    .login-card {
-        border-radius: 16px;
-        margin: 16px;
+    .MuiFormHelperText-root {
+        margin-top: 4px;
+        margin-inline: 5px !important;
     }
 }

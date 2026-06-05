@@ -52,16 +52,12 @@ const ProfileAvatar = () => {
 
                 // You can add additional success handling here if needed
                 if (syncData) {
-                    // Show success message or update UI as needed
-                    console.log('Sync was successful');
                     return true;
                 }
                 throw new Error('No data returned from sync');
             });
 
             if (!syncSuccess) {
-                // Handle sync failure (error is already logged by startSync)
-                console.log('Sync completed with errors');
             }
         } catch (error) {
             // This catch block is a fallback in case something unexpected happens

@@ -8,7 +8,8 @@ import {
   Box,
   useTheme,
   CircularProgress,
-  Slide
+  Slide,
+  Alert
 } from '@mui/material';
 import {
   Close as CloseIcon,
@@ -17,7 +18,10 @@ import {
   ChevronRight as ChevronRightIcon,
   Description as DescriptionIcon,
   PictureAsPdf as PdfIcon,
-  InsertDriveFile as FileIcon
+  InsertDriveFile as FileIcon,
+  MusicNote as MusicNoteIcon,
+  AudioFile as AudioFileIcon,
+  TableChart as TableChartIcon
 } from '@mui/icons-material';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Keyboard, Thumbs, Zoom } from 'swiper/modules';
@@ -29,6 +33,10 @@ import 'swiper/css/pagination';
 import 'swiper/css/zoom';
 import 'swiper/css/thumbs';
 
+// Import preview components
+import ExcelPreview from '../ExcelPreview/ExcelPreview';
+import WordPreview from '../WordPreview/WordPreview';
+
 import './MediaViewer.scss';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -39,9 +47,28 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 const getMediaType = (item) => {
   if (item.type) return item.type;
   const ext = item.name?.split('.').pop()?.toLowerCase();
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
-  if (['mp4', 'webm', 'ogg'].includes(ext)) return 'video';
-  if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'].includes(ext)) return 'document';
+  
+  // Images
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) return 'image';
+  
+  // Videos
+  if (['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'].includes(ext)) return 'video';
+  
+  // Audio
+  if (['mp3', 'wav', 'ogg', 'aac', 'm4a', 'flac', 'wma'].includes(ext)) return 'audio';
+  
+  // PDF
+  if (ext === 'pdf') return 'pdf';
+  
+  // Excel
+  if (['xls', 'xlsx', 'csv'].includes(ext)) return 'excel';
+  
+  // Word
+  if (['doc', 'docx'].includes(ext)) return 'word';
+  
+  // Other documents
+  if (['txt', 'rtf'].includes(ext)) return 'document';
+  
   return 'unknown';
 };
 
@@ -106,6 +133,198 @@ const MediaViewer = ({ mediaItems = [], initialIndex = 0, onClose }) => {
     );
   };
 
+  // Audio Renderer
+  const AudioRenderer = ({ item }) => {
+    const audioRef = useRef(null);
+
+    return (
+      <Box className="audio-container">
+        <Box className="audio-card">
+          <MusicNoteIcon sx={{ fontSize: 80, color: theme.palette.primary.main, mb: 2 }} />
+          <Typography variant="h6" className="audio-name">{item.name}</Typography>
+          {item.size && <Typography variant="body2" color="textSecondary">{item.size}</Typography>}
+          
+          <Box mt={3} width="100%" display="flex" justifyContent="center">
+            <audio
+              ref={audioRef}
+              src={item.src}
+              controls
+              style={{ width: '100%', maxWidth: 400 }}
+            />
+          </Box>
+
+          <Box mt={2}>
+            <IconButton
+              onClick={handleDownload}
+              sx={{ bgcolor: theme.palette.primary.main, color: '#fff', '&:hover': { bgcolor: theme.palette.primary.dark } }}
+            >
+              <DownloadIcon />
+            </IconButton>
+          </Box>
+        </Box>
+      </Box>
+    );
+  };
+
+  // PDF Renderer
+  const PDFRenderer = ({ item }) => {
+    const [error, setError] = useState(false);
+
+    return (
+      <Box className="pdf-container">
+        {error ? (
+          <Box className="pdf-error-card">
+            <PdfIcon sx={{ fontSize: 80, color: '#F40F02', mb: 2 }} />
+            <Typography variant="h6" className="pdf-name">{item.name}</Typography>
+            <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+              Unable to preview PDF. Please download to view.
+            </Alert>
+            <IconButton
+              onClick={handleDownload}
+              sx={{ bgcolor: theme.palette.primary.main, color: '#fff', '&:hover': { bgcolor: theme.palette.primary.dark } }}
+            >
+              <DownloadIcon />
+            </IconButton>
+          </Box>
+        ) : (
+          <iframe
+            src={item.src}
+            title={item.name}
+            onError={() => setError(true)}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              minHeight: '80vh'
+            }}
+          />
+        )}
+      </Box>
+    );
+  };
+
+  // Excel Renderer
+  const ExcelRenderer = ({ item }) => {
+    const [fileObject, setFileObject] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+      const fetchFile = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const response = await fetch(item.src);
+          const blob = await response.blob();
+          const file = new File([blob], item.name, {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          });
+          setFileObject(file);
+        } catch (err) {
+          console.error('Error loading Excel file:', err);
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchFile();
+    }, [item.src, item.name]);
+
+    if (loading) {
+      return (
+        <Box className="excel-container" display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Box className="excel-error-card">
+          <TableChartIcon sx={{ fontSize: 80, color: '#217346', mb: 2 }} />
+          <Typography variant="h6">{item.name}</Typography>
+          <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+            Error loading Excel file: {error}
+          </Alert>
+          <IconButton
+            onClick={handleDownload}
+            sx={{ bgcolor: theme.palette.primary.main, color: '#fff', '&:hover': { bgcolor: theme.palette.primary.dark } }}
+          >
+            <DownloadIcon />
+          </IconButton>
+        </Box>
+      );
+    }
+
+    return (
+      <Box className="excel-container">
+        {fileObject && <ExcelPreview fileObject={fileObject} />}
+      </Box>
+    );
+  };
+
+  // Word Renderer
+  const WordRenderer = ({ item }) => {
+    const [fileObject, setFileObject] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+      const fetchFile = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const response = await fetch(item.src);
+          const blob = await response.blob();
+          const file = new File([blob], item.name, {
+            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+          });
+          setFileObject(file);
+        } catch (err) {
+          console.error('Error loading Word file:', err);
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchFile();
+    }, [item.src, item.name]);
+
+    if (loading) {
+      return (
+        <Box className="word-container" display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    if (error) {
+      return (
+        <Box className="word-error-card">
+          <DescriptionIcon sx={{ fontSize: 80, color: '#2B579A', mb: 2 }} />
+          <Typography variant="h6">{item.name}</Typography>
+          <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+            Error loading Word file: {error}
+          </Alert>
+          <IconButton
+            onClick={handleDownload}
+            sx={{ bgcolor: theme.palette.primary.main, color: '#fff', '&:hover': { bgcolor: theme.palette.primary.dark } }}
+          >
+            <DownloadIcon />
+          </IconButton>
+        </Box>
+      );
+    }
+
+    return (
+      <Box className="word-container">
+        {fileObject && <WordPreview fileObject={fileObject} />}
+      </Box>
+    );
+  };
+
   const renderDocument = (item) => {
     const ext = item.name?.split('.').pop()?.toLowerCase();
     let Icon = FileIcon;
@@ -118,7 +337,7 @@ const MediaViewer = ({ mediaItems = [], initialIndex = 0, onClose }) => {
       Icon = DescriptionIcon;
       color = '#2B579A';
     } else if (['xls', 'xlsx'].includes(ext)) {
-      Icon = DescriptionIcon; // Or specific excel icon
+      Icon = TableChartIcon;
       color = '#217346';
     }
 
@@ -126,7 +345,7 @@ const MediaViewer = ({ mediaItems = [], initialIndex = 0, onClose }) => {
       <Box className="document-preview-card">
         <Icon sx={{ fontSize: 80, color, mb: 2 }} />
         <Typography variant="h6" className="doc-name">{item.name}</Typography>
-        <Typography variant="body2" color="textSecondary">{item.size}</Typography>
+        {item.size && <Typography variant="body2" color="textSecondary">{item.size}</Typography>}
 
         <Box mt={3}>
           <IconButton
@@ -168,15 +387,19 @@ const MediaViewer = ({ mediaItems = [], initialIndex = 0, onClose }) => {
         {mediaItems.length === 1 ? (
           // Single Item View - No Swiper
           <Box className="media-slide-content single-view">
-            {(() => {
-              const item = mediaItems[0];
-              const type = getMediaType(item);
-              if (type === 'image') return <img src={item.src} alt={item.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />;
-              if (type === 'video') return <VideoRenderer item={item} isActive={true} />;
-              if (type === 'document') return renderDocument(item);
-              return null;
-            })()}
-          </Box>
+          {(() => {
+            const item = mediaItems[0];
+            const type = getMediaType(item);
+            if (type === 'image') return <img src={item.src} alt={item.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />;
+            if (type === 'video') return <VideoRenderer item={item} isActive={true} />;
+            if (type === 'audio') return <AudioRenderer item={item} />;
+            if (type === 'pdf') return <PDFRenderer item={item} />;
+            if (type === 'excel') return <ExcelRenderer item={item} />;
+            if (type === 'word') return <WordRenderer item={item} />;
+            if (type === 'document') return renderDocument(item);
+            return null;
+          })()}
+        </Box>
         ) : (
           // Multi Item View - With Swiper
           <>
@@ -205,6 +428,10 @@ const MediaViewer = ({ mediaItems = [], initialIndex = 0, onClose }) => {
                       <Box className="media-slide-content">
                         {type === 'image' && renderImage(item)}
                         {type === 'video' && <VideoRenderer item={item} isActive={isActive} />}
+                        {type === 'audio' && <AudioRenderer item={item} />}
+                        {type === 'pdf' && <PDFRenderer item={item} />}
+                        {type === 'excel' && <ExcelRenderer item={item} />}
+                        {type === 'word' && <WordRenderer item={item} />}
                         {type === 'document' && renderDocument(item)}
                         {type === 'unknown' && (
                           <Box display="flex" flexDirection="column" alignItems="center">
@@ -247,6 +474,10 @@ const MediaViewer = ({ mediaItems = [], initialIndex = 0, onClose }) => {
                   ) : (
                     <Box className={`thumb-placeholder ${type}`}>
                       {type === 'video' && '🎬'}
+                      {type === 'audio' && '🎵'}
+                      {type === 'pdf' && '📕'}
+                      {type === 'excel' && '📊'}
+                      {type === 'word' && '📄'}
                       {type === 'document' && '📄'}
                     </Box>
                   )}

@@ -1,4 +1,4 @@
-import { CommonAPI1 } from "../InitialApi/CommonApi1";
+import { CommonAPI } from "../InitialApi/CommonApi";
 
 export const getToken = async (companyCode) => {
 
@@ -9,7 +9,7 @@ export const getToken = async (companyCode) => {
             "f": "Gettoken By Company Code (ConversionDetail)"
         }
 
-        const response = await CommonAPI1(body);
+        const response = await CommonAPI(body);
         if (response?.Data) {
             return response?.Data;
         } else {

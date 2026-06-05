@@ -1,9 +1,8 @@
-import './App.css';
 import { useEffect, useState, useContext, useRef } from 'react';
 import { useNavigate, Routes, Route, useLocation, matchPath } from 'react-router-dom';
 import { Box } from '@mui/material';
 import toast, { Toaster } from 'react-hot-toast';
-import LoginPage1 from './components/LoginPage/LoginPage1';
+import LoginPage from './components/LoginPage/LoginPage';
 import Home from './components/Home/Home';
 import Customers from './components/Customers/Customers';
 import Header from './components/Header/Header';
@@ -362,7 +361,7 @@ function App() {
       {!isAuthChecking && (
         <div className="app_mainDiv">
           <Routes>
-            <Route path="/login" element={<LoginPage1 />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/session-check" element={<LoginExists />} />
             <Route
               path="*"

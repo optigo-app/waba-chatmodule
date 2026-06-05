@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Box, CircularProgress, IconButton, Skeleton, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { ChevronDown, Download, FileText } from 'lucide-react';
@@ -61,6 +61,143 @@ const renderMessageWithLinks = (text, theme) => {
     });
 };
 
+// Video Message Component
+const VideoMessage = ({ msg, src, mediaKey, loadedMedia, markLoaded, handleMediaClick, theme, UploadProgressOverlay }) => {
+    const videoRef = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    
+    const handleVideoClick = (e) => {
+        e.stopPropagation();
+        if (videoRef.current) {
+            if (videoRef.current.paused) {
+                videoRef.current.play();
+                setIsPlaying(true);
+            } else {
+                videoRef.current.pause();
+                setIsPlaying(false);
+            }
+        }
+    };
+
+    const handleVideoDoubleClick = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (videoRef.current) {
+            videoRef.current.pause();
+        }
+        handleMediaClick({
+            mediaItems: [{
+                url: src,
+                mimeType: 'video/*',
+                filename: 'video'
+            }]
+        }, 0);
+    };
+
+    return (
+        <div
+            className="message-video"
+            style={{
+                position: 'relative',
+                width: '100%',
+                height: 240,
+                borderRadius: 8,
+                overflow: 'hidden',
+            }}
+        >
+            {!loadedMedia[mediaKey] && (
+                <Skeleton
+                    variant="rounded"
+                    className="media-skeleton"
+                    sx={{
+                        borderRadius: 0,
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                    }}
+                />
+            )}
+
+            <div
+                onClick={handleVideoClick}
+                onDoubleClick={handleVideoDoubleClick}
+                style={{
+                    cursor: 'pointer',
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%'
+                }}
+            >
+                {src &&
+                    <video
+                        ref={videoRef}
+                        src={src}
+                        onLoadedData={() => markLoaded(mediaKey)}
+                        onError={() => markLoaded(mediaKey)}
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            opacity: loadedMedia[mediaKey] ? 1 : 0,
+                        }}
+                    />
+                }
+                
+                {/* Video overlay indicator */}
+                {!isPlaying && loadedMedia[mediaKey] && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: alpha('#000', 0.3),
+                            transition: 'opacity 0.2s',
+                            '&:hover': {
+                                backgroundColor: alpha('#000', 0.4),
+                            }
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: '50%',
+                                backgroundColor: alpha('#fff', 0.9),
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: 0,
+                                    height: 0,
+                                    borderLeft: '20px solid #000',
+                                    borderTop: '12px solid transparent',
+                                    borderBottom: '12px solid transparent',
+                                    marginLeft: '4px',
+                                }}
+                            />
+                        </Box>
+                    </Box>
+                )}
+            </div>
+            {msg.isUploading && (
+                <UploadProgressOverlay percent={msg.percent} />
+            )}
+        </div>
+    );
+};
+
 const MessageContent = ({
     msg,
     isOutgoing,
@@ -85,8 +222,7 @@ const MessageContent = ({
     handleMediaClick,
     getMessageStatusIcon,
 }) => {
-
-    console.log(msg);
+    console.log("dlkls", msg)
 
     const theme = useTheme();
 
@@ -495,62 +631,16 @@ const MessageContent = ({
                     const mediaKey = getMediaKey(msg, index);
                     const src = getMediaSrcForMessage(msg);
                     return (
-                        <div
-                            className="message-video"
-                            style={{
-                                position: 'relative',
-                                width: '100%',
-                                height: 240,
-                                borderRadius: 8,
-                                overflow: 'hidden',
-                            }}
-                        >
-                            {!loadedMedia[mediaKey] && (
-                                <Skeleton
-                                    variant="rounded"
-                                    className="media-skeleton"
-                                    sx={{
-                                        borderRadius: 0,
-                                        position: 'absolute',
-                                        inset: 0,
-                                        width: '100%',
-                                        height: '100%',
-                                    }}
-                                />
-                            )}
-
-                            <div onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                handleMediaClick({
-                                    mediaItems: [{
-                                        url: src,
-                                        mimeType: 'video/*',
-                                        filename: 'video'
-                                    }]
-                                }, 0);
-                            }} style={{ cursor: 'pointer' }}>
-                                {src &&
-                                    <video
-                                        src={src}
-                                        controls
-                                        onLoadedData={() => markLoaded(mediaKey)}
-                                        onError={() => markLoaded(mediaKey)}
-                                        style={{
-                                            width: '100%',
-                                            height: '100%',
-                                            objectFit: 'cover',
-                                            opacity: loadedMedia[mediaKey] ? 1 : 0,
-                                        }}
-                                        onClick={(e) => e.stopPropagation()}
-                                    />
-                                }
-                            </div>
-
-                            {msg.isUploading && (
-                                <UploadProgressOverlay percent={msg.percent} />
-                            )}
-                        </div>
+                        <VideoMessage
+                            msg={msg}
+                            src={src}
+                            mediaKey={mediaKey}
+                            loadedMedia={loadedMedia}
+                            markLoaded={markLoaded}
+                            handleMediaClick={handleMediaClick}
+                            theme={theme}
+                            UploadProgressOverlay={UploadProgressOverlay}
+                        />
                     );
                 })()}
 
@@ -649,7 +739,7 @@ const MessageContent = ({
                 })()}
 
                 {/* Optional caption under media */}
-                {msg?.MessageType !== 'text' && msg?.MessageType !== 'template' && msg?.Message && (
+                {msg?.MessageType !== 'text' && msg?.MessageType !== 'template' && msg?.MessageType !== "button" && msg?.Message && (
                     <Typography
                         variant="body2"
                         className="message-text"

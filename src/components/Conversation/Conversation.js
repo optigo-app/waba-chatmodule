@@ -233,8 +233,6 @@ const Conversation = ({ selectedCustomer, onConversationRead, onViewConversation
     };
 
     const handleMessageEmojiClick = async (emojiObject, message) => {
-        console.log("TCL: handleMessageEmojiClick -> message", message)
-
         try {
             if (!selectedCustomer?.CustomerId && selectedCustomer?.CustomerId !== 0) return;
 

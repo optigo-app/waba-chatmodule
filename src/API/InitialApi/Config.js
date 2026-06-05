@@ -1,7 +1,5 @@
-import { GetCredentialsFromCookie } from "../../utils/FetchToken";
 
-
-const isLocal = ["localhost", '5dmjw0dg-2000.inc1.devtunnels.ms'].includes(window.location.hostname);
+const isLocal = [ '5dmjw0dg-2000.inc1.devtunnels.ms'].includes(window.location.hostname);
 const isNxt = ['nxtwabachat.optigoapps.com'].includes(window.location.hostname);
 const isLocalWeb = ["wabachat.web"].includes(window.location.hostname);
 
@@ -25,59 +23,28 @@ export const SAVEPLAYERID = `${BASE_URL}/report`;
 export const MEDIARETRIEVED = `${BASE_URL}/whatsapp/media/retrieved`;
 
 
-// ✅ Updated function to skip credentials if missing
-export const getHeaders = () => {
-    let credentials = GetCredentialsFromCookie();
-    const version = "v2";
-
-    if (!credentials) {
-        const sessionToken = JSON.parse(sessionStorage.getItem("token"));
-        if (sessionToken) {
-            credentials = {
-                yc: sessionToken.yearcode || sessionToken.yc,
-                sv: sessionToken.sv,
-            };
-        }
+const getAuthData = () => {
+    try {
+        const authData = sessionStorage.getItem("token");
+        return authData ? JSON.parse(authData) : null;
+    } catch (error) {
+        console.error("Error parsing AuthData:", error);
+        return null;
     }
-
-    const headers = {
-        Version: version,
-        sp: "16",
-        whatsappNumber: "622385334300738",
-    };
-
-    if (credentials) {
-        headers.Yearcode = credentials.yc || credentials.yearcode;
-        headers.sv = credentials.sv;
-    }
-
-    return headers;
 };
 
-// ✅ Similarly safe version for login headers
-export const getLoginHeaders = (init = {}) => {
-    let credentials = GetCredentialsFromCookie();
-    const { version = "v2" } = init;
-
-    if (!credentials) {
-        const sessionToken = JSON.parse(sessionStorage.getItem("token"));
-        if (sessionToken) {
-            credentials = {
-                yc: sessionToken.yc,
-                sv: sessionToken.sv,
-            };
-        }
-    }
-
-    const headers = {
-        Version: version,
+// ✅ Updated function to skip credentials if missing
+export const getHeaders = (init = {}) => {
+    const { version = 'v2', token = "" } = init;
+    const AuthData = getAuthData();
+    const sp_version = process.env.REACT_APP_SP_VERSION || "16";
+    
+    return {
+        Authorization: `Bearer ${token}` ?? '',
+        Yearcode: (AuthData?.yc ?? AuthData?.yearcode) ?? "",
+        whatsappNumber: AuthData?.whatsappNumber || "",
+        Version: (AuthData?.cuver ?? version) ?? 'v2',
+        sv: (AuthData?.sv ?? AuthData?.svid) ?? "1",
         sp: "16",
     };
-
-    if (credentials && credentials.yc && credentials.sv) {
-        headers.Yearcode = credentials.yc;
-        headers.sv = credentials.sv;
-    }
-
-    return headers;
 };

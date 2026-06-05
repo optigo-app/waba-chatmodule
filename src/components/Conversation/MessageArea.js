@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext, useCallback, useEffect } from 'react';
-import { Box, CircularProgress, Typography, Avatar } from '@mui/material';
+import { Box, CircularProgress, Typography, Avatar, Tooltip } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import { Clock3, Check, CheckCheck, AlertCircle } from 'lucide-react';
 import MediaPreview from '../MediaPreview/MediaPreview';
@@ -127,19 +127,53 @@ const MessageArea = ({
 
         // Failed status (4)
         if (status === 4) {
+            let errorTitle = 'Message Failed';
+            let errorMessage = 'Message failed to deliver';
+            let errorDetails = '';
+            let errorHref = '';
+
+            try {
+                if (msg?.FailedReson) {
+                    const parsed = JSON.parse(msg.FailedReson);
+                    errorTitle = parsed.title || parsed.message || 'Message Failed';
+                    errorMessage = parsed.message || 'Message failed to deliver';
+                    errorDetails = parsed.error_data?.details || '';
+                    errorHref = parsed.href || '';
+                }
+            } catch (e) {
+                errorMessage = msg?.FailedReson || 'Message failed to deliver';
+            }
+
             return (
-                <Box
-                    component="span"
-                    sx={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        ml: 0.5,
-                        color: failedColor,
-                        lineHeight: 1,
-                    }}
+                <Tooltip
+                    title={
+                        <Box sx={{ p: 1 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5, color: '#fff' }}>
+                                {errorTitle}
+                            </Typography>
+                            {errorDetails && (
+                                <Typography variant="body2" sx={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', fontStyle: 'italic' }}>
+                                    {errorDetails}
+                                </Typography>
+                            )}
+                        </Box>
+                    }
+                    arrow
+                    placement="top"
                 >
-                    <AlertCircle size={16} style={{ color: failedColor, marginTop: "0px" }} />
-                </Box>
+                    <Box
+                        component="span"
+                        sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            ml: 0.5,
+                            color: failedColor,
+                            lineHeight: 1,
+                        }}
+                    >
+                        <AlertCircle size={16} style={{ color: failedColor, marginTop: "0px" }} />
+                    </Box>
+                </Tooltip>
             );
         }
 

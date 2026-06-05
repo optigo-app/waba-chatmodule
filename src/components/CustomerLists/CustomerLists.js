@@ -61,8 +61,6 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     const pageSize = 100;
     const searchTimeoutRef = useRef(null);
     const { auth, PERMISSION_SET, isSyncing } = useContext(LoginContext);
-    console.log("kjdskj", auth)
-
     const can = (perm) => PERMISSION_SET?.has(perm);
 
     const handleCloseMenu = () => {
@@ -427,8 +425,13 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                     return prev;
                 }
 
+                const mergedData = { ...currentChat, ...data };
                 const updatedChat = {
                     ...currentChat,
+                    name: currentChat.name && currentChat.name !== 'Unknown' ? currentChat.name : getCustomerDisplayName(mergedData),
+                    CustomerName: currentChat.CustomerName || data?.CustomerName || '',
+                    CustomerPhone: currentChat.CustomerPhone || data?.CustomerPhone || (data?.Direction === 0 || data?.Direction === '0' ? data?.Sender : ''),
+                    avatarConfig: currentChat.avatarConfig && currentChat.name !== 'Unknown' ? currentChat.avatarConfig : getWhatsAppAvatarConfig(getCustomerAvatarSeed(mergedData)),
                     lastMessage: messagePreviewNode,
                     lastMessageText: messagePreviewText,
                     lastMessageTime: formattedTime,
@@ -453,6 +456,8 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
             } else {
                 const newChat = {
                     ConversationId: data?.ConversationId,
+                    CustomerName: data?.CustomerName || '',
+                    CustomerPhone: data?.CustomerPhone || (data?.Direction === 0 || data?.Direction === '0' ? data?.Sender : ''),
                     name: getCustomerDisplayName(data),
                     lastMessage: messagePreviewNode,
                     lastMessageText: messagePreviewText,
