@@ -38,7 +38,7 @@ import { formatChatTimestamp } from '../../utils/DateFnc';
 import { getCustomerAvatarSeed, getCustomerDisplayName, getWhatsAppAvatarConfig, hasCustomerName } from '../../utils/globalFunc';
 import AddCustomerDialog from '../AddCustomerDialog/AddCustomerDialog';
 import WhatsAppMenu from '../ReusableComponent/WhatsAppMenu';
-import { getMessagePreview, processApiResponse, getCustomerListMenuItems } from './CustomerListFunc';
+import { getMessagePreview, processApiResponse, getCustomerListMenuItems, extractCustomerPhoneFromSocketData } from './CustomerListFunc';
 
 const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, selectedStatus = 'All', selectedTag = 'All', isConversationRead = false, viewConversationRead = false, onConversationList = () => { } }) => {
     const location = useLocation();
@@ -58,8 +58,18 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
     const [selectedMemberForDialog, setSelectedMemberForDialog] = useState(null);
     const [hoveredId, setHoveredId] = useState(null);
     const containerRef = useRef(null);
+    const sentinelRef = useRef(null);
     const pageSize = 100;
     const searchTimeoutRef = useRef(null);
+
+    // Refs to avoid stale closures in scroll handler and loadMembers
+    const loadingRef = useRef(loading);
+    const hasMoreRef = useRef(hasMore);
+    const currentPageRef = useRef(currentPage);
+
+    useEffect(() => { loadingRef.current = loading; }, [loading]);
+    useEffect(() => { hasMoreRef.current = hasMore; }, [hasMore]);
+    useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
     const { auth, PERMISSION_SET, isSyncing } = useContext(LoginContext);
     const can = (perm) => PERMISSION_SET?.has(perm);
 
@@ -71,13 +81,33 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         setRowContextMenu(null);
     };
 
+    // WhatsApp-like sort: pinned first, then unread, then read, all by newest timestamp
+    const sortConversations = (list) => {
+        return [...list].sort((a, b) => {
+            const aPin = a.IsPin === 1 ? 1 : 0;
+            const bPin = b.IsPin === 1 ? 1 : 0;
+            if (aPin !== bPin) return bPin - aPin;
+
+            const aUnread = (a.unreadCount || 0) > 0 ? 1 : 0;
+            const bUnread = (b.unreadCount || 0) > 0 ? 1 : 0;
+            if (aUnread !== bUnread) return bUnread - aUnread;
+
+            const aTime = new Date(a.lastMessageTimestamp || a.lastMessageTime).getTime() || 0;
+            const bTime = new Date(b.lastMessageTimestamp || b.lastMessageTime).getTime() || 0;
+            if (aTime !== bTime) return bTime - aTime;
+
+            return Number(b.ConversationId || 0) - Number(a.ConversationId || 0);
+        });
+    };
+
     const loadMembers = useCallback(async (page = 1, reset = false, search = null) => {
-        if (loading || (!reset && !hasMore)) return;
+        if (loadingRef.current || (!reset && !hasMoreRef.current)) return;
 
         if (!auth?.token || !auth?.userId) {
             console.log('⚠️ No auth token available, skipping conversation load');
             return;
         }
+        loadingRef.current = true;
         setLoading(true);
 
         try {
@@ -93,6 +123,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                 lastMessage: '',
                 lastMessageText: '',
                 lastMessageTime: new Date().toISOString(),
+                lastMessageTimestamp: new Date().toISOString(),
                 unreadCount: 0,
                 isSearchResult: true // Flag to identify search results
             })) || [];
@@ -105,10 +136,7 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                 ]
                 : currentConversations;
 
-            // Sort by last message time (newest first)
-            const sortedConversations = mergedConversations.sort((a, b) => {
-                return new Date(b.lastMessageTime) - new Date(a.lastMessageTime);
-            });
+            const sortedConversations = sortConversations(mergedConversations);
 
             setChatMembers(prev => ({
                 data: reset ? sortedConversations : [...(prev.data || []), ...sortedConversations],
@@ -116,15 +144,20 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
             }));
 
             const moreAvailable = response?.hasMore ?? sortedConversations.length > 0;
+            hasMoreRef.current = moreAvailable;
             setHasMore(moreAvailable);
 
-            if (moreAvailable) setCurrentPage(page);
+            if (moreAvailable) {
+                currentPageRef.current = page;
+                setCurrentPage(page);
+            }
         } catch (error) {
             console.error('Error loading members:', error);
         } finally {
+            loadingRef.current = false;
             setLoading(false);
         }
-    }, [loading, pageSize, processApiResponse, searchTerm]);
+    }, [pageSize, processApiResponse, searchTerm, auth?.token, auth?.userId]);
 
     // Effect to refresh customer list when sync completes
     useEffect(() => {
@@ -171,23 +204,23 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
         }
     };
 
-    const handleScroll = useCallback(() => {
-        if (!containerRef.current || loading || !hasMore) return;
-
-        const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-        if (scrollTop + clientHeight >= scrollHeight - 80) {
-            loadMembers(currentPage + 1);
-        }
-    }, [loading, hasMore, currentPage, loadMembers]);
-
-
+    // IntersectionObserver-based infinite scroll
     useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
+        const sentinel = sentinelRef.current;
+        if (!sentinel) return;
 
-        container.addEventListener('scroll', handleScroll);
-        return () => container.removeEventListener('scroll', handleScroll);
-    }, [handleScroll]);
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !loadingRef.current && hasMoreRef.current) {
+                    loadMembers(currentPageRef.current + 1);
+                }
+            },
+            { root: containerRef.current, threshold: 0 }
+        );
+
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, [loadMembers]);
 
     const handleTabChange = (newValue) => {
         if (newValue === null || newValue === undefined) return;
@@ -425,16 +458,19 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                     return prev;
                 }
 
-                const mergedData = { ...currentChat, ...data };
+                const extractedPhone = extractCustomerPhoneFromSocketData(data);
+                const mergedData = { ...currentChat, ...data, ...(extractedPhone && { CustomerPhone: extractedPhone }) };
                 const updatedChat = {
                     ...currentChat,
                     name: currentChat.name && currentChat.name !== 'Unknown' ? currentChat.name : getCustomerDisplayName(mergedData),
                     CustomerName: currentChat.CustomerName || data?.CustomerName || '',
-                    CustomerPhone: currentChat.CustomerPhone || data?.CustomerPhone || (data?.Direction === 0 || data?.Direction === '0' ? data?.Sender : ''),
+                    CustomerPhone: currentChat.CustomerPhone || extractedPhone || data?.CustomerPhone || (data?.Direction === 0 || data?.Direction === '0' ? data?.Sender : ''),
                     avatarConfig: currentChat.avatarConfig && currentChat.name !== 'Unknown' ? currentChat.avatarConfig : getWhatsAppAvatarConfig(getCustomerAvatarSeed(mergedData)),
                     lastMessage: messagePreviewNode,
                     lastMessageText: messagePreviewText,
                     lastMessageTime: formattedTime,
+                    // Only update timestamp for actual new messages, not status changes (prevents timezone sort jumps)
+                    lastMessageTimestamp: isStatusChange ? currentChat.lastMessageTimestamp : (data?.DateTime || currentChat.lastMessageTimestamp),
                     lastMessageStatus: data?.Status ?? data?.status ?? currentChat.lastMessageStatus,
                     lastMessageDirection: data?.Direction ?? currentChat.lastMessageDirection,
                 };
@@ -447,31 +483,29 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                     updatedChat.unreadCount = 0;
                 }
 
-                updatedData.splice(index, 1);
-                if (!isStatusChange) {
-                    updatedData.unshift(updatedChat);
-                } else {
-                    updatedData.splice(index, 0, updatedChat);
-                }
+                updatedData.splice(index, 1, updatedChat);
             } else {
+                const extractedPhone = extractCustomerPhoneFromSocketData(data);
+                const enrichedData = { ...data, ...(extractedPhone && { CustomerPhone: extractedPhone }) };
                 const newChat = {
                     ConversationId: data?.ConversationId,
                     CustomerName: data?.CustomerName || '',
-                    CustomerPhone: data?.CustomerPhone || (data?.Direction === 0 || data?.Direction === '0' ? data?.Sender : ''),
-                    name: getCustomerDisplayName(data),
+                    CustomerPhone: extractedPhone || data?.CustomerPhone || (data?.Direction === 0 || data?.Direction === '0' ? data?.Sender : ''),
+                    name: getCustomerDisplayName(enrichedData),
                     lastMessage: messagePreviewNode,
                     lastMessageText: messagePreviewText,
                     lastMessageTime: formattedTime,
+                    lastMessageTimestamp: data?.DateTime || new Date().toISOString(),
                     lastMessageStatus: data?.Status ?? data?.status,
                     lastMessageDirection: data?.Direction,
                     unreadCount: isStatusChange ? 0 : 1,
                     avatar: null,
-                    avatarConfig: getWhatsAppAvatarConfig(getCustomerAvatarSeed(data)),
+                    avatarConfig: getWhatsAppAvatarConfig(getCustomerAvatarSeed(enrichedData)),
                 };
-                updatedData.unshift(newChat);
+                updatedData.push(newChat);
             }
 
-            return { ...prev, data: updatedData };
+            return { ...prev, data: sortConversations(updatedData) };
         });
     };
 
@@ -625,6 +659,28 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                 <ul ref={containerRef}>
                     {can(15) ? (
                         <>
+                            {/* Search / refresh loading overlay */}
+                            {loading && currentPage === 1 && chatMembers?.data?.length > 0 && (
+                                <li style={{
+                                    position: 'sticky',
+                                    top: 0,
+                                    zIndex: 10,
+                                    textAlign: 'center',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    padding: '8px',
+                                    background: 'rgba(255,255,255,0.9)',
+                                    backdropFilter: 'blur(4px)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <CircularProgress size={18} thickness={5} />
+                                        <Typography variant="caption" color="textSecondary">
+                                            Updating...
+                                        </Typography>
+                                    </div>
+                                </li>
+                            )}
+
                             {loading && (!chatMembers?.data || chatMembers?.data.length === 0) ? (
                                 <li
                                     style={{
@@ -866,16 +922,17 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
 
                             {/* ✅ Show pagination loader only when fetching next pages */}
                             {loading && chatMembers?.data?.length > 0 && hasMore && (
-                                <li
-                                    style={{
-                                        textAlign: 'center',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        padding: '10px'
-                                    }}
-                                >
-                                    <Typography variant="caption" color="textSecondary">
-                                        Loading more...
+                                <li style={{ textAlign: 'center', display: 'flex', justifyContent: 'center', padding: '20px' }}>
+                                    <Typography variant="body2" color="textSecondary">
+                                        <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            gap: '15px',
+                                        }}>
+                                            <CircularProgress size={28} />
+                                            Loading more conversations...
+                                        </div>
                                     </Typography>
                                 </li>
                             )}
@@ -888,24 +945,8 @@ const CustomerLists = ({ onCustomerSelect = () => { }, selectedCustomer = null, 
                         </div>
                     )}
 
-                    {/* {loading && chatMembers?.data?.length > 0 && currentPage > 0 && ( */}
-                    {currentPage > 1 && (
-                        <li style={{ textAlign: 'center', display: "flex", justifyContent: "center", padding: '20px' }}>
-                            <Typography variant="body2" color="textSecondary">
-                                <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    padding: '20px',
-                                    borderBottom: '1px solid #e0e0e0',
-                                    gap: "15px",
-                                }}>
-                                    <CircularProgress size={35} />
-                                    Loading more conversations...
-                                </div>
-                            </Typography>
-                        </li>
-                    )}
+                    {/* Sentinel for IntersectionObserver infinite scroll */}
+                    <li ref={sentinelRef} style={{ height: 1, listStyle: 'none' }} />
                 </ul>
                 <WhatsAppMenu
                     anchorEl={anchorEl}

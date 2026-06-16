@@ -10,14 +10,16 @@ export const getMessagePreview = (msg) => {
       : type === 'video' ? 'Video'
         : type === 'document' ? 'Document'
           : type === 'file' ? 'File'
-            : 'New message';
+            : type === 'template' ? (msg?.Message ? `Template: ${msg.Message}` : 'Template')
+              : 'New message';
 
-  const showIcon = type === 'image' || type === 'video' || type === 'document' || type === 'file';
+  const showIcon = type === 'image' || type === 'video' || type === 'document' || type === 'file' || type === 'template';
   const Icon = type === 'image' ? Image
     : type === 'video' ? Video
       : type === 'document' ? FileText
         : type === 'file' ? File
-          : null;
+          : type === 'template' ? MessageCircle
+            : null;
 
   if (!text) {
     return { text: '', node: '' };
@@ -73,6 +75,7 @@ export const processApiResponse = (apiData) => {
       lastMessage: preview.node,
       lastMessageText: preview.text,
       lastMessageTime: formatChatTimestamp(lastMessage?.DateTime || conversation.DateTime),
+      lastMessageTimestamp: lastMessage?.DateTime || conversation.DateTime,
       lastMessageStatus: lastMessage?.Status,
       lastMessageDirection: lastMessage?.Direction,
       unreadCount: conversation.UnReadMsgCount || 0,
@@ -82,6 +85,38 @@ export const processApiResponse = (apiData) => {
       avatarConfig: getWhatsAppAvatarConfig(getCustomerAvatarSeed(conversation)),
     };
   });
+};
+
+/**
+ * Extract customer phone from socket message data,
+ * especially for outbound messages where Sender is the agent ID
+ * and the customer phone lives inside MessageBody JSON.
+ */
+export const extractCustomerPhoneFromSocketData = (data) => {
+  if (!data) return null;
+  if (data.CustomerPhone) return data.CustomerPhone;
+
+  // For inbound messages, Sender is the customer phone
+  if (data.Direction === 0 || data.Direction === '0') {
+    return data.Sender || null;
+  }
+
+  // For outbound messages, try to parse MessageBody JSON
+  if (data.MessageBody && typeof data.MessageBody === 'string') {
+    try {
+      const body = JSON.parse(data.MessageBody);
+      const phone =
+        body?.payload?.to ||
+        body?.data?.to ||
+        body?.response?.data?.contacts?.[0]?.wa_id ||
+        body?.response?.data?.contacts?.[0]?.input;
+      if (phone) return String(phone);
+    } catch (e) {
+      // Ignore JSON parse errors
+    }
+  }
+
+  return null;
 };
 
 export const getCustomerListMenuItems = (member) => [

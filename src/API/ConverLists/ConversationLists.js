@@ -9,11 +9,14 @@ export const fetchConversationLists = async (page = 1, pageSize = 20, userId, se
         };
         const response = await CommonAPI(body);
         if (response?.Data) {
+            const resultsArray = Array.isArray(response.Data)
+                ? response.Data
+                : (response.Data?.rd || []);
             return {
                 data: response?.Data || [],
-                total: response?.Data?.total || response?.Data?.length || 0,
+                total: response?.Data?.total || resultsArray.length || 0,
                 currentPage: page,
-                hasMore: response?.Data?.length === pageSize
+                hasMore: resultsArray.length === pageSize
             };
         } else {
             return {

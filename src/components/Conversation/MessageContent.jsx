@@ -24,41 +24,78 @@ const charToUnified = (char) => {
 /**
  * Detects URLs in text and wraps them in styled anchor tags.
  */
+const getLinkStyle = (theme) => ({
+    color: theme.palette.primary.main,
+    textDecoration: 'none',
+    fontWeight: 500,
+    wordBreak: 'break-all',
+    transition: 'opacity 0.2s',
+});
+
+const LinkAnchor = ({ href, children, theme, isTel }) => (
+    <a
+        href={href}
+        target={isTel ? undefined : '_blank'}
+        rel={isTel ? undefined : 'noopener noreferrer'}
+        style={getLinkStyle(theme)}
+        onMouseOver={(e) => {
+            e.target.style.opacity = 0.8;
+            e.target.style.textDecoration = 'underline';
+        }}
+        onMouseOut={(e) => {
+            e.target.style.opacity = 1;
+            e.target.style.textDecoration = 'none';
+        }}
+    >
+        {children}
+    </a>
+);
+
 const renderMessageWithLinks = (text, theme) => {
     if (!text) return text;
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = text.split(urlRegex);
 
-    return parts.map((part, index) => {
-        if (part.match(urlRegex)) {
-            return (
-                <a
-                    key={index}
-                    href={part}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                        color: theme.palette.primary.main,
-                        textDecoration: 'none',
-                        fontWeight: 500,
-                        wordBreak: 'break-all',
-                        transition: 'opacity 0.2s',
-                    }}
-                    onMouseOver={(e) => {
-                        e.target.style.opacity = 0.8;
-                        e.target.style.textDecoration = 'underline';
-                    }}
-                    onMouseOut={(e) => {
-                        e.target.style.opacity = 1;
-                        e.target.style.textDecoration = 'none';
-                    }}
-                >
-                    {part}
-                </a>
+    // Matches: https?:// URLs | www. domains | phone numbers (+ followed by digits/spaces/hyphens, min 8 chars)
+    const regex = /(https?:\/\/[^\s]+)|(www\.[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}[^\s]*)|(\+\d[\d\s\-]{6,}\d)/g;
+    const elements = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            elements.push(<span key={`t-${lastIndex}`}>{text.slice(lastIndex, match.index)}</span>);
+        }
+
+        const matchedText = match[0];
+
+        if (match[1]) {
+            elements.push(
+                <LinkAnchor key={`url-${match.index}`} href={matchedText} theme={theme}>
+                    {matchedText}
+                </LinkAnchor>
+            );
+        } else if (match[2]) {
+            elements.push(
+                <LinkAnchor key={`www-${match.index}`} href={`https://${matchedText}`} theme={theme}>
+                    {matchedText}
+                </LinkAnchor>
+            );
+        } else if (match[3]) {
+            const cleanPhone = matchedText.replace(/[\s\-]/g, '');
+            elements.push(
+                <LinkAnchor key={`tel-${match.index}`} href={`tel:${cleanPhone}`} theme={theme} isTel>
+                    {matchedText}
+                </LinkAnchor>
             );
         }
-        return part;
-    });
+
+        lastIndex = match.index + matchedText.length;
+    }
+
+    if (lastIndex < text.length) {
+        elements.push(<span key={`t-end`}>{text.slice(lastIndex)}</span>);
+    }
+
+    return elements.length > 0 ? elements : text;
 };
 
 // Video Message Component
@@ -222,8 +259,6 @@ const MessageContent = ({
     handleMediaClick,
     getMessageStatusIcon,
 }) => {
-    console.log("dlkls", msg)
-
     const theme = useTheme();
 
     const [imageDims, setImageDims] = useState(null);
@@ -311,7 +346,8 @@ const MessageContent = ({
                         zIndex: 1,
                         overflow: 'visible !important',
                         maxWidth: { xs: '90%', sm: ['image', 'video', 'document'].includes(msg?.MessageType) ? 350 : 420 },
-                        ...(['image', 'video', 'document'].includes(msg?.MessageType) && { width: 'min(350px, 85vw)' }),
+                        ...(msg?.MessageType === 'image' && { width: 'fit-content', minWidth: 0 }),
+                        ...((msg?.MessageType === 'video' || msg?.MessageType === 'document') && { width: 'min(350px, 85vw)' }),
                         padding: '4px !important',
                         borderRadius: (isOutgoing
                             ? '16px 16px 4px 16px'
@@ -463,7 +499,7 @@ const MessageContent = ({
                             </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1.5rem', width: '100%' }}>
-                            <Typography variant="body2" className="message-text" style={{ flex: 1, marginRight: 0 }}>
+                            <Typography variant="body2" className="message-text" style={{ flex: 1, marginRight: 0, whiteSpace: 'pre-wrap' }}>
                                 {msg?.MessageType === 'template' ? "" : renderMessageWithLinks(msg.Message, theme)}
                             </Typography>
                             {/* Message status inline for reply messages */}
@@ -522,6 +558,7 @@ const MessageContent = ({
                             fontWeight: 450,
                             lineHeight: 1.6,
                             letterSpacing: '0.01em',
+                            whiteSpace: 'pre-wrap',
                         }}
                     >
                         {msg?.MessageType === 'template' ? "" : renderMessageWithLinks(msg.Message, theme)}
@@ -548,19 +585,33 @@ const MessageContent = ({
                     const cachedDims = src ? imageDimsCache.get(src) : null;
                     const dimsForCalc = imageDims || cachedDims;
 
-                    // Bubble inner width ≈ 268px (280px − 4px padding×2 − 4px border×2)
-                    const mediaWidth = 268;
-                    const computedHeight = dimsForCalc?.w && dimsForCalc?.h
-                        ? Math.max(160, Math.min(268, Math.round(mediaWidth * (dimsForCalc.h / dimsForCalc.w))))
-                        : 240;
+                    const MAX_W = 350;
+                    const MAX_H = 420;
+                    const MIN_W = 160;
+                    const MIN_H = 160;
+
+                    let containerW = MAX_W;
+                    let containerH = 240;
+
+                    if (dimsForCalc?.w && dimsForCalc?.h) {
+                        const ratio = dimsForCalc.w / dimsForCalc.h;
+                        containerW = MAX_W;
+                        containerH = Math.round(MAX_W / ratio);
+                        if (containerH > MAX_H) {
+                            containerH = MAX_H;
+                            containerW = Math.round(MAX_H * ratio);
+                        }
+                        containerW = Math.max(MIN_W, containerW);
+                        containerH = Math.max(MIN_H, containerH);
+                    }
 
                     return (
                         <div
                             className="message-image"
                             style={{
                                 position: 'relative',
-                                width: '100%',
-                                height: computedHeight,
+                                width: containerW,
+                                height: containerH,
                                 borderRadius: '8px',
                                 overflow: 'hidden',
                             }}
@@ -753,6 +804,7 @@ const MessageContent = ({
                             lineHeight: 1.5,
                             fontWeight: 450,
                             wordBreak: 'break-word',
+                            whiteSpace: 'pre-wrap',
                         }}
                     >
                         {renderMessageWithLinks(msg.Message, theme)}
